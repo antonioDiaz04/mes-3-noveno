@@ -7,11 +7,11 @@ const bcrypt = require("bcryptjs");
 
 exports.Login = async (req, res) => {
   try {
-    const { email, password1 } = req.body;
+    const { email, password } = req.body;
     let usuario;
-
+    console.log(req.body);
     usuario = await Usuario.findOne({ email });
-    console.table(["correo recibido:", email, "password recibido:", password1]);
+    console.table(["correo recibido:", email, "password recibido:", password]);
 
     console.log("aqui llego if:");
 
@@ -19,7 +19,7 @@ exports.Login = async (req, res) => {
     // if (usuario) return res.status(200).send("El correo  existe");
     console.log("aqui llego:");
 
-    const isPasswordValid = await bcrypt.compare(password1, usuario.password1);
+    const isPasswordValid = await bcrypt.compare(password, usuario.password);
     if (!isPasswordValid) return res.status(401).send("Contraseña incorrecta");
 
     // Verificar si el usuario tiene un rol

@@ -6,9 +6,9 @@ const UsuarioController = require("../Controllers/usuarioController");
 
 router.get("/admin", UsuarioController.adminRoute);
 // agrega cliente
-router.post("/cliente", UsuarioController.crearUsuario);
+router.post("/", UsuarioController.crearUsuario);
 //
-router.get("/cliente", UsuarioController.clienteRoute);
+router.get("/", UsuarioController.clienteRoute);
 router.put("/actualizaRol/:id", UsuarioController.actualizaRolUsuario);
 router.put("/actualiza/:id", UsuarioController.actualizaDatos);
 router.delete("/deleteCliente/:id", UsuarioController.eliminarCliente);

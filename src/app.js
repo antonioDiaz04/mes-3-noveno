@@ -10,8 +10,8 @@ conectarDB();
 const corsOptions = {
   //Lista de URLs clientes permitidas
   origin: [
-    "https://purificadoras.vercel.app",
-    // "http://localhost:4200", //!prueba local
+    // "https://purificadoras.vercel.app",
+    "http://localhost:4200", //!prueba local
   ],
   credentials: true,
 };
@@ -68,13 +68,15 @@ const enviarNotification = async (req, res) => {
   }
 };
 
+// app.route('/api/v1/').post(enviarNotification);
 app.route('/api/v1/enviar-notification').post(enviarNotification);
 
-app.use("/autentificacion", require("./Routes/AuthRoute"));
+app.use("/api/v1/verificar", require("./Routes/catpch"));
+app.use("/api/v1/autentificacion", require("./Routes/AuthRoute"));
 // Ruta para acciones con rol de Administrador de la pagina
-app.use("/adminPage", require("./Routes/PrivadoRoute"));
+app.use("/api/v1/adminPage", require("./Routes/PrivadoRoute"));
 // Ruta para acciones con rol de Administrador
-app.use("/usuarios", require("./Routes/UsuarioRoute"));
+app.use("/api/v1/usuarios", require("./Routes/UsuarioRoute"));
 
 
 module.exports = app;

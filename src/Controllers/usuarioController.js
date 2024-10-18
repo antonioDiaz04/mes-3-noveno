@@ -123,15 +123,10 @@ exports.EstadoUsuario = async (req, res) => {
 
 exports.crearUsuario = async (req, res) => {
   try {
-    const idPurificadora=req.params.idPurificadora;
     let nombre = req.body.nombre;
     let telefono = req.body.telefono;
     let email = req.body.email;
-    let longitud = req.body.longitud; // Agregar longitud
-    let latitud = req.body.latitud; // Agregar latitud
-    let numCasa = req.body.numCasa; // Agregar obtenerUsuarioById
-    let municipio = req.body.municipio; // Agregar obtenerUsuarioById
-    let colonia = req.body.colonia; // Agregar obtenerUsuarioById
+    let password = req.body.password;
 
     console.table(req.body);
 
@@ -141,19 +136,15 @@ exports.crearUsuario = async (req, res) => {
     }
 
     const usuario = new Usuario({
-      idPurificadora: idPurificadora,
       nombre: nombre,
       email: email,
       telefono: telefono,
-      longitud: longitud, // Agregar longitud al objeto usuario
-      latitud: latitud, // Agregar latitud al objeto usuario
-      numCasa: numCasa, // Agregar numCasa al objeto usuario
-      municipio: municipio, // Agregar numCasa al objeto usuario
-      colonia: colonia, // Agregar numCasa al objeto usuario
+      password: password,
     });
 
     const resultado = await usuario.save();
 
+    
     console.log("Registro exitoso:", resultado); // Mensaje de éxito en la consola
     res.json({
       usuario: resultado._id,
