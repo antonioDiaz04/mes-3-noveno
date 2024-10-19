@@ -14,6 +14,7 @@ exports.perfilUsuario = async (req, res) => {
     if (!usuario) {
       return res.status(404).json({ mensaje: "Usuario no encontrado" });
     }
+    
     // Devolver los datos del perfil del usuario
     return res.status(200).json({ datos: usuario });
   } catch (error) {
@@ -393,7 +394,7 @@ exports.listarSecretas = async (req, res) => {
 exports.actualizaRolUsuario = async (req, res) => {
   const { id } = req.params;
   const { rol } = req.body;
-
+  
   try {
     // Busca y actualiza el usuario en la base de datos
     const usuarioActualizado = await Usuario.findByIdAndUpdate(
