@@ -17,6 +17,7 @@ exports.VerificarCaptcha = async (req, res) => {
       response: token,
       // remoteip: req.connection.remoteAddress, // Opcional
     };
+    
 
     const response = await axios.post(
       "https://www.google.com/recaptcha/api/siteverify",

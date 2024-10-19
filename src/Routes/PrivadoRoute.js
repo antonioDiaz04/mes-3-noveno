@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
 
-// const PrivadoController = require("../Controllers/PrivadoController");
+const PrivadoController = require("../Controllers/PrivadoController");
 
-// // obtner todas las purificaciones
-// router.get("/purificadoras", PrivadoController.getPurificadoras);
+router.post("/politica", PrivadoController.crearPoliticas);
+router.get("/politicas", PrivadoController.obtenerPoliticas);
+router.put("/politica", PrivadoController.actualizarPoliticas);
 
-// router.post("/purificadora", PrivadoController.registroPurificadora);
 module.exports = router;
 

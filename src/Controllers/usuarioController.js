@@ -42,6 +42,7 @@ exports.VerificaTipoRolAcceso = (req, res) => {
 // Middleware para verificar el token y el rol del usuario
 exports.verifyTokenAndRole = (role) => (req, res, next) => {
   // Verificar si el usuario está autenticado
+  console.log(role)
   if (!req.user) {
     return res
       .status(401)
@@ -86,10 +87,10 @@ exports.getColoniasPorClientes = async (req, res) => {
       .json({ message: "Error al obtener clientes agrupados", error });
   }
 };
-// Ruta protegida para administradores
-exports.adminRoute = exports.verifyTokenAndRole("administrador");
-// Ruta protegida para clientes
-exports.clienteRoute = exports.verifyTokenAndRole("cliente");
+// // Ruta protegida para administradores
+// exports.adminRoute = exports.verifyTokenAndRole("ADMIN");
+// // Ruta protegida para clientes
+// exports.clienteRoute = exports.verifyTokenAndRole("cliente");
 
 exports.EstadoUsuario = async (req, res) => {
   try {
@@ -134,17 +135,19 @@ exports.crearUsuario = async (req, res) => {
     if (record) {
       return res.status(400).send({ message: "El email ya está registrado" });
     }
+    // Encripta la nueva contraseña
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     const usuario = new Usuario({
       nombre: nombre,
       email: email,
       telefono: telefono,
-      password: password,
+      password: hashedPassword,
     });
 
     const resultado = await usuario.save();
 
-    
     console.log("Registro exitoso:", resultado); // Mensaje de éxito en la consola
     res.json({
       usuario: resultado._id,
@@ -241,7 +244,7 @@ exports.BuscaUsuarioByPreguntayRespuesta = async (req, res) => {
 exports.obtenerUsuarios = async (req, res) => {
   try {
     // Excluye el usuario con el rol "admin" de la consulta
-    const usuarios = await Usuario.find({ rol: { $ne: "ADMINPG" } });
+    const usuarios = await Usuario.find({ rol: { $ne: "ADMIN" } });
     res.json(usuarios);
   } catch (error) {
     console.log("error de consulta");
