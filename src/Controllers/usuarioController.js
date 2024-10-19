@@ -123,29 +123,39 @@ exports.EstadoUsuario = async (req, res) => {
 
 exports.crearUsuario = async (req, res) => {
   try {
-    let nombre = req.body.nombre;
-    let telefono = req.body.telefono;
-    let email = req.body.email;
-    let password = req.body.password;
+    const { nombre, email, telefono, password } = req.body;
 
-    console.table(req.body);
-
-    const record = await Usuario.findOne({ email: email });
-    if (record) {
+    const usuarioDuplicado = await Usuario.findOne({ usuario: nombre });
+    if (usuarioDuplicado) {
+      return res.status(400).send({ message: "El usuario ya está en uso" });
+    }
+    const emailDuplicado = await Usuario.findOne({ email: email });
+    if (emailDuplicado) {
       return res.status(400).send({ message: "El email ya está registrado" });
     }
+
+    const telefonoDuplicado = await Usuario.findOne({ telefono: telefono });
+
+    if (telefonoDuplicado) {
+      return res
+        .status(400)
+        .send({ message: "El número de telefono ya está registrado" });
+    }
+
+    // Encriptar la contraseña
+    const salt = await bcrypt.genSalt(10);
+
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     const usuario = new Usuario({
       nombre: nombre,
       email: email,
       telefono: telefono,
-      password: password,
+      password: hashedPassword,
     });
 
     const resultado = await usuario.save();
 
-    
-    console.log("Registro exitoso:", resultado); // Mensaje de éxito en la consola
     res.json({
       usuario: resultado._id,
       message: "exitoso",
@@ -333,7 +343,6 @@ exports.actualizarPasswordxPregunta = async (req, res) => {
 };
 const mongoose = require("mongoose");
 const { ObjectId } = mongoose.Types.ObjectId;
-
 
 exports.eliminarCliente = async (req, res) => {
   try {

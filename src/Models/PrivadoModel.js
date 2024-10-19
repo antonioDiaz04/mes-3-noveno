@@ -1,24 +1,24 @@
 const mongoose = require("mongoose");
-const PoliticaNegocioSchema = mongoose.Schema({
 
+const PoliticaNegocioSchema = mongoose.Schema({
   titulo: {
-    type:String,
+    type: String,
     required: true,
   },
   contenido: {
-    type:String,
+    type: String,
     required: true,
   },
-  
+
   fechaCreacion: {
     type: Date,
     default: Date.now(),
   },
 });
-const AcercaSchema = mongoose.Schema({
 
+const AcercaSchema = mongoose.Schema({
   titulo: {
-    type:String,
+    type: String,
     required: true,
   },
   contenido: {
@@ -27,11 +27,9 @@ const AcercaSchema = mongoose.Schema({
   },
 });
 
-
 const PreguntaSchema = mongoose.Schema({
-
   titulo: {
-    type:String,
+    type: String,
     required: true,
   },
   contenido: {
@@ -41,9 +39,8 @@ const PreguntaSchema = mongoose.Schema({
 });
 
 const ContactoSchema = mongoose.Schema({
-
   titulo: {
-    type:String,
+    type: String,
     required: true,
   },
   contenido: {
@@ -52,12 +49,9 @@ const ContactoSchema = mongoose.Schema({
   },
 });
 
-
-
-
 module.exports = {
-    Politica: mongoose.model("Politica", PoliticaNegocioSchema),
-    AcercaDe: mongoose.model("AcercaDe", AcercaSchema),
-    Pregunta: mongoose.model("Pregunta", PreguntaSchema),
-    Contacto: mongoose.model("Contacto", ContactoSchema),
-  };
+  Politica: mongoose.model("Politica", PoliticaNegocioSchema),
+  AcercaDe: mongoose.model("AcercaDe", AcercaSchema),
+  Pregunta: mongoose.model("Pregunta", PreguntaSchema),
+  Contacto: mongoose.model("Contacto", ContactoSchema),
+};
