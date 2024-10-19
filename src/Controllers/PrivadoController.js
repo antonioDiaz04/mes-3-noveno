@@ -2,7 +2,6 @@ const { Politicas } = require("../Models/PrivadoModel");
 const {
   AcercaDe,
   Contacto,
-  Politica,
   Pregunta,
 } = require("../Models/PrivadoModel.js");
 
