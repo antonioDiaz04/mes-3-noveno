@@ -1,10 +1,10 @@
 {
-  "name": "purificadoraapi",
+  "name": "backendatr",
   "version": "1.0.0",
-  "description": "PURIFICADORA API",
+  "description": "BakendAtr",
   "main": "src/index.js",
   "scripts": {
-    "dev": "nodemon  ."
+    "dev": "nodemon  src/index.js"
   },
   "author": "Antonio Diaz",
   "license": "ISC",

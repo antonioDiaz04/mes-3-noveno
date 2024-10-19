@@ -50,8 +50,8 @@ const ContactoSchema = mongoose.Schema({
 });
 
 module.exports = {
-  Politica: mongoose.model("Politica", PoliticaNegocioSchema),
-  AcercaDe: mongoose.model("AcercaDe", AcercaSchema),
-  Pregunta: mongoose.model("Pregunta", PreguntaSchema),
-  Contacto: mongoose.model("Contacto", ContactoSchema),
-};
+    Politicas: mongoose.model("Politicas", PoliticaNegocioSchema),
+    AcercaDe: mongoose.model("AcercaDe", AcercaSchema),
+    Pregunta: mongoose.model("Pregunta", PreguntaSchema),
+    Contacto: mongoose.model("Contacto", ContactoSchema),
+  };

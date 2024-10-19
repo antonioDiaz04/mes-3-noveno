@@ -4,18 +4,18 @@ const bcrypt = require("bcryptjs");
 const jw = require("jsonwebtoken");
 const UsuarioController = require("../Controllers/usuarioController");
 
-router.get("/admin", UsuarioController.adminRoute);
+// router.get("/admin", UsuarioController.adminRoute);
 // agrega cliente
 router.post("/", UsuarioController.crearUsuario);
 //
-router.get("/", UsuarioController.clienteRoute);
+// router.get("/", UsuarioController.clienteRoute);
 router.put("/actualizaRol/:id", UsuarioController.actualizaRolUsuario);
 router.put("/actualiza/:id", UsuarioController.actualizaDatos);
 router.delete("/deleteCliente/:id", UsuarioController.eliminarCliente);
 // obtener detalles del cliente por id
 router.get("/:id", UsuarioController.obtenerUsuarioById);
 // obtener todos los clientes registrados
-router.get("/", UsuarioController.obtenerUsuarios);
+// router.get("/", UsuarioController.obtenerUsuarios);
 // busca un usuario por correo
 router.get("/:correo", UsuarioController.buscaUsuarioByCorreo);
 // colonias por clientes 
