@@ -4,7 +4,8 @@
   "description": "BakendAtr",
   "main": "src/index.js",
   "scripts": {
-    "dev": "nodemon  src/index.js"
+    "dev": "nodemon index.js",
+    "start": "node index.js"
   },
   "author": "Antonio Diaz",
   "license": "ISC",
