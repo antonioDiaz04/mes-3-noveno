@@ -1,4 +1,4 @@
-const { Usuario } = require("../Models/UsuarioModel");
+const { Usuario,EstadoCuenta } = require("../Models/UsuarioModel");
 require("../Routes/UsuarioRoute");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
@@ -14,7 +14,7 @@ exports.perfilUsuario = async (req, res) => {
     if (!usuario) {
       return res.status(404).json({ mensaje: "Usuario no encontrado" });
     }
-    
+
     // Devolver los datos del perfil del usuario
     return res.status(200).json({ datos: usuario });
   } catch (error) {
@@ -43,7 +43,7 @@ exports.VerificaTipoRolAcceso = (req, res) => {
 // Middleware para verificar el token y el rol del usuario
 exports.verifyTokenAndRole = (role) => (req, res, next) => {
   // Verificar si el usuario está autenticado
-  console.log(role)
+  console.log(role);
   if (!req.user) {
     return res
       .status(401)
@@ -139,11 +139,17 @@ exports.crearUsuario = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    //eliminar espacios telefono
+    const telefonoSinEspacios = telefono.replace(/\s/g, "");
+
+    const nuevoEstadoCuenta = await EstadoCuenta.create({});
+
     const usuario = new Usuario({
       nombre: nombre,
       email: email,
-      telefono: telefono,
+      telefono: telefonoSinEspacios,
       password: hashedPassword,
+      estadoCuenta: nuevoEstadoCuenta._id, 
     });
 
     const resultado = await usuario.save();
@@ -391,7 +397,7 @@ exports.listarSecretas = async (req, res) => {
 exports.actualizaRolUsuario = async (req, res) => {
   const { id } = req.params;
   const { rol } = req.body;
-  
+
   try {
     // Busca y actualiza el usuario en la base de datos
     const usuarioActualizado = await Usuario.findByIdAndUpdate(
