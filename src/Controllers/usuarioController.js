@@ -129,9 +129,7 @@ exports.crearUsuario = async (req, res) => {
     let telefono = req.body.telefono;
     let email = req.body.email;
     let password = req.body.password;
-
     console.table(req.body);
-
     const record = await Usuario.findOne({ email: email });
     if (record) {
       return res.status(400).send({ message: "El email ya está registrado" });
@@ -145,6 +143,9 @@ exports.crearUsuario = async (req, res) => {
       email: email,
       telefono: telefono,
       password: hashedPassword,
+      token: "",
+      codigoVerificacion: null,
+      verificado: false,
     });
 
     const resultado = await usuario.save();
