@@ -6,7 +6,7 @@ const EstadoCuentaSchema = mongoose.Schema({
   fechaUltimoIntentoFallido: { type: Date },
   vecesDeBloqueos: { type: Number, default: 0 },
   fechaDeUltimoBloqueo: { type: Date },
-  tiempoDeBloqueo: { type: Date }
+  tiempoDeBloqueo: { type: Date },
 });
 
 const UsuarioSchema = mongoose.Schema({
@@ -14,14 +14,25 @@ const UsuarioSchema = mongoose.Schema({
   email: { type: String, unique: true, required: false },
   telefono: { type: String, required: true },
   token: { type: String, required: false },
+  codigoVerificacion: { type: String, required: false },
+  verificado: { type: Boolean, required: false },
   rol: { type: String, required: false, default: "cliente" },
   password: { type: String, required: false, default: "" },
   fechaDeRegistro: { type: Date, default: Date.now() },
-  estadoCuenta: { type: mongoose.Schema.Types.ObjectId, ref: "EstadoCuenta" }, 
+  estadoCuenta: { type: mongoose.Schema.Types.ObjectId, ref: "EstadoCuenta" },
 });
 
 const EstadoCuenta = mongoose.model("EstadoCuenta", EstadoCuentaSchema);
 const Usuario = mongoose.model("Usuarios", UsuarioSchema);
+
+//  Middleware pre-save para limpiar el número de teléfono
+UsuarioSchema.pre("save", function (next) {
+  if (this.telefono) {
+    // Remover espacios del número de teléfono
+    this.telefono = this.telefono.replace(/\s+/g, "");
+  }
+  next();
+});
 
 module.exports = {
   Usuario,

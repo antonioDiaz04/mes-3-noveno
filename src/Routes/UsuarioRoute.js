@@ -23,8 +23,6 @@ router.get("/:id", UsuarioController.obtenerUsuarioById);
 router.get("/:correo", UsuarioController.buscaUsuarioByCorreo);
 // colonias por clientes 
 router.get("/clientes/agrupados", UsuarioController.getColoniasPorClientes);
-
-
 router.put("/actualizaxCorreo", UsuarioController.actualizarPasswordxCorreo);
 router.put(
   "/actualizaxPregunta",

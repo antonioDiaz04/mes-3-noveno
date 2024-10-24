@@ -125,14 +125,15 @@ exports.EstadoUsuario = async (req, res) => {
 
 exports.crearUsuario = async (req, res) => {
   try {
-    const { nombre, email, telefono, password } = req.body;
+    let nombre = req.body.nombre;
+    let telefono = req.body.telefono;
+    let email = req.body.email;
+    let password = req.body.password;
 
-    const usuarioDuplicado = await Usuario.findOne({ usuario: nombre });
-    if (usuarioDuplicado) {
-      return res.status(400).send({ message: "El usuario ya está en uso" });
-    }
-    const emailDuplicado = await Usuario.findOne({ email: email });
-    if (emailDuplicado) {
+    console.table(req.body);
+
+    const record = await Usuario.findOne({ email: email });
+    if (record) {
       return res.status(400).send({ message: "El email ya está registrado" });
     }
     // Encripta la nueva contraseña
@@ -150,6 +151,9 @@ exports.crearUsuario = async (req, res) => {
       telefono: telefonoSinEspacios,
       password: hashedPassword,
       estadoCuenta: nuevoEstadoCuenta._id,
+      token: "",
+      codigoVerificacion: null,
+      verificado: false,
     });
 
     const resultado = await usuario.save();

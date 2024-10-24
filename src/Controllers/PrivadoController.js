@@ -96,7 +96,7 @@ exports.crearPoliticas = async (req, res) => {
 // Obtener todas las políticas
 exports.obtenerPoliticas = async (req, res) => {
   try {
-    const politicas = await Politicas.find({ estado: { $ne: 'eliminado' } });
+    const politicas = await Politicas.find({ estado: { $ne: "eliminado" } });
     return res.status(200).json(politicas);
   } catch (error) {
     console.log("Error al obtener políticas:", error);
@@ -110,7 +110,7 @@ exports.actualizarPoliticas = async (req, res) => {
     const { titulo, contenido } = req.body;
 
     const politicaExistente = await Politicas.findById(id);
-    
+
     if (!politicaExistente) {
       return res.status(404).send("Política no encontrada");
     }
@@ -149,17 +149,19 @@ exports.eliminarPolitica = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Buscar y eliminar la política por su ID
-    const politica = await Politicas.findById(id);
+    const politica = await Politicas.findById(id).populate("historial");
 
-    // Si no se encuentra la política, devolver un mensaje de error
     if (!politica) {
       return res.status(404).json({ message: "Política no encontrada" });
     }
-    politica.estado = 'eliminado';
 
-    // Responder con un código 204 si la eliminación fue exitosa
-    res.status(204).send();
+    console.log(politica.estado);
+    politica.estado = "eliminado";
+
+    await politica.save();
+    res.status(204).json({
+      message: "Politica eliminada",
+    });
   } catch (error) {
     console.error("Error al eliminar política:", error);
     res.status(500).json({

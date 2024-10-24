@@ -8,12 +8,12 @@ let BLOCK_TIME_MINUTES = 1;
 exports.Login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    let usuario;
+    console.log(req.body);
+    usuario = await Usuario.findOne({ email }).populate("estadoCuenta");
+    console.table(["correo recibido:", email, "password recibido:", password]);
 
-    const usuario = await Usuario.findOne({ email }).populate("estadoCuenta");
-
-    if (!usuario) return res.status(401).send("El correo no esta registrado");
-
-    // Comprobar si el usuario está bloqueado
+   // Comprobar si el usuario está bloqueado
     if (usuario.estadoCuenta.estado === "bloqueado") {
       const now = new Date();
       const blockTime = new Date(usuario.estadoCuenta.tiempoDeBloqueo);
@@ -40,6 +40,7 @@ exports.Login = async (req, res) => {
         await usuario.estadoCuenta.save(); // Guardar cambios
       }
     }
+
     const isPasswordValid = await bcrypt.compare(password, usuario.password);
 
     if (!isPasswordValid) {
@@ -72,13 +73,70 @@ exports.Login = async (req, res) => {
     await usuario.estadoCuenta.save();
 
     if (!usuario.rol) {
+      // Si el usuario no tiene un rol, enviar un mensaje de error
       return res.status(401).send("El usuario no tiene un rol asignado");
     }
+    const token = jwt.sign(
+      { _id: usuario._id, rol: usuario.rol },
+      process.env.JWT_SECRET || "secret", // Mejor usar variables de entorno para el secreto
+      { expiresIn: "24h" } // Token expira en 1 hora
+    );
 
-    const token = jwt.sign({ _id: usuario._id, rol: usuario.rol }, "secret");
+    console.log("Token JWT generado:", token);
+
+    // Si deseas usar cookies para el token:
+    res.cookie("token", token, {
+      httpOnly: true, // Evita que JavaScript en el cliente acceda a la cookie
+      secure: process.env.NODE_ENV === "production", // Solo se envía por HTTPS en producción
+      sameSite: "Strict", // Evita ataques CSRF
+      maxAge: 3600000, // La cookie expira en 1 hora
+    });
     return res.status(200).json({ token, rol: usuario.rol });
   } catch (error) {
-    console.log("ohh no :", error);
-    return res.status(500).send("Error en el servidor: " + error);
+    console.error("Error en el servidor:", error);
+    return res.status(500).send("Error en el servidor: " + error.message);
   }
 };
+
+// exports.verificarCodigo = async (req, res) => {
+//   try {
+//     const { email, codigo } = req.body;
+//     // let usuario;
+//     const usuario = await Usuario.findOne({ email, codigoVerificacion });
+
+//     console.table([
+//       "correo recibido:",
+//       email,
+//       "codigoVerificacion recibido:",
+//       codigoVerificacion,
+//     ]);
+//     // Verificar si el código es válido
+//     const isCodigoValido = await bcrypt.compare(
+//       codigo,
+//       usuario.codigoVerificacion
+//     );
+//     if (!isCodigoValido) {
+//       return res
+//         .status(401)
+//         .json({ message: "Código de verificación incorrecto." });
+//     }
+
+//     // Generar el token JWT
+//     const token = jwt.sign(
+//       { _id: usuario._id, rol: usuario.rol },
+//       process.env.JWT_SECRET || "secret",
+//       {
+//         expiresIn: "1h", // El token expirará en 1 hora
+//       }
+//     );
+
+//     console.log("aqui llego tambien :");
+
+//     // Si el usuario tiene un rol, firmar el token JWT con el rol incluido
+//     // const token = jwt.sign({ _id: usuario._id, rol: usuario.rol }, "secret");
+//     return res.status(200).json({ token, rol: usuario.rol });
+//   } catch (error) {
+//     console.log("ohh no :", error);
+//     return res.status(500).send("Error en el servidor: " + error);
+//   }
+// };

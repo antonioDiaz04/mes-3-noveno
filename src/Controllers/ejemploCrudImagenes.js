@@ -1,109 +1,142 @@
-//importamos nuestras funciones personalizadas (crud) xd
-import { uploadImage, deleteImage } from "../cloudinary/cloudinary";
-import fs from "fs-extra";
+const { Usuario } = require("../Models/UsuarioModel");
 
-export const eliminarImagenes = async (req, res) => {
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+
+// const webpush = require("../Shareds/webpush");
+let BLOCK_TIME_MINUTES = 1;
+exports.Login = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { imagenesParaEliminar } = req.body;
+    const { email, password } = req.body;
+    let usuario;
+    console.log(req.body);
+    usuario = await Usuario.findOne({ email }).populate("estadoCuenta");
+    console.table(["correo recibido:", email, "password recibido:", password]);
 
-    // Verifica si se proporcionan imágenes para eliminar
-    if (!imagenesParaEliminar || !Array.isArray(imagenesParaEliminar)) {
-      return res
-        .status(400)
-        .json({ mensaje: "No se proporcionaron imágenes para eliminar" });
-    }
+   // Comprobar si el usuario está bloqueado
+    if (usuario.estadoCuenta.estado === "bloqueado") {
+      const now = new Date();
+      const blockTime = new Date(usuario.estadoCuenta.tiempoDeBloqueo);
+      const timeDifference = (now - blockTime) / 1000;
 
-    // Busca el informe técnico por ID
-    const informe = await InformeTecnico.findById(id);
-    if (!informe) {
-      return res.status(404).json({ mensaje: "Informe técnico no encontrado" });
-    }
+      const remainingTimeInSeconds = BLOCK_TIME_MINUTES * 60 - timeDifference;
 
-    // Elimina las imágenes de Cloudinary
-    for (const imagen of imagenesParaEliminar) {
-      try {
-        await deleteImage(imagen.public_id);
-      } catch (error) {
-        console.error("Error al eliminar la imagen de Cloudinary:", error);
-        return res
-          .status(500)
-          .json({ mensaje: "Error al eliminar una de las imágenes" });
-      }
-    }
+      const remainingMinutes = Math.floor(remainingTimeInSeconds / 60); // calcular minutos
+      const remainingSeconds = Math.floor(remainingTimeInSeconds % 60); // calcular segundos
 
-    // Actualiza el informe técnico para remover las imágenes eliminadas
-    informe.informe.solicitud.imagenes =
-      informe.informe.solicitud.imagenes.filter(
-        (img) =>
-          !imagenesParaEliminar.some(
-            (elimImg) => elimImg.public_id === img.public_id
-          )
-      );
-
-    // Guarda los cambios en la base de datos
-    await informe.save();
-    res.status(200).json({ mensaje: "Imágenes eliminadas correctamente" });
-  } catch (error) {
-    console.error("Error al eliminar imágenes del informe técnico:", error);
-    res
-      .status(500)
-      .json({ mensaje: "Error interno del servidor", error: error.message });
-  }
-};
-export const subirImagenes = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Verifica si se han proporcionado archivos en la solicitud
-    if (!req.files || Object.keys(req.files).length === 0) {
-      return res
-        .status(400)
-        .json({ mensaje: "No se proporcionaron imágenes para subir" });
-    }
-
-    // Busca el informe técnico por ID
-    const informe = await InformeTecnico.findById(id);
-    if (!informe) {
-      return res.status(404).json({ mensaje: "Informe técnico no encontrado" });
-    }
-
-    const imagenes = [];
-    const fileKeys = Object.keys(req.files);
-
-    // Procesa y sube cada archivo
-    for (const key of fileKeys) {
-      const file = req.files[key];
-      try {
-        const result = await uploadImage(file.tempFilePath || file.path);
-        imagenes.push({
-          public_id: result.public_id,
-          secure_url: result.secure_url,
+      if (remainingTimeInSeconds > 0) {
+        return res.status(401).json({
+          title: "Usuario bloqueado",
+          message: `El usuario se encuentra bloqueado. Tiempo restante: ${remainingMinutes} minutos y ${remainingSeconds} segundos.`,
+          minutos: remainingMinutes,
+          segundos: remainingSeconds,
+          datosCuenta: usuario.estadoCuenta,
         });
-        await fs.unlink(file.tempFilePath || file.path); // Elimina el archivo temporal después de subirlo
-      } catch (error) {
-        console.error("Error al procesar la imagen:", error);
-        return res
-          .status(500)
-          .json({ mensaje: "Error al procesar una de las imágenes" });
+      } else {
+        // Desbloquear la cuenta
+        usuario.estadoCuenta.estado = "activa";
+        usuario.estadoCuenta.intentosFallidos = 0;
+        usuario.estadoCuenta.tiempoDeBloqueo = null; // Resetear tiempo de bloqueo
+        await usuario.estadoCuenta.save(); // Guardar cambios
       }
     }
 
-    // Actualiza el informe técnico con las nuevas imágenes
-    informe.informe.solicitud.imagenes = [
-      ...informe.informe.solicitud.imagenes,
-      ...imagenes,
-    ];
+    const isPasswordValid = await bcrypt.compare(password, usuario.password);
 
-    // Guarda los cambios en la base de datos
-    await informe.save();
-    res
-      .status(200)
-      .json({ mensaje: "Imágenes subidas correctamente", imagenes });
+    if (!isPasswordValid) {
+      // Incrementar intentos fallidos
+      usuario.estadoCuenta.intentosFallidos += 1;
+      usuario.estadoCuenta.fechaUltimoIntentoFallido = new Date();
+
+      // Comprobar si se alcanzó el límite de intentos fallidos
+      if (
+        usuario.estadoCuenta.intentosFallidos >= 5 &&
+        usuario.estadoCuenta.estado !== "bloqueado"
+      ) {
+        usuario.estadoCuenta.estado = "bloqueado";
+        usuario.estadoCuenta.vecesDeBloqueos += 1;
+        usuario.estadoCuenta.fechaDeUltimoBloqueo = new Date(); // Registrar fecha del último bloqueo
+        usuario.estadoCuenta.tiempoDeBloqueo = new Date();
+      }
+
+      await usuario.estadoCuenta.save();
+      return res.status(401).json({
+        title: "Contraseña incorrecta",
+        message:
+          "La contraseña es incorrecta numero de intentos:" +
+          usuario.estadoCuenta.intentosFallidos,
+        datosCuenta: usuario.estadoCuenta,
+      });
+    }
+
+    usuario.estadoCuenta.intentosFallidos = 0;
+    await usuario.estadoCuenta.save();
+
+    if (!usuario.rol) {
+      // Si el usuario no tiene un rol, enviar un mensaje de error
+      return res.status(401).send("El usuario no tiene un rol asignado");
+    }
+    const token = jwt.sign(
+      { _id: usuario._id, rol: usuario.rol },
+      process.env.JWT_SECRET || "secret", // Mejor usar variables de entorno para el secreto
+      { expiresIn: "24h" } // Token expira en 1 hora
+    );
+
+    console.log("Token JWT generado:", token);
+
+    // Si deseas usar cookies para el token:
+    res.cookie("token", token, {
+      httpOnly: true, // Evita que JavaScript en el cliente acceda a la cookie
+      secure: process.env.NODE_ENV === "production", // Solo se envía por HTTPS en producción
+      sameSite: "Strict", // Evita ataques CSRF
+      maxAge: 3600000, // La cookie expira en 1 hora
+    });
+    return res.status(200).json({ token, rol: usuario.rol });
   } catch (error) {
-    console.error("Error al subir imágenes al informe técnico:", error);
-    res
-      .status(500)
-      .json({ mensaje: "Error interno del servidor", error: error.message });
+    console.error("Error en el servidor:", error);
+    return res.status(500).send("Error en el servidor: " + error.message);
   }
 };
+
+// exports.verificarCodigo = async (req, res) => {
+//   try {
+//     const { email, codigo } = req.body;
+//     // let usuario;
+//     const usuario = await Usuario.findOne({ email, codigoVerificacion });
+
+//     console.table([
+//       "correo recibido:",
+//       email,
+//       "codigoVerificacion recibido:",
+//       codigoVerificacion,
+//     ]);
+//     // Verificar si el código es válido
+//     const isCodigoValido = await bcrypt.compare(
+//       codigo,
+//       usuario.codigoVerificacion
+//     );
+//     if (!isCodigoValido) {
+//       return res
+//         .status(401)
+//         .json({ message: "Código de verificación incorrecto." });
+//     }
+
+//     // Generar el token JWT
+//     const token = jwt.sign(
+//       { _id: usuario._id, rol: usuario.rol },
+//       process.env.JWT_SECRET || "secret",
+//       {
+//         expiresIn: "1h", // El token expirará en 1 hora
+//       }
+//     );
+
+//     console.log("aqui llego tambien :");
+
+//     // Si el usuario tiene un rol, firmar el token JWT con el rol incluido
+//     // const token = jwt.sign({ _id: usuario._id, rol: usuario.rol }, "secret");
+//     return res.status(200).json({ token, rol: usuario.rol });
+//   } catch (error) {
+//     console.log("ohh no :", error);
+//     return res.status(500).send("Error en el servidor: " + error);
+//   }
+// };
