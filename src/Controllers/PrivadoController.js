@@ -1,9 +1,5 @@
 const { Politicas } = require("../Models/PrivadoModel");
-const {
-  AcercaDe,
-  Contacto,
-  Pregunta,
-} = require("../Models/PrivadoModel.js");
+const { AcercaDe, Contacto, Pregunta } = require("../Models/PrivadoModel.js");
 
 exports.createAcercaDe = async (req, res) => {
   try {

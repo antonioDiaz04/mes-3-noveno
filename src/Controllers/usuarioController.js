@@ -1,4 +1,4 @@
-const { Usuario,EstadoCuenta } = require("../Models/UsuarioModel");
+const { Usuario, EstadoCuenta } = require("../Models/UsuarioModel");
 require("../Routes/UsuarioRoute");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
@@ -149,7 +149,7 @@ exports.crearUsuario = async (req, res) => {
       email: email,
       telefono: telefonoSinEspacios,
       password: hashedPassword,
-      estadoCuenta: nuevoEstadoCuenta._id, 
+      estadoCuenta: nuevoEstadoCuenta._id,
     });
 
     const resultado = await usuario.save();
@@ -158,6 +158,42 @@ exports.crearUsuario = async (req, res) => {
       usuario: resultado._id,
       message: "exitoso",
     });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Error en el servidor: " + error);
+  }
+};
+
+
+exports.eliminarUsuario = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await Usuario.deleteOne({ _id: id });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "Usuario no encontrado." });
+    }
+
+    res.status(200).json({ message: "Usuario eliminado con éxito." });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Error en el servidor: " + error);
+  }
+};
+exports.editarUsuario = async (req, res) => {
+  try {
+    const { nombre, telefono, email, rol } = req.body;
+    const usuario = await Usuario.findOne({ email: email });
+    if (!usuario) {
+      return res.status(404).send("Usuario no encontrado.");
+    }
+    usuario.nombre = nombre;
+    usuario.email = email;
+    usuario.telefono = telefono;
+    usuario.rol = rol;
+    await usuario.save();
+    console.log("Usuario actualizado correctamente.");
+    res.status(200).send("Usuario actualizado correctamente.");
   } catch (error) {
     console.log(error);
     res.status(500).send("Error en el servidor: " + error);

@@ -1,5 +1,5 @@
 //importamos nuestras funciones personalizadas (crud) xd
-import { uploadImage, deleteImage } from "../util/cloudinary.js";
+import { uploadImage, deleteImage } from "../cloudinary/cloudinary";
 import fs from "fs-extra";
 
 export const eliminarImagenes = async (req, res) => {
