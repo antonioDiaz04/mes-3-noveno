@@ -29,6 +29,10 @@ const PoliticaNegocioSchema = mongoose.Schema({
         type: String,
         required: true,
       },
+      titulo: {
+        type: String,
+        required: true,
+      },
       contenido: {
         type: String,
         required: true,

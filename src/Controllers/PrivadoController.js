@@ -110,6 +110,7 @@ exports.actualizarPoliticas = async (req, res) => {
     const { titulo, contenido } = req.body;
 
     const politicaExistente = await Politicas.findById(id);
+    
     if (!politicaExistente) {
       return res.status(404).send("Política no encontrada");
     }
@@ -118,7 +119,7 @@ exports.actualizarPoliticas = async (req, res) => {
       version: politicaExistente.version,
       titulo: politicaExistente.titulo,
       contenido: politicaExistente.contenido,
-      estado: politicaExistente.estado,
+      estado: "no vigente",
       fechaCreacion: new Date(),
     });
 
