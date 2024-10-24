@@ -64,12 +64,29 @@ exports.updateAcercaDe = async (req, res) => {
   }
 };
 
-// Crear nuevas políticas
+// Crear nuevas políticas o actualizar la existente
 exports.crearPoliticas = async (req, res) => {
   try {
-    const nuevaPolitica = new Politica(req.body);
+    const { titulo, contenido } = req.body;
+
+    const nuevaVersion = "1.0";
+
+    // Crear una nueva instancia de la política
+    const nuevaPolitica = new Politicas({
+      titulo: titulo,
+      contenido: contenido,
+      version: nuevaVersion,
+      estado: "vigente",
+      historial: [],
+    });
+
+    // Guardar la nueva política
     await nuevaPolitica.save();
-    return res.status(201).json({ message: "Política creada exitosamente" });
+
+    return res.status(201).json({
+      message: "Política creada exitosamente",
+      politica: nuevaPolitica,
+    });
   } catch (error) {
     console.log("Error al crear políticas:", error);
     return res.status(500).send("Error en el servidor: " + error);
@@ -79,30 +96,103 @@ exports.crearPoliticas = async (req, res) => {
 // Obtener todas las políticas
 exports.obtenerPoliticas = async (req, res) => {
   try {
-    const politicas = await Politicas.find();
+    const politicas = await Politicas.find().sort({ version: -1 });
     return res.status(200).json(politicas);
   } catch (error) {
     console.log("Error al obtener políticas:", error);
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
-
 // Actualizar políticas existentes
 exports.actualizarPoliticas = async (req, res) => {
   try {
-    const { id } = req.body;
-    const politicaActualizada = await Politica.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
-    if (!politicaActualizada) {
+    const { id } = req.params;
+    const { titulo, contenido } = req.body;
+
+    const politicaExistente = await Politicas.findById(id);
+    if (!politicaExistente) {
       return res.status(404).send("Política no encontrada");
     }
+
+    politicaExistente.historial.push({
+      version: politicaExistente.version,
+      titulo: politicaExistente.titulo,
+      contenido: politicaExistente.contenido,
+      estado: politicaExistente.estado,
+      fechaCreacion: new Date(),
+    });
+
+    // Incrementar la versión
+    const nuevaVersion = (parseFloat(politicaExistente.version) + 1).toFixed(1);
+
+    // Actualizar los campos de la política
+    politicaExistente.titulo = titulo;
+    politicaExistente.contenido = contenido;
+    politicaExistente.version = nuevaVersion;
+    politicaExistente.estado = "vigente"; // Asumiendo que el nuevo contenido es vigente
+
+    const politicaActualizada = await politicaExistente.save();
+
     return res.status(200).json({
       message: "Política actualizada exitosamente",
       politica: politicaActualizada,
     });
   } catch (error) {
     console.log("Error al actualizar políticas:", error);
+    return res.status(500).send("Error en el servidor: " + error);
+  }
+};
+
+// Eliminar una política específica
+exports.eliminarPolitica = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Buscar y eliminar la política por su ID
+    const politica = await Politicas.findByIdAndDelete(id);
+
+    // Si no se encuentra la política, devolver un mensaje de error
+    if (!politica) {
+      return res.status(404).json({ message: "Política no encontrada" });
+    }
+
+    // Responder con un código 204 si la eliminación fue exitosa
+    res.status(204).send();
+  } catch (error) {
+    console.error("Error al eliminar política:", error);
+    res.status(500).json({
+      mensaje: "Error interno del servidor",
+      error: error.message,
+    });
+  }
+};
+
+exports.obtenerHistorialPolitica = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Buscar la política por su ID
+    const politica = await Politicas.findById(id);
+    if (!politica) {
+      return res.status(404).send("Política no encontrada");
+    }
+
+    const historialCompleto = [
+      {
+        version: politica.version,
+        titulo: politica.titulo,
+        contenido: politica.contenido,
+        estado: politica.estado,
+        fechaCreacion: politica.fechaCreacion, // Asegúrate de tener esta propiedad en tu esquema
+      },
+      ...politica.historial, // Agregar el historial anterior
+    ];
+
+    return res.status(200).json({
+      historial: historialCompleto,
+    });
+  } catch (error) {
+    console.log("Error al obtener el historial de la política:", error);
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
