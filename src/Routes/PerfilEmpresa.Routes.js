@@ -29,4 +29,5 @@ router.put(
   editarPerfilEmpresa
 );
 
+
 module.exports = router;
