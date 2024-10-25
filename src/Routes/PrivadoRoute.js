@@ -14,7 +14,7 @@ const {
   actualizarTerminosYCondiciones,
   obtenerTerminosYCondiciones,
   eliminarTerminosYCondiciones,
-  obtenerHistorialTerminosYCondiciones,
+  obtenerHistorialTerminosYCondiciones,obtenerTerminosYCondicionesVigentes,
 } = require("../Controllers/PrivadoController");
 const {
 crearDeslindeLegal,actualizarDeslindeLegal,eliminarDeslindeLegal,obtenerDeslindesLegales,obtenerHistorialDeslindeLegal
@@ -27,6 +27,7 @@ router.get(
   obtenerHistorialTerminosYCondiciones
 );
 router.get("/obtenerHistorialPoliticas/:id", obtenerHistorialPolitica);
+router.get("/obtenerTerminosYCondicionesVigentes", obtenerTerminosYCondicionesVigentes);
 
 router.post("/crearPoliticas", crearPoliticas);
 

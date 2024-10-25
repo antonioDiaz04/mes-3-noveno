@@ -279,7 +279,6 @@ exports.obtenerTerminosYCondiciones = async (req, res) => {
 
     const fechaHoy = new Date();
 
-    // Actualizar el estado de las políticas que han pasado su fecha de vigencia
     for (const termino of terminos) {
       if (
         new Date(termino.fechaVigencia) < fechaHoy &&
@@ -294,7 +293,43 @@ exports.obtenerTerminosYCondiciones = async (req, res) => {
     console.error("Error al obtener términos y condiciones:", error);
     return res.status(500).send("Error en el servidor: " + error);
   }
+};exports.obtenerTerminosYCondicionesVigentes = async (req, res) => {
+  try {
+    // Buscar todos los términos que están vigentes
+    const terminos = await TerminosYCondiciones.find({
+      estado: "vigente",
+    });
+
+    // Si no hay términos vigentes, retornar 404
+    if (terminos.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No hay términos y condiciones vigentes disponibles" });
+    }
+
+    const fechaHoy = new Date();
+
+    // Cambiar el estado de los términos que han pasado su fecha de vigencia
+    for (const termino of terminos) {
+      if (new Date(termino.fechaVigencia) < fechaHoy) {
+        termino.estado = "no vigente"; // Cambiar a "no vigente"
+        await termino.save(); // Guardar los cambios
+      }
+    }
+
+    // Filtrar nuevamente para devolver solo los vigentes después de actualizar el estado
+    const terminosVigentes = terminos.filter(
+      (termino) => termino.estado === "vigente"
+    );
+
+    return res.status(200).json(terminosVigentes); // Retornar términos vigentes
+  } catch (error) {
+    console.error("Error al obtener términos y condiciones:", error);
+    return res.status(500).send("Error en el servidor: " + error);
+  }
 };
+
+
 
 exports.actualizarTerminosYCondiciones = async (req, res) => {
   try {
