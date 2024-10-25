@@ -1,4 +1,8 @@
-const { Politicas, TerminosYCondiciones,Deslindelegal  } = require("../Models/PrivadoModel");
+const {
+  Politicas,
+  TerminosYCondiciones,
+  Deslindelegal,
+} = require("../Models/PrivadoModel");
 const { AcercaDe, Contacto, Pregunta } = require("../Models/PrivadoModel.js");
 
 // Acerca de
@@ -268,7 +272,9 @@ exports.obtenerTerminosYCondiciones = async (req, res) => {
       estado: { $ne: "eliminado" },
     });
     if (!terminos) {
-      return res.status(404).json({ message: "No hay términos y condiciones disponibles" });
+      return res
+        .status(404)
+        .json({ message: "No hay términos y condiciones disponibles" });
     }
 
     const fechaHoy = new Date();
@@ -303,7 +309,7 @@ exports.actualizarTerminosYCondiciones = async (req, res) => {
     if (!fechaVigencia || isNaN(new Date(fechaVigencia).getTime())) {
       return res.status(400).json({ message: "Fecha de vigencia inválida" });
     }
-    console.log(titulo, contenido, fechaVigencia)
+    console.log(titulo, contenido, fechaVigencia);
 
     // Guardar el historial de la versión anterior
     terminosExistentes.historial.push({
@@ -400,8 +406,6 @@ exports.obtenerHistorialTerminosYCondiciones = async (req, res) => {
   }
 };
 
-
-
 exports.crearDeslindeLegal = async (req, res) => {
   try {
     const { titulo, contenido, fechaVigencia } = req.body;
@@ -437,7 +441,9 @@ exports.obtenerDeslindesLegales = async (req, res) => {
     });
 
     if (!deslindes) {
-      return res.status(404).json({ message: "No hay deslindes legales disponibles" });
+      return res
+        .status(404)
+        .json({ message: "No hay deslindes legales disponibles" });
     }
 
     const fechaHoy = new Date();
@@ -538,7 +544,7 @@ exports.obtenerHistorialDeslindeLegal = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deslinde = await Deslindelegal  .findById(id);
+    const deslinde = await Deslindelegal.findById(id);
     if (!deslinde) {
       return res.status(404).send("Deslinde legal no encontrado");
     }

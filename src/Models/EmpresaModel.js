@@ -14,6 +14,7 @@ const DatosAtelierSchema = mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: "RedesSociales", // Referencia al modelo RedesSociales
     },
+    
   ],
   slogan: {
     type: String,
@@ -43,6 +44,10 @@ const redesSocialesSchema = mongoose.Schema({
   enlace: {
     type: String,
     required: true, // Asegúrate de que haya un enlace para la plataforma
+  },
+  activo: {
+    type: Boolean,
+    default: true, // Indica si la red social está activa
   },
 });
 
