@@ -11,6 +11,7 @@ const corsOptions = {
   //Lista de URLs clientes permitidas
   origin: [
     // "https://purificadoras.vercel.app",
+    "http://proyecto-atr.vercel.app",
     "http://localhost:4200", //!prueba local
   ],
   credentials: true,
@@ -27,7 +28,6 @@ app.use("/api/v1/verificacion", require("./Routes/CorreoRoute"));
 app.use("/api/v1/verificar", require("./Routes/catpch"));
 app.use("/api/v1/pruebaSubirImagen", require("./Routes/cloudinary.Routes"));
 app.use("/api/v1/Empresa", require("./Routes/PerfilEmpresa.Routes"));
-
 
 app.use("/api/v1/autentificacion", require("./Routes/AuthRoute"));
 // Ruta para acciones con rol de Administrador de la pagina
