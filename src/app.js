@@ -8,13 +8,13 @@ const app = express();
 // conectamos a la base de datos
 conectarDB();
 const corsOptions = {
-  //Lista de URLs clientes permitidas
   origin: [
-    // "https://purificadoras.vercel.app",
-    "http://proyecto-atr.vercel.app",
-    "http://localhost:4200", //!prueba local
+    "https://proyecto-atr.vercel.app", // URL de tu frontend en producción
+    "http://localhost:4200" // URL local para desarrollo
   ],
-  credentials: true,
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  credentials: true, // Permitir el envío de cookies
+  optionsSuccessStatus: 200, // Responder exitosamente a solicitudes preflight
 };
 
 app.use(cookieParser());
