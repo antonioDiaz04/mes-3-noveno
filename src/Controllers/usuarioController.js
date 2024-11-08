@@ -123,6 +123,30 @@ exports.EstadoUsuario = async (req, res) => {
   }
 };
 
+exports.checkEmail = async (req, res) => {
+  try {
+    let  email = req.body.email;
+    console.log(req.body);
+    // Verifica si el correo ya está registrado
+    const record = await Usuario.findOne({ email: email });
+
+    if (record) {
+      // Responde con un mensaje de error si el correo ya existe
+      return res.status(400).json({ message: "El email ya está registrado" });
+    }
+
+    // Respuesta de éxito si el email está disponible
+    return res.status(200).json({ message: "El email está disponible" });
+  } catch (error) {
+    console.error(error);
+    // Responde con un mensaje de error en caso de excepción
+    res
+      .status(500)
+      .json({ message: "Error en el servidor", error: error.toString() });
+  }
+};
+
+
 exports.crearUsuario = async (req, res) => {
   try {
     let nombre = req.body.nombre;

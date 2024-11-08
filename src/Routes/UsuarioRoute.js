@@ -7,10 +7,11 @@ const UsuarioController = require("../Controllers/usuarioController");
 // router.get("/admin", UsuarioController.adminRoute);
 // agrega cliente
 router.post("/", UsuarioController.crearUsuario);
+router.post("/check-email", UsuarioController.checkEmail);
+
 router.put("/editarUsuario/:id", UsuarioController.editarUsuario);
 router.delete("/eliminarUsuario/:id", UsuarioController.eliminarUsuario);
 
-//
 // router.get("/", UsuarioController.clienteRoute);
 router.put("/actualizaRol/:id", UsuarioController.actualizaRolUsuario);
 router.put("/actualiza/:id", UsuarioController.actualizaDatos);

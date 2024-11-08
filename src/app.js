@@ -14,7 +14,7 @@ const corsOptions = {
     "http://localhost:4200" // URL local para desarrollo
   ],
   // methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  // credentials: true, // Permitir el envío de cookies
+  credentials: true, // Permitir el envío de cookies
   // optionsSuccessStatus: 200, // Responder exitosamente a solicitudes preflight
 };
 
