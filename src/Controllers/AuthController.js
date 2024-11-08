@@ -20,43 +20,39 @@ exports.Login = async (req, res) => {
 
     if (!usuario) {
       console.log("Error: El correo no existe");
-      return res.status(401).send("El correo no existe");
+      return res.status(401).json({ message: "El correo no existe" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, usuario.password);
     if (!isPasswordValid) {
       console.log("Error: Contraseña incorrecta");
-      return res.status(401).send("Contraseña incorrecta");
+      return res.status(401).json({ message: "Contraseña incorrecta" });
     }
 
-    // Verificar si el usuario tiene un rol
     if (!usuario.rol) {
       console.log("Error: El usuario no tiene un rol asignado");
-      return res.status(401).send("El usuario no tiene un rol asignado");
+      return res.status(401).json({ message: "El usuario no tiene un rol asignado" });
     }
 
-    // Firmar el token JWT con el rol incluido y una expiración de 1 hora
     const token = jwt.sign(
       { _id: usuario._id, rol: usuario.rol },
-      process.env.JWT_SECRET || "secret", // Mejor usar variables de entorno para el secreto
-      { expiresIn: "24h" } // Token expira en 1 hora
+      process.env.JWT_SECRET || "secret",
+      { expiresIn: "24h" }
     );
 
     console.log("Token JWT generado:", token);
 
-    // Si deseas usar cookies para el token:
     res.cookie("token", token, {
-      httpOnly: true, // Evita que JavaScript en el cliente acceda a la cookie
-      secure: process.env.NODE_ENV === "production", // Solo se envía por HTTPS en producción
-      sameSite: "Strict", // Evita ataques CSRF
-      maxAge: 3600000, // La cookie expira en 1 hora
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 3600000,
     });
 
-    // Devolver respuesta con token en el cuerpo o como cookie
     return res.status(200).json({ token, rol: usuario.rol });
   } catch (error) {
     console.error("Error en el servidor:", error);
-    return res.status(500).send("Error en el servidor: " + error.message);
+    return res.status(500).json({ message: "Error en el servidor: " + error.message });
   }
 };
 
