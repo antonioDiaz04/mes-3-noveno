@@ -10,8 +10,9 @@ const app = express();
 conectarDB();
 const corsOptions = {
   origin: [
-    "https://proyecto-atr.vercel.app", // URL de tu frontend en producción
-    "http://localhost:4200" // URL local para desarrollo
+    // "https://proyecto-atr.vercel.app", // URL de tu frontend en producción
+    "http://localhost:4200", // URL local para desarrollo
+    // "https://nhnwlf08-4200.usw3.devtunnels.ms/" // URL local para desarrollo
   ],
   // methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true, // Permitir el envío de cookies
