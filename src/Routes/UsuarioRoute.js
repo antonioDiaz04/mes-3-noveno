@@ -8,6 +8,7 @@ const UsuarioController = require("../Controllers/usuarioController");
 // agrega cliente
 router.post("/", UsuarioController.crearUsuario);
 router.post("/check-email", UsuarioController.checkEmail);
+router.post("/check-code", UsuarioController.checkCode);
 
 router.put("/editarUsuario/:id", UsuarioController.editarUsuario);
 router.delete("/eliminarUsuario/:id", UsuarioController.eliminarUsuario);

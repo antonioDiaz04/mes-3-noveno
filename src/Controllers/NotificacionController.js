@@ -47,7 +47,8 @@ exports.enviarNotificacionyCuerpo = async (req, res) => {
     console.error("Error sending notification", err);
     res.status(500).send("Error sending notification");
   }
-};exports.enviarNotificacionCorreo = async (req, res) => {
+};
+exports.enviarNotificacionCorreo = async (req, res) => {
   const pushSubscription = {
     endpoint:
       "https://fcm.googleapis.com/fcm/send/cG9WhFIPP3A:APA91bFZ5N5SGliIWMF3wjQdoUdXEgCduuLr2-GUXEan--zTbDbDGxvyzuc0yed1yYlxIXXTpU3_Q810k_n54ATbNpu-ux87i4c2_tq98UNIRDPGhKp6e8RyWXc7EGSgpXOEsTsgfkxL",

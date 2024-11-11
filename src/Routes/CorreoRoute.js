@@ -4,8 +4,9 @@ const router = express.Router();
 const CorreoController = require("../Controllers/CorreoController");
 
 router.post("/", CorreoController.enviarCorreoyCuerpo);
-router.post("/confirmar", CorreoController.confirmar);
-router.post("/confirmar-usuario", CorreoController.confirmar);
+router.post("/code", CorreoController.confirmarVerficacion);
+// router.post("/codeycorreo", CorreoController.confirmarVerficacionCodigoCorreo);
+// router.post("/confirmar-usuario", CorreoController.confirmar);
 router.post("/activar-cuenta", CorreoController.activarCuenta);
 
 // router.post("/", CorreoController.enviarCorreoyCuerpo);

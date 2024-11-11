@@ -125,7 +125,7 @@ exports.EstadoUsuario = async (req, res) => {
 
 exports.checkEmail = async (req, res) => {
   try {
-    let  email = req.body.email;
+    let email = req.body.email;
     console.log(req.body);
     // Verifica si el correo ya está registrado
     const record = await Usuario.findOne({ email: email });
@@ -145,7 +145,28 @@ exports.checkEmail = async (req, res) => {
       .json({ message: "Error en el servidor", error: error.toString() });
   }
 };
+exports.checkCode = async (req, res) => {
+  try {
+    let code = req.body.code;
+    console.log(req.body);
+    // Verifica si el correo ya está registrado
+    const record = await Usuario.findOne({ codigoVerificacion: code });
 
+    if (!record) {
+      // Responde con un mensaje de error si el correo ya existe
+      return res.status(400).json({ message: "El codigo es incorrecto" });
+    }
+
+    // Respuesta de éxito si el email está disponible
+    return res.status(200).json({ message: "El codigo es correcto" });
+  } catch (error) {
+    console.error(error);
+    // Responde con un mensaje de error en caso de excepción
+    res
+      .status(500)
+      .json({ message: "Error en el servidor", error: error.toString() });
+  }
+};
 
 exports.crearUsuario = async (req, res) => {
   try {
@@ -191,7 +212,6 @@ exports.crearUsuario = async (req, res) => {
     res.status(500).send("Error en el servidor: " + error);
   }
 };
-
 
 exports.eliminarUsuario = async (req, res) => {
   try {
@@ -319,12 +339,11 @@ exports.obtenerUsuarios = async (req, res) => {
     console.log("error de consulta");
   }
 };
-
 exports.actualizarPasswordxCorreo = async (req, res) => {
   try {
-    let { correo } = req.body.correo;
-    let { token } = req.body.token;
+    let { email } = req.body; // Corrección aquí
     let nuevaPassword = req.body.nueva;
+    console.table(req.body);
 
     // Verificar si nuevaPassword está definido y no es una cadena vacía
     if (!nuevaPassword || typeof nuevaPassword !== "string") {
@@ -337,7 +356,7 @@ exports.actualizarPasswordxCorreo = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(nuevaPassword, salt);
 
-    const usuario = await Usuario.findOne({ correo: correo, token: token });
+    const usuario = await Usuario.findOne({ email: email });
 
     if (!usuario) {
       return res.status(404).json({ message: "Usuario no encontrado" });
@@ -357,6 +376,7 @@ exports.actualizarPasswordxCorreo = async (req, res) => {
       .json({ message: "Ocurrió un error al actualizar la contraseña" });
   }
 };
+
 
 exports.actualizarPasswordxPregunta = async (req, res) => {
   try {
