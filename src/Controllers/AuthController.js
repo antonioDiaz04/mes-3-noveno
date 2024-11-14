@@ -1,26 +1,47 @@
 const { Usuario } = require("../Models/UsuarioModel");
-
+const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
 // const webpush = require("../Shareds/webpush");
 
+const verifyTurnstile = async (captchaToken) => {
+  console.log(captchaToken)
+  const secretKey = process.env.CLOUDFLARE_SECRET_KEY; // Tu clave secreta de Cloudflare
+  const url = `https://challenges.cloudflare.com/turnstile/v0/siteverify`;
+
+  try {
+    const response = await axios.post(url, {
+      secret: secretKey,
+      response: captchaToken, // El token del CAPTCHA recibido del cliente
+    });
+
+    if (response.data.success) {
+      console.error("El CAPTCHA es válido:", response.data);
+      return true; // El CAPTCHA es válido
+    } else {
+      console.error("El CAPTCHA no es válido:", response.data);
+      return false; // El CAPTCHA no es válido
+    }
+  } catch (error) {
+    console.error("Error al verificar el CAPTCHA:", error);
+    return false;
+  }
+};
 exports.Login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password,captchaToken } = req.body;
     let usuario;
 
-    console.log("Request body:", req.body);
     usuario = await Usuario.findOne({ email });
-
-    console.table([
-      ["Correo recibido:", email],
-      ["Password recibido:", password],
-    ]);
 
     if (!usuario) {
       console.log("Error: El correo no existe");
       return res.status(401).json({ message: "El correo no existe" });
+    }
+       const isCaptchaValid = await verifyTurnstile(captchaToken);
+    if (!isCaptchaValid) {
+      return res.status(400).json({ message: "Captcha inválido" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, usuario.password);
@@ -49,7 +70,7 @@ exports.Login = async (req, res) => {
       maxAge: 3600000,
     });
 
-    return res.status(200).json({ token, rol: usuario.rol });
+    return res.status(200).json({ token, rol: usuario.rol, captchaValid: isCaptchaValid });
   } catch (error) {
     console.error("Error en el servidor:", error);
     return res.status(500).json({ message: "Error en el servidor: " + error.message });
