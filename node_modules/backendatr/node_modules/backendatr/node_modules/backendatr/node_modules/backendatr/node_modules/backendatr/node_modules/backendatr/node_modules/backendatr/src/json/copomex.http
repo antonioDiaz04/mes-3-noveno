@@ -1,0 +1,156 @@
+
+Obtener municipio por estado
+https://api.copomex.com/query/get_municipio_por_estado/{Estado}?token={tokenCOPOMEX}
+Example
+https://api.copomex.com/query/get_municipio_por_estado/Aguascalientes?token=e5c85720-9a02-4f1b-9175-9d922653ae7e
+json response get
+{
+  "error": false,
+  "code_error": 0,
+  "error_message": null,
+  "response": {
+    "municipios": [
+      "Pachuca de Soto",
+      "Mineral del Chico",
+      "Mineral del Monte",
+      "Ajacuba",
+      "San Agustín Tlaxiaca",
+      "Mineral de la Reforma",
+      "Zapotlán de Juárez",
+      "Jacala de Ledezma",
+      "Pisaflores",
+      "Pacula",
+      "La Misión",
+      "Chapulhuacán",
+      "Ixmiquilpan",
+      "Zimapán",
+      "Nicolás Flores",
+      "Cardonal",
+      "Tasquillo",
+      "Alfajayucan",
+      "Huichapan",
+      "Tecozautla",
+      "Nopala de Villagrán",
+      "Actopan",
+      "Santiago de Anaya",
+      "San Salvador",
+      "Francisco I. Madero",
+      "El Arenal",
+      "Mixquiahuala de Juárez",
+      "Progreso de Obregón",
+      "Chilcuautla",
+      "Tezontepec de Aldama",
+      "Tlahuelilpan",
+      "Tula de Allende",
+      "Tepeji del Río de Ocampo",
+      "Chapantongo",
+      "Tepetitlán",
+      "Tetepango",
+      "Tlaxcoapan",
+      "Atitalaquia",
+      "Atotonilco de Tula",
+      "Huejutla de Reyes",
+      "San Felipe Orizatlán",
+      "Jaltocán",
+      "Huautla",
+      "Atlapexco",
+      "Huazalingo",
+      "Yahualica",
+      "Xochiatipan",
+      "Molango de Escamilla",
+      "Tepehuacán de Guerrero",
+      "Lolotla",
+      "Tlanchinol",
+      "Tlahuiltepa",
+      "Juárez Hidalgo",
+      "Zacualtipán de Ángeles",
+      "Calnali",
+      "Xochicoatlán",
+      "Tianguistengo",
+      "Atotonilco el Grande",
+      "Eloxochitlán",
+      "Metztitlán",
+      "San Agustín Metzquititlán",
+      "Metepec",
+      "Huehuetla",
+      "San Bartolo Tutotepec",
+      "Agua Blanca de Iturbide",
+      "Tenango de Doria",
+      "Huasca de Ocampo",
+      "Acatlán",
+      "Omitlán de Juárez",
+      "Epazoyucan",
+      "Tulancingo de Bravo",
+      "Acaxochitlán",
+      "Cuautepec de Hinojosa",
+      "Santiago Tulantepec de Lugo Guerrero",
+      "Singuilucan",
+      "Tizayuca",
+      "Zempoala",
+      "Tolcayuca",
+      "Villa de Tezontepec",
+      "Apan",
+      "Tlanalapa",
+      "Almoloya",
+      "Emiliano Zapata",
+      "Tepeapulco"
+    ]
+  }
+}
+
+
+
+
+
+
+Obtener colonias por municipio
+https://api.copomex.com/query/get_colonia_por_municipio/{municipio}?token={tokenCOPOMEX}
+Example
+
+GET https://api.copomex.com/query/get_colonia_por_municipio/Jaltocan?token=e5c85720-9a02-4f1b-9175-9d922653ae7e
+
+json respuesta
+{
+
+      "error": false,
+      "code_error": 0,
+      "error_message": null,
+      "response": {
+            "colonia": [
+                  "JaltocÃ¡n Centro",
+                  "La Capilla",
+                  "Tlalnepantla",
+                  "Mirador",
+                  "Toltitla",
+                  "El Palmar",
+                  "Chalahuitzintla",
+                  "El Rosario",
+                  "Pahuatitla",
+                  "Amaxac I",
+                  "El Chote",
+                  "Petacotita",
+                  "Amaxac II",
+                  "Tepexicuicuil",
+                  "Nuevo Rosario",
+                  "RevoluciÃ³n Mexicana",
+                  "Chiconcoac",
+                  "Aguacatitla",
+                  "Vinazco",
+                  "La Lima",
+                  "Cuatecomaco",
+                  "Huichapa",
+                  "Matachilillo",
+                  "Potrero ZactipÃ¡n",
+                  "Cuatzatzas",
+                  "Tzinancatitla",
+                  "Octatitla",
+                  "Ahuayo",
+                  "La IlusiÃ³n",
+                  "Anacleto Ramos"
+            ]
+      }
+
+}
+
+
+

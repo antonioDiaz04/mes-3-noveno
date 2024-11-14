@@ -1,0 +1,106 @@
+
+
+# crear usuario
+
+
+
+Request URL:http://localhost:4000/usuarios/signUp
+Request Method:POST
+
+Body
+{
+  "nombre": "adm",
+  "email": "correo@ejemplo.com",
+  "password1": "contraseña123",
+  "passwordConfirmar": "contraseña123",
+  "longitud": "-98.52107347143587",
+  "latitud": "21.18937867390761",
+  "telefono": "1234567890",
+  "numCasa": "valor_de_numero_de_casa"
+}
+
+//21.18937867390761, -98.52107347143587
+
+  .
+
+
+  # login
+
+  
+
+Request URL: http://localhost:4000/usuarios/signIn
+Request Method:POST
+
+Body
+{
+  "pass": "contraseña123",
+  "correo": "correo@ejemplo.com"
+}
+
+#Registro de purificadora
+
+
+Request URL:http://localhost:4000/purificadoraAdmin/agregacionPurificadora 
+Request Method:POST
+
+
+
+Body
+{
+  "nombre": "Juan Pérez",
+  "telefono": "1234567890",
+  "email": "juan.perez@example.com",
+  "longitud": -99.1332,
+  "latitud": 19.4326,
+  "purificadoraNombre": "Aqua Pure",
+  "calle": "Calle Falsa",
+  "codigoPostal": "01234",
+  "estado": "Ciudad de México",
+  "numero": "123"
+}
+
+
+
+
+#Registro de repartidor
+
+//POST http://localhost:4000/purificadoraRepartidores/crearRepartidores
+
+
+Body
+{
+  "password1": "miContraseñaSegura123",
+  "nombre": "Juan Pérez",
+  "telefono": "1234567890",
+  "email": "juan.perez@example.com",
+  "pregunta": "¿Cuál es tu color favorito?",
+  "respuesta": "Azul",
+  "longitud": -99.1332,
+  "latitud": 19.4326,
+  "numCasa": "123"
+}
+
+
+
+!purificadora
+
+#actualizar purificadora
+------------------------------------------------------------------{id}
+//PUT  http://localhost:4000/purificadoraAdmin/updatePurificadora/6646fb1e056585782d99ded6
+
+Body
+{
+  "nombre": "Carlos",
+  "email": "carlos.garcia@example.com",
+  "purificadoraNombre": "Agua Pura",
+  "calle": "Avenida Siempre Viva",
+  "numero": "123",
+  "estado": "Ciudad de México",
+  "codigoPostal": "01000",
+  "longitud": "-99.1332",
+  "latitud": "19.4326",
+  "telefono": "5551234567",
+  "usuario": "pepe",
+  "password1": "contraseña123"
+  
+}
