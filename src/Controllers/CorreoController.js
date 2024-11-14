@@ -2,6 +2,8 @@ const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const codigoVerificacion = Math.floor(1000 + Math.random() * 9000).toString();
 
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 const { Usuario } = require("../Models/UsuarioModel");
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -13,39 +15,29 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-exports.enviarCorreoyCuerpo = async (req, res) => {
-  try {
-    const email = req.body.email;
-    const codigo = req.body.codigoVerificacion;
-    console.log(email);
-    if (!email) {
-      return res.status(400).json({ msg: "El email es requerido" });
-    }
+// exports.enviarCorreoyCuerpo = async (req, res) => {
+//   try {
+//     const email = req.body.email;
+//     const codigo = Math.floor(1000 + Math.random() * 9000); // Generar un código de verificación de 4 dígitos
 
-    // Generar un código de verificación aleatorio (puedes personalizarlo según tus necesidades)
-    // const codigoVerificacion = Math.floor(100000 + Math.random() * 900000); // Ejemplo: código de 6 dígitos
+//     console.log(`Email: ${email}, Código: ${codigo}`);
 
-    // Actualizar el código de verificación en la base de datos
-    // const result = await Usuario.updateOne(
-    //   { email: email },
-    //   { $set: { codigoVerificacion: codigoVerificacion } }
-    // );
+//     if (!email) {
+//       return res.status(400).json({ msg: "El email es requerido" });
+//     }
 
-    // if (result.nModified === 0) {
-    //   return res
-    //     .status(404)
-    //     .json({ msg: "Usuario no encontrado o sin cambios" });
-    // }
+//     // Generar token con el código y una expiración de 15 minutos
+//     const token = jwt.sign({ codigo }, 'clave_secreta', { expiresIn: '15m' });
 
-    // Enviar el código de verificación por correo
-    enviarCodigoVerficiacionActivaCuenta(email, codigo);
+//     // Enviar el código de verificación por correo
+//     await enviarCodigoVerficiacionActivaCuenta(email, codigo);
 
-    res.status(200).json({ msg: "Correo electrónico enviado correctamente" });
-  } catch (error) {
-    console.error("Error en enviarCorreoyCuerpo:", error);
-    res.status(500).json({ msg: "Error en el servidor" });
-  }
-};
+//     res.status(200).json({ msg: "Correo electrónico enviado correctamente" });
+//   } catch (error) {
+//     console.error("Error en enviarCorreoyCuerpo:", error);
+//     res.status(500).json({ msg: "Error en el servidor" });
+//   }
+// };
 
 // Función para enviar el código de verificación por correo
 
@@ -58,6 +50,7 @@ exports.confirmarVerficacion = async (req, res) => {
     // Generar un código de verificación aleatorio de 4 dígitos
     const code = Math.floor(1000 + Math.random() * 9000);
 
+    console.log(code)
     // Actualizar el código de verificación en la base de datos
     const result = await Usuario.updateOne(
       { email: email },
@@ -69,14 +62,12 @@ exports.confirmarVerficacion = async (req, res) => {
     } else {
       console.log("No se encontró un usuario con ese email.");
     }
-
     // Verificar si se actualizó algún documento
     if (result.matchedCount === 0) {
       return res
         .status(200)
         .json({ msg: "Si el correo existe, se enviará un código" });
     }
-
     // Enviar el correo con el código de verificación
     await enviarCodigoVerficiacionActivaCuenta(email, code);
 
@@ -85,52 +76,8 @@ exports.confirmarVerficacion = async (req, res) => {
     console.error("Error en confirmarVerficacion:", error);
     res.status(500).json({ msg: "Error en el servidor" });
   }
+  
 };
-// exports.confirmar = async (req, res) => {
-//   try {
-//     const { email } = req.body;
-
-//     const mailOptions = {
-//       from: '"Atelier " <tu_correo@example.com>',
-//       to: email,
-//       subject: "Confirmar Verificación de Cuenta",
-//       html: `<p>para ${email} </p>`,
-//       html: `
-//       <div style="text-align: center;">
-//         <img
-//           src="https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGyFH5OuM6r1tACq3-mVFcYR0h90jzEayNHSH3SPMRrI51RogsRfGPAbUgPfKvg07sOtYgtuNKj9Z6QFXwTItIa&_nc_ohc=8hl8yeqpTEEQ7kNvgGedGRK&_nc_zt=23&_nc_ht=scontent.fver2-1.fna&_nc_gid=ABKLJP1JM9SqQAYgwjeYfjR&oh=00_AYBnl4LdKUUFbd65zViJYdqZvy3chdMfV2r0MnTt3CZjxw&oe=671C7743"
-//           alt="Logo"
-//           style="border-radius: 50%; width: 100px; height: 100px;"
-//         />
-//       </div>
-//       <h1>Confirmar Activación de Cuenta</h1>
-//       <p>Hola,</p>
-//       <p>Gracias por registrarte. Para activar tu cuenta, por favor confirma haciendo clic en el botón de abajo.</p>
-//       <div style="text-align: center; margin-top: 20px;">
-//         <form action="http://localhost:4200/api/v1/verificacion/" method="POST">
-//           <input type="hidden" name="email" value="${email}" />
-//           <button type="submit" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">Activar Cuenta</button>
-//         </form>
-//         <br><br>
-//         <button style="padding: 10px 20px; background-color: #F44336; color: white; border: none; border-radius: 5px; cursor: pointer;" onclick="window.location.href='http://tu-dominio.com/cancelar-verificacion';">Cancelar</button>
-//       </div>
-//       <p>Si no solicitaste esta acción, puedes ignorar este correo.</p>
-//       `,
-//     };
-
-//     transporter.sendMail(mailOptions, function (err, info) {
-//       if (err) {
-//         console.error("Error al enviar el correo electrónico:", err);
-//         return res.status(500).send("Error al enviar el correo");
-//       }
-//       console.log("Correo enviado:", info.response);
-//       return res.status(200).send("Correo de verificación enviado");
-//     });
-//   } catch (error) {
-//     console.log("Error en la verificación:", error);
-//     return res.status(500).send("Error en el servidor");
-//   }
-// };
 
 function enviarCorreo(correo) {
   const mailOptions = {
@@ -160,12 +107,14 @@ function enviarCorreo(correo) {
   });
 }
 
-function enviarCodigoVerficiacionActivaCuenta(email, code) {
+async function enviarCodigoVerficiacionActivaCuenta(email, code) {
+  const expiracion = new Date(new Date().getTime() + 15 * 60000);
+  const tiempoRestante = Math.floor((expiracion - new Date()) / 60000); // Calcular minutos restantes
+
   const mailOptions = {
     from: '"Atelier" <atelier>',
     to: email,
     subject: "Activación de cuenta",
-    text: `<p>para ${email} </p>`,
     html: `
     <div style="text-align: center;">
       <img 
@@ -176,19 +125,68 @@ function enviarCodigoVerficiacionActivaCuenta(email, code) {
     </div>
     <p>Hola,</p>
     <p>Recibimos una solicitud para activar tu cuenta. Ingresa el siguiente código para activarla:</p>
-    <p style="font-size: 20px; font-weight: bold; background-color: #f0f0f0; padding: 10px; border-radius: 5px; text-align: center;" id="codigo">${code}</p>
+    <p style="font-size: 20px; font-weight: bold; background-color: #f0f0f0; padding: 10px; border-radius: 5px; text-align: center;">${code}</p>
+    <p>Este código es válido por <strong>${tiempoRestante} minutos</strong>. Por favor, utilízalo antes de que expire.</p>
+    <p>Si no solicitaste esta verificación, ignora este mensaje.</p>
+    <p style="font-size: 12px; color: #666;">Atentamente,<br>El equipo de Atelier</p>
   `,
   };
 
-  transporter.sendMail(mailOptions, function (err, info) {
-    if (err) {
-      console.error("Error al enviar el correo electrónico:", err);
-    } else {
-      console.log("Correo electrónico enviado:", info.response);
-    }
-  });
+  return transporter.sendMail(mailOptions);
 }
 
+exports.enviarCorreoyCuerpo = async (req, res) => {
+  try {
+    const email = req.body.email;
+    const codigo = Math.floor(1000 + Math.random() * 9000); // Código de 4 dígitos
+
+    if (!email) {
+      return res.status(400).json({ msg: "El email es requerido" });
+    }
+
+    // Hashear el código
+    const hashedCode = await bcrypt.hash(codigo.toString(), 10);
+
+    // Generar token con el hash del código
+    const token = jwt.sign({ hashedCode }, "clave_secreta", { expiresIn: "15m" });
+
+    // Enviar correo con el código real
+    await enviarCodigoVerficiacionActivaCuenta(email, codigo);
+
+    // Devolver el token al cliente
+    res.status(200).json({ msg: "Correo enviado", token });
+  } catch (error) {
+    console.error("Error en enviarCorreoyCuerpo:", error);
+    res.status(500).json({ msg: "Error en el servidor" });
+  }
+};
+
+// Validar el código ingresado
+exports.validarCodigo = async (req, res) => {
+  try {
+    const { token, codigoIngresado } = req.body;
+
+    if (!token || !codigoIngresado) {
+      return res.status(400).json({ msg: "Token y código son requeridos" });
+    }
+
+    // Verificar token y obtener el hash
+    const decoded = jwt.verify(token, "clave_secreta");
+    const { hashedCode } = decoded;
+
+    // Comparar código ingresado con el hash
+    const isValid = await bcrypt.compare(codigoIngresado.toString(), hashedCode);
+
+    if (isValid) {
+      res.status(200).json({ msg: "Código validado correctamente" });
+    } else {
+      res.status(400).json({ msg: "Código inválido" });
+    }
+  } catch (error) {
+    console.error("Error en validarCodigo:", error);
+    res.status(500).json({ msg: "Error en el servidor" });
+  }
+};
 // exports.verificarCodigo = async (req, res) => {
 //   try {
 //     const { email, codigo } = req.body;
