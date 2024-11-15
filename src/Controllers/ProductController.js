@@ -92,77 +92,9 @@ exports.crearProducto = async (req, res) => {
 };
 
 
-// exports.crearProducto = async (req, res) => {
-//   // if (!req.files || !req.files.imagenPrincipal) {
-//   //   //       return res.status(400).json({ message: 'No se ha proporcionado una imagen principal.' });
-//   // }
-//   const { title, description } = req.body;
-//   const newPhoto = { title, description, imagePath: req.file.path };
-//   // const newPhoto = { imagePath: req.file.path };
-//   console.log(newPhoto);
-//   // const photo = new Photo(newPhoto);
-//   // await photo.save();
-//   return res.json({
-//     message: "Photo Saved Successfully",
-//     newPhoto,
-//   });
-// };
-
-// // Crear un nuevo producto con subida de imágenes a Cloudinary
-// exports.crearProducto = async (req, res) => {
-//   try {
-//     // Verificar si se están enviando archivos de imagen
-//     if (!req.files || !req.files.imagenPrincipal) {
-//       return res.status(400).json({ message: 'No se ha proporcionado una imagen principal.' });
-//     }
-
-//     const { otrasImagenes } = req.files;
-//     const productoData = req.body;
-
-//     // Array para almacenar los datos de las imágenes subidas
-//     const imagenesSubidas = {
-//       imagenPrincipal: null,
-//       otrasImagenes: [],
-//     };
-
-//     // Subir imagen principal
-//     const imagenPrincipalFile = req.files.imagenPrincipal[0];
-//     const resultPrincipal = await uploadImage(imagenPrincipalFile.path);
-//     imagenesSubidas.imagenPrincipal = {
-//       public_id: resultPrincipal.public_id,
-//       secure_url: resultPrincipal.secure_url,
-//     };
-//     await fs.unlink(imagenPrincipalFile.path);
-
-//     // Subir otras imágenes si están presentes
-//     if (otrasImagenes && otrasImagenes.length > 0) {
-//       for (const imagen of otrasImagenes) {
-//         const result = await uploadImage(imagen.path);
-//         imagenesSubidas.otrasImagenes.push({
-//           public_id: result.public_id,
-//           secure_url: result.secure_url,
-//         });
-//         await fs.unlink(imagen.path);
-//       }
-//     }
-
-//     // Crear un nuevo producto incluyendo las URLs de Cloudinary
-//     const nuevoProducto = new Producto({
-//       ...productoData,
-//       imagenPrincipal: imagenesSubidas.imagenPrincipal,
-//       otrasImagenes: imagenesSubidas.otrasImagenes,
-//     });
-
-//     const productoGuardado = await nuevoProducto.save();
-//     res.status(201).json(productoGuardado);
-//   } catch (error) {
-//     console.error("Error al crear el producto:", error);
-//     res.status(500).json({ message: "Error al crear el producto", error });
-//   }
-// };
-
-// Editar un producto existente con actualización de imágenes en Cloudinary
 exports.editarProducto = async (req, res) => {
+
+  
   try {
     const { imagenPrincipal, otrasImagenes, ...productoData } = req.body;
 
@@ -212,13 +144,12 @@ exports.editarProducto = async (req, res) => {
 // Eliminar un producto
 exports.eliminarProducto = async (req, res) => {
   try {
-    const productoEliminado = await Producto.findByIdAndDelete(req.params.id);
-    if (!productoEliminado) {
-      return res.status(404).json({ message: "Producto no encontrado" });
-    }
-    res.status(200).json({ message: "Producto eliminado correctamente" });
+    const { id } = req.params;
+    const result = await Producto.deleteOne({ _id: id });
+    res.status(200).json({ message: "Producto eliminado con éxito." });
   } catch (error) {
-    res.status(500).json({ message: "Error al eliminar el producto", error });
+    console.error(error);
+    res.status(500).send("Error en el servidor: " + error);
   }
 };
 

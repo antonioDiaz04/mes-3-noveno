@@ -4,8 +4,10 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
 const verifyTurnstile = async (captchaToken) => {
+  console.log(captchaToken)
   const secretKey = process.env.CLOUDFLARE_SECRET_KEY; // Tu clave secreta de Cloudflare
   const url = `https://challenges.cloudflare.com/turnstile/v0/siteverify`;
+
   try {
     const response = await axios.post(url, {
       secret: secretKey,
@@ -13,8 +15,10 @@ const verifyTurnstile = async (captchaToken) => {
     });
 
     if (response.data.success) {
+      console.error("El CAPTCHA es válido:", response.data);
       return true; // El CAPTCHA es válido
     } else {
+      console.error("El CAPTCHA no es válido:", response.data);
       return false; // El CAPTCHA no es válido
     }
   } catch (error) {
@@ -22,7 +26,6 @@ const verifyTurnstile = async (captchaToken) => {
     return false;
   }
 };
-
 exports.Login = async (req, res) => {
   try {
     const { email, password, captchaToken } = req.body;

@@ -6,7 +6,11 @@ const upload = require("../Midlewares/multer"); // Asegúrate de importar y conf
 const ProductController = require("../Controllers/ProductController");
 
 // Configuración de las rutas
-router.post("/",upload.fields([{ name: "imagenPrincipal" }, { name: "otrasImagenes" }]),ProductController.crearProducto);
+router.post(
+  "/",
+  upload.fields([{ name: "imagenPrincipal" }, { name: "otrasImagenes" }]),
+  ProductController.crearProducto
+);
 // router.post("/", upload.single("image"), ProductController.crearProducto);
 
 //   upload.fields([{ name: "imagenPrincipal" }, { name: "otrasImagenes" }]),

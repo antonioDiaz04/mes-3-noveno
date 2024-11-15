@@ -1,6 +1,8 @@
 // Importamos nuestras funciones personalizadas (CRUD)
 const { v2: cloudinary } = require("cloudinary");
 const {deleteImage,uploadImage } = require("../cloudinary/cloudinary");
+
+
 const fs = require("fs-extra");
 
 // Función de prueba para subir imágenes

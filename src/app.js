@@ -26,6 +26,7 @@ app.use(bodyParser.json());
 // app.use(fileUpload());
 
 
+app.use("/api/v1/msj", require("./Routes/WhatsappRoute.js"));
 app.use("/api/v1/producto", require("./Routes/ProductRoute"));
 app.use("/api/v1/enviar-notificacion", require("./Routes/NotificacionRoute"));
 app.use("/api/v1/enviar-correo", require("./Routes/CorreoRoute"));

@@ -11,12 +11,12 @@ router.post("/check-email", UsuarioController.checkEmail);
 router.post("/check-code", UsuarioController.checkCode);
 
 router.put("/editarUsuario/:id", UsuarioController.editarUsuario);
-router.delete("/eliminarUsuario/:id", UsuarioController.eliminarUsuario);
+router.delete("/:id", UsuarioController.eliminarUsuario);
 
 // router.get("/", UsuarioController.clienteRoute);
 router.put("/actualizaRol/:id", UsuarioController.actualizaRolUsuario);
 router.put("/actualiza/:id", UsuarioController.actualizaDatos);
-router.delete("/deleteCliente/:id", UsuarioController.eliminarCliente);
+// router.delete("/deleteCliente/:id", UsuarioController.eliminarCliente);
 // obtener detalles del cliente por id
 router.get("/:id", UsuarioController.obtenerUsuarioById);
 // obtener todos los clientes registrados
