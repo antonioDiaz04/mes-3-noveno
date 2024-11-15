@@ -6,7 +6,8 @@ const EstadoCuentaSchema = mongoose.Schema({
   fechaUltimoIntentoFallido: { type: Date },
   vecesDeBloqueos: { type: Number, default: 0 },
   fechaDeUltimoBloqueo: { type: Date },
-  tiempoDeBloqueo: { type: Date },
+  intentosPermitidos: { type: Number, default: 5 },
+  tiempoDeBloqueo: { type: Number, default: 30 },
 });
 
 const UsuarioSchema = mongoose.Schema({

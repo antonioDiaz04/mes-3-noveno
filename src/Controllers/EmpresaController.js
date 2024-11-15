@@ -1,4 +1,5 @@
 const { DatosAtelier, RedesSociales } = require("../Models/EmpresaModel.js");
+const { Usuario } = require("../Models/UsuarioModel.js");
 const { uploadImage, deleteImage } = require("../cloudinary/cloudinary");
 const fs = require("fs-extra");
 
@@ -177,5 +178,42 @@ exports.eliminarImagenesPerfil = async (req, res) => {
   } catch (error) {
     console.error("Error al eliminar imágenes del perfil de la empresa:", error);
     res.status(500).json({ mensaje: "Error interno del servidor", error: error.message });
+  }
+};
+
+exports.consultarConfigurarEmpresa = async (req, res) => {
+  try {
+    const usuarios = await Usuario.find().populate("estadoCuenta");
+
+    if (usuarios.length === 0) {
+      return res.status(404).json({ message: "No se encontró la empresa" });
+    }
+
+    // Buscar el primer usuario que pase la condición
+    const usuarioConfigurado = usuarios.find((usuario) => {
+      return (
+        usuario.estadoCuenta &&
+        usuario.estadoCuenta.intentosPermitidos !== undefined &&
+        usuario.estadoCuenta.tiempoDeBloqueo !== undefined
+      );
+    });
+
+    if (!usuarioConfigurado) {
+      return res
+        .status(404)
+        .json({ message: "No se encontraron configuraciones válidas" });
+    }
+
+    res.status(200).json({
+      message: "Configuración de empresa consultada exitosamente",
+      configuracion: {
+        nombre: usuarioConfigurado.nombre,
+        intentosPermitidos: usuarioConfigurado.estadoCuenta.intentosPermitidos,
+        tiempoDeBloqueo: usuarioConfigurado.estadoCuenta.tiempoDeBloqueo,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error al consultar la configuración" });
   }
 };
