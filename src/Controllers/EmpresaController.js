@@ -90,7 +90,7 @@ exports.editarPerfilEmpresa = async (req, res) => {
 
     // Verifica si se ha subido una nueva imagen
     let logoUrl;
-    console.log(req);
+
     if (req.files && Object.keys(req.files).length > 0) {
       const fileKey = Object.keys(req.files)[0];
       const file = req.files[fileKey];
@@ -107,16 +107,6 @@ exports.editarPerfilEmpresa = async (req, res) => {
     const perfilExistente = await DatosAtelier.findOne({});
     if (!perfilExistente) {
       return res.status(404).json({ mensaje: "Perfil no encontrado" });
-    }
-
-    // Actualizamos los datos del perfil
-    perfilExistente.redesSociales = [];
-    if (Array.isArray(redesSociales)) {
-      for (const red of redesSociales) {
-        const nuevaRed = new RedesSociales(red);
-        const redGuardada = await nuevaRed.save();
-        perfilExistente.redesSociales.push(redGuardada._id);
-      }
     }
 
     // Actualiza otros campos
@@ -147,14 +137,22 @@ exports.eliminarImagenesPerfil = async (req, res) => {
     const { imagenesParaEliminar } = req.body;
 
     // Verifica si se proporcionan imágenes para eliminar
-    if (!imagenesParaEliminar || !Array.isArray(imagenesParaEliminar) || imagenesParaEliminar.length === 0) {
-      return res.status(400).json({ mensaje: "No se proporcionaron imágenes para eliminar" });
+    if (
+      !imagenesParaEliminar ||
+      !Array.isArray(imagenesParaEliminar) ||
+      imagenesParaEliminar.length === 0
+    ) {
+      return res
+        .status(400)
+        .json({ mensaje: "No se proporcionaron imágenes para eliminar" });
     }
 
     // Busca el perfil de la empresa por ID
     const perfil = await DatosAtelier.findById(id);
     if (!perfil) {
-      return res.status(404).json({ mensaje: "Perfil de empresa no encontrado" });
+      return res
+        .status(404)
+        .json({ mensaje: "Perfil de empresa no encontrado" });
     }
 
     // Elimina las imágenes de Cloudinary
@@ -163,21 +161,33 @@ exports.eliminarImagenesPerfil = async (req, res) => {
         await deleteImage(imagen.public_id);
       } catch (error) {
         console.error("Error al eliminar la imagen de Cloudinary:", error);
-        return res.status(500).json({ mensaje: "Error al eliminar una de las imágenes" });
+        return res
+          .status(500)
+          .json({ mensaje: "Error al eliminar una de las imágenes" });
       }
     }
 
     // Actualiza el perfil para remover las imágenes eliminadas
     perfil.redesSociales = perfil.redesSociales.filter(
-      (red) => !imagenesParaEliminar.some((elimImg) => elimImg.public_id === red.public_id)
+      (red) =>
+        !imagenesParaEliminar.some(
+          (elimImg) => elimImg.public_id === red.public_id
+        )
     );
 
     // Guarda los cambios en la base de datos
     await perfil.save();
-    res.status(200).json({ mensaje: "Imágenes eliminadas correctamente", perfil });
+    res
+      .status(200)
+      .json({ mensaje: "Imágenes eliminadas correctamente", perfil });
   } catch (error) {
-    console.error("Error al eliminar imágenes del perfil de la empresa:", error);
-    res.status(500).json({ mensaje: "Error interno del servidor", error: error.message });
+    console.error(
+      "Error al eliminar imágenes del perfil de la empresa:",
+      error
+    );
+    res
+      .status(500)
+      .json({ mensaje: "Error interno del servidor", error: error.message });
   }
 };
 
@@ -215,5 +225,106 @@ exports.consultarConfigurarEmpresa = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error al consultar la configuración" });
+  }
+};
+
+exports.guardarRedSocial = async (req, res) => {
+  try {
+    const {
+      enlace,
+      plataforma: { icon, red },
+    } = req.body;
+
+    const nuevaRedSocial = new RedesSociales({
+      plataforma: red,
+      enlace: enlace,
+      icon: icon,
+    });
+    const redSocialGuardada = await nuevaRedSocial.save();
+
+    const perfilEmpresa = await DatosAtelier.find().populate("redesSociales");
+    if (!perfilEmpresa) {
+      return res
+        .status(404)
+        .json({ error: "Perfil de empresa no encontrado." });
+    }
+
+    perfilEmpresa[0].redesSociales.push(redSocialGuardada._id);
+
+    await perfilEmpresa[0].save();
+    return res
+      .status(200)
+      .json({ message: "Red social guardada correctamente." });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: "Error al guardar la red social." });
+  }
+};
+exports.obtenerRedesSociales = async (req, res) => {
+  try {
+    const perfilEmpresa = await DatosAtelier.find().populate("redesSociales");
+
+    if (!perfilEmpresa) {
+      return res
+        .status(404)
+        .json({ error: "Perfil de empresa no encontrado." });
+    }
+
+    console.log(perfilEmpresa[0].RedesSociales);
+
+    return res
+      .status(200)
+      .json({ message: "Red social guardada correctamente." });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: "Error al guardar la red social." });
+  }
+};
+
+exports.eliminarRedSocial = async (req, res) => {
+  try {
+    const { id } = req.params; // El _id de la red social se pasa como parámetro en la URL.
+    console.log("Red social ID:", id);
+
+    // Buscar el perfil de la empresa y hacer un populate de las redes sociales.
+    const perfilEmpresa = await DatosAtelier.findOne().populate(
+      "redesSociales"
+    );
+
+    // Verificar que perfilEmpresa existe y tiene el campo redesSociales
+    if (
+      !perfilEmpresa ||
+      !perfilEmpresa.redesSociales ||
+      perfilEmpresa.redesSociales.length === 0
+    ) {
+      return res
+        .status(404)
+        .json({ error: "Perfil de empresa o redes sociales no encontradas." });
+    }
+
+    // Buscar el índice de la red social en el array
+    const redSocialIndex = perfilEmpresa.redesSociales.findIndex(
+      (red) => red._id.toString() === id
+    );
+
+    if (redSocialIndex === -1) {
+      return res.status(404).json({ error: "Red social no encontrada." });
+    }
+
+    // Eliminar la red social del array de redes sociales.
+    perfilEmpresa.redesSociales.splice(redSocialIndex, 1);
+
+    // Eliminar la red social de la base de datos.
+    await RedesSociales.findByIdAndDelete(id);
+
+    // Guardar los cambios en el perfil de la empresa.
+    await perfilEmpresa.save();
+
+    return res
+      .status(200)
+      .json({ message: "Red social eliminada correctamente." });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: "Error al eliminar la red social." });
   }
 };

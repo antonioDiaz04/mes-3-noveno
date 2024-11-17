@@ -175,12 +175,11 @@ exports.crearUsuario = async (req, res) => {
     let email = req.body.email;
     let password = req.body.password;
 
-    console.table(req.body);
-
     const record = await Usuario.findOne({ email: email });
     if (record) {
       return res.status(400).send({ message: "El email ya está registrado" });
     }
+
     // Encripta la nueva contraseña
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -217,8 +216,9 @@ exports.eliminarUsuario = async (req, res) => {
   try {
     const { id } = req.params;
     const result = await Usuario.deleteOne({ _id: id });
-
-    res.status(200).json({ message: "Usuario eliminado con éxito." });
+    if (result) {
+      res.status(200).json({ message: "Usuario eliminado con éxito." });
+    }
   } catch (error) {
     console.log(error);
     res.status(500).send("Error en el servidor: " + error);
@@ -375,7 +375,6 @@ exports.actualizarPasswordxCorreo = async (req, res) => {
       .json({ message: "Ocurrió un error al actualizar la contraseña" });
   }
 };
-
 
 exports.actualizarPasswordxPregunta = async (req, res) => {
   try {

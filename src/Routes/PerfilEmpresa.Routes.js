@@ -4,7 +4,11 @@ const fileUpload = require("express-fileupload");
 const {
   crearPerfilEmpresa,
   obtenerPerfilesEmpresa,
-  editarPerfilEmpresa,eliminarAuditoria
+  editarPerfilEmpresa,
+  guardarRedSocial,
+  obtenerRedesSociales,
+  eliminarAuditoria,
+  eliminarRedSocial,
 } = require("../Controllers/EmpresaController.js");
 
 router.post(
@@ -19,6 +23,9 @@ router.post(
 
 // Obtener todos los perfiles de empresa
 router.get("/obtenerPerfilesEmpresa", obtenerPerfilesEmpresa);
+router.get("/obtenerRedesSociales", obtenerRedesSociales);
+
+router.post("/guardarRedSocial/:id", guardarRedSocial);
 
 router.put(
   "/editarPerfilEmpresa",
@@ -28,6 +35,6 @@ router.put(
   }),
   editarPerfilEmpresa
 );
-
+router.delete("/eliminarRedSocial/:id", eliminarRedSocial);
 
 module.exports = router;
