@@ -297,7 +297,7 @@ exports.editarConfigurarEmpresa = async (req, res) => {
 exports.guardarRedSocial = async (req, res) => {
   try {
     const { enlace, plataforma } = req.body;
-
+    console.log(req.body);
     const nuevaRedSocial = new RedesSociales({
       plataforma: plataforma,
       enlace: enlace,
@@ -309,7 +309,7 @@ exports.guardarRedSocial = async (req, res) => {
       return res
         .status(404)
         .json({ error: "Perfil de empresa no encontrado." });
-    }s
+    }
 
     perfilEmpresa[0].redesSociales.push(redSocialGuardada._id);
 
