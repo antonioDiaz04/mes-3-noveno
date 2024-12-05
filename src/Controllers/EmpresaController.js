@@ -1,5 +1,5 @@
 const { DatosAtelier, RedesSociales } = require("../Models/EmpresaModel.js");
-const { Usuario } = require("../Models/UsuarioModel.js");
+const { Usuario, EstadoCuenta } = require("../Models/UsuarioModel.js");
 const { uploadImage, deleteImage } = require("../cloudinary/cloudinary");
 const fs = require("fs-extra");
 
@@ -227,18 +227,80 @@ exports.consultarConfigurarEmpresa = async (req, res) => {
     res.status(500).json({ message: "Error al consultar la configuración" });
   }
 };
+exports.editarConfigurarEmpresa = async (req, res) => {
+  try {
+    const { intentosPermitidos, tiempoDeBloqueo } = req.body;
+
+    const usuarios = await Usuario.find().populate("estadoCuenta");
+
+    if (!usuarios || usuarios.length === 0) {
+      return res.status(404).json({ message: "No se encontraron usuarios" });
+    }
+
+    let totalActualizados = 0;
+
+    for (let i = 0; i < usuarios.length; i++) {
+      const usuario = usuarios[i];
+
+      let actualizado = false;
+
+      // Crear un estadoCuenta si no existe
+      if (!usuario.estadoCuenta) {
+        const nuevoEstadoCuenta = new EstadoCuenta({
+          intentosPermitidos,
+          tiempoDeBloqueo,
+        });
+        usuario.estadoCuenta = await nuevoEstadoCuenta.save();
+        actualizado = true;
+      } else {
+        // Actualizar los campos si ya existe
+        if (
+          usuario.estadoCuenta.intentosPermitidos !== undefined &&
+          usuario.estadoCuenta.intentosPermitidos !== intentosPermitidos
+        ) {
+          usuario.estadoCuenta.intentosPermitidos = intentosPermitidos;
+          actualizado = true;
+        }
+
+        if (
+          usuario.estadoCuenta.tiempoDeBloqueo !== undefined &&
+          usuario.estadoCuenta.tiempoDeBloqueo !== tiempoDeBloqueo
+        ) {
+          usuario.estadoCuenta.tiempoDeBloqueo = tiempoDeBloqueo;
+          actualizado = true;
+        }
+      }
+
+      if (actualizado) {
+        await usuario.estadoCuenta.save();
+        await usuario.save();
+        totalActualizados++;
+      }
+    }
+
+    return totalActualizados
+      ? res.status(200).json({
+          message:
+            "Configuración actualizada exitosamente para todos los usuarios",
+          totalActualizados,
+        })
+      : res.status(500).json({ message: "Error al actualizar los usuarios" });
+  } catch (error) {
+    console.error("Error en editarConfigurarEmpresa:", error.message);
+    res.status(500).json({
+      message: "Error al actualizar la configuración",
+      error: error.message,
+    });
+  }
+};
 
 exports.guardarRedSocial = async (req, res) => {
   try {
-    const {
-      enlace,
-      plataforma: { icon, red },
-    } = req.body;
+    const { enlace, plataforma } = req.body;
 
     const nuevaRedSocial = new RedesSociales({
-      plataforma: red,
+      plataforma: plataforma,
       enlace: enlace,
-      icon: icon,
     });
     const redSocialGuardada = await nuevaRedSocial.save();
 
@@ -247,7 +309,7 @@ exports.guardarRedSocial = async (req, res) => {
       return res
         .status(404)
         .json({ error: "Perfil de empresa no encontrado." });
-    }
+    }s
 
     perfilEmpresa[0].redesSociales.push(redSocialGuardada._id);
 

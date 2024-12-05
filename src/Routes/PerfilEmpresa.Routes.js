@@ -8,7 +8,7 @@ const {
   guardarRedSocial,
   obtenerRedesSociales,
   eliminarAuditoria,
-  eliminarRedSocial,
+  eliminarRedSocial,editarConfigurarEmpresa,
 } = require("../Controllers/EmpresaController.js");
 
 router.post(
@@ -35,6 +35,7 @@ router.put(
   }),
   editarPerfilEmpresa
 );
+router.put("/editarConfigurarEmpresa", editarConfigurarEmpresa);
 router.delete("/eliminarRedSocial/:id", eliminarRedSocial);
 
 module.exports = router;
