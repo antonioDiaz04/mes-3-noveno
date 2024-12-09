@@ -26,6 +26,7 @@ router.get("/obtenerPerfilesEmpresa", obtenerPerfilesEmpresa);
 router.get("/obtenerRedesSociales", obtenerRedesSociales);
 
 router.post("/guardarRedSocial/:id", guardarRedSocial);
+// router.put("/configurarEmpresa/", editarConfigurarEmpresa);
 
 router.put(
   "/editarPerfilEmpresa",
