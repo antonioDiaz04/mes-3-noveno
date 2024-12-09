@@ -28,8 +28,7 @@ exports.Login = async (req, res) => {
     usuario = await Usuario.findOne({ email }).populate("estadoCuenta");
 
     if (!usuario) {
-      console.log("Error: El correo no existe");
-      return res.status(401).json({ message: "El correo no existe" });
+      return res.status(401).json({ message: " El correo no esta registrado" });
     }
 
     const estadoCuenta = usuario.estadoCuenta;

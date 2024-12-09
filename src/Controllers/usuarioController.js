@@ -123,6 +123,31 @@ exports.EstadoUsuario = async (req, res) => {
   }
 };
 
+exports.checkTelefono = async (req, res) => {
+  try {
+    let telefono = req.body.telefono.replace(/\s+/g, "");
+    console.log(req.body);
+    // Verifica si el correo ya está registrado
+    const record = await Usuario.findOne({ telefono: telefono });
+
+    if (record) {
+      // Responde con un mensaje de error si el correo ya existe
+      return res
+        .status(400)
+        .json({ message: "El telefono ya está registrado" });
+    }
+
+    // Respuesta de éxito si el email está disponible
+    return res.status(200).json({ message: "El telefono está disponible" });
+  } catch (error) {
+    console.error(error);
+    // Responde con un mensaje de error en caso de excepción
+    res
+      .status(500)
+      .json({ message: "Error en el servidor", error: error.toString() });
+  }
+};
+
 exports.checkEmail = async (req, res) => {
   try {
     let email = req.body.email;
@@ -170,28 +195,43 @@ exports.checkCode = async (req, res) => {
 
 exports.crearUsuario = async (req, res) => {
   try {
-    let nombre = req.body.nombre;
-    let telefono = req.body.telefono;
-    let email = req.body.email;
-    let password = req.body.password;
+    let { nombre, telefono, email, password } = req.body;
+    console.log(req.body);
 
+    // Validar que todos los campos estén presentes
+    if (!nombre || !telefono || !email || !password) {
+      return res.status(400).send({ message: "Todos los campos son obligatorios" });
+    }
+
+    // Verificar si el email ya está registrado
     const record = await Usuario.findOne({ email: email });
     if (record) {
       return res.status(400).send({ message: "El email ya está registrado" });
     }
 
-    // Encripta la nueva contraseña
+    // Encriptar la nueva contraseña
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    //eliminar espacios telefono
-    const telefonoSinEspacios = telefono.replace(/\s/g, "");
+    // Eliminar espacios en el teléfono
+    const telefonoSinEspacios = telefono?.replace(/\s/g, "") || null;
+    if (!telefonoSinEspacios) {
+      return res.status(400).send({ message: "El número telefónico no es válido" });
+    }
 
+    // Verificar si el número de teléfono ya está registrado
+    const exist_number = await Usuario.findOne({ telefono: telefonoSinEspacios });
+    if (exist_number) {
+      return res.status(400).send({ message: "El número telefónico ya está registrado" });
+    }
+
+    // Crear un nuevo estado de cuenta
     const nuevoEstadoCuenta = await EstadoCuenta.create({});
 
+    // Crear el nuevo usuario
     const usuario = new Usuario({
-      nombre: nombre,
-      email: email,
+      nombre,
+      email,
       telefono: telefonoSinEspacios,
       password: hashedPassword,
       estadoCuenta: nuevoEstadoCuenta._id,
@@ -202,13 +242,15 @@ exports.crearUsuario = async (req, res) => {
 
     const resultado = await usuario.save();
 
-    res.json({
+    // Responder con éxito
+    return res.json({
       usuario: resultado._id,
-      message: "exitoso",
+      message: "Usuario creado exitosamente",
     });
   } catch (error) {
     console.log(error);
-    res.status(500).send("Error en el servidor: " + error);
+    // Responder con error del servidor
+    return res.status(500).send({ message: "Error en el servidor", error: error.toString() });
   }
 };
 
