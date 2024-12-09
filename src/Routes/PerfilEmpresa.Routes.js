@@ -8,7 +8,7 @@ const {
   guardarRedSocial,
   obtenerRedesSociales,
   eliminarAuditoria,
-  eliminarRedSocial,editarConfigurarEmpresa,
+  eliminarRedSocial,editarConfigurarEmpresa,consultarConfigurarEmpresa
 } = require("../Controllers/EmpresaController.js");
 
 router.post(
@@ -24,7 +24,7 @@ router.post(
 // Obtener todos los perfiles de empresa
 router.get("/obtenerPerfilesEmpresa", obtenerPerfilesEmpresa);
 router.get("/obtenerRedesSociales", obtenerRedesSociales);
-
+router.get("/consultarConfigurarEmpresa", consultarConfigurarEmpresa);
 router.post("/guardarRedSocial/:id", guardarRedSocial);
 // router.put("/configurarEmpresa/", editarConfigurarEmpresa);
 
