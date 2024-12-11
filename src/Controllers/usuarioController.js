@@ -196,37 +196,52 @@ exports.checkCode = async (req, res) => {
 exports.crearUsuario = async (req, res) => {
   try {
     let { nombre, telefono, email, password } = req.body;
-    console.log(req.body);
 
     // Validar que todos los campos estén presentes
     if (!nombre || !telefono || !email || !password) {
-      return res.status(400).send({ message: "Todos los campos son obligatorios" });
+      return res
+        .status(400)
+        .send({ message: "Todos los campos son obligatorios" });
     }
 
     // Verificar si el email ya está registrado
     const record = await Usuario.findOne({ email: email });
     if (record) {
       return res.status(400).send({ message: "El email ya está registrado" });
+    } // Eliminar espacios en el teléfono
+    
+    const telefonoSinEspacios = telefono?.replace(/\s/g, "") || null;
+    if (!telefonoSinEspacios) {
+      return res
+        .status(400)
+        .send({ message: "El número telefónico no es válido" });
     }
+
+    // Verificar si el número de teléfono ya está registrado
+    const exist_number = await Usuario.findOne({
+      telefono: telefonoSinEspacios,
+    });
+    if (exist_number) {
+      return res
+        .status(400)
+        .send({ message: "El número telefónico ya está registrado" });
+    }
+
+    const primerUsuario = await Usuario.findOne().populate("estadoCuenta");
 
     // Encriptar la nueva contraseña
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Eliminar espacios en el teléfono
-    const telefonoSinEspacios = telefono?.replace(/\s/g, "") || null;
-    if (!telefonoSinEspacios) {
-      return res.status(400).send({ message: "El número telefónico no es válido" });
-    }
+   
 
-    // Verificar si el número de teléfono ya está registrado
-    const exist_number = await Usuario.findOne({ telefono: telefonoSinEspacios });
-    if (exist_number) {
-      return res.status(400).send({ message: "El número telefónico ya está registrado" });
-    }
+    const { intentosPermitidos, tiempoDeBloqueo } = primerUsuario.estadoCuenta;
 
     // Crear un nuevo estado de cuenta
-    const nuevoEstadoCuenta = await EstadoCuenta.create({});
+    const nuevoEstadoCuenta = await EstadoCuenta.create({
+      intentosPermitidos,
+      tiempoDeBloqueo,
+    });
 
     // Crear el nuevo usuario
     const usuario = new Usuario({
@@ -250,7 +265,9 @@ exports.crearUsuario = async (req, res) => {
   } catch (error) {
     console.log(error);
     // Responder con error del servidor
-    return res.status(500).send({ message: "Error en el servidor", error: error.toString() });
+    return res
+      .status(500)
+      .send({ message: "Error en el servidor", error: error.toString() });
   }
 };
 
