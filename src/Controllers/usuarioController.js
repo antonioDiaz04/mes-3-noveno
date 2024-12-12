@@ -101,7 +101,7 @@ exports.EstadoUsuario = async (req, res) => {
         message: "no autentificado",
       });
     }
-    const claims = jwt.verfy(cookie, "secret");
+    const claims = jwt.verify(cookie, "secret");
     if (!claims) {
       return res.status(401).send({
         message: "no  autentificado",
@@ -123,19 +123,34 @@ exports.EstadoUsuario = async (req, res) => {
   }
 };
 
-exports.checkTelefono = async (req, res) => {
-  try {
-    let telefono = req.body.telefono.replace(/\s+/g, "");
-    console.log(req.body);
-    // Verifica si el correo ya está registrado
-    const record = await Usuario.findOne({ telefono: telefono });
+function cleanPhoneNumber(phoneNumber) {
+  // Elimina cualquier prefijo internacional (ejemplo: +52, +1, +34, etc.)
+  let cleanedPhoneNumber = phoneNumber.replace(/^\+?\d{1,4}\s?/g, ""); // Elimina cualquier prefijo de país
 
-    if (record) {
+  // Elimina todos los caracteres no numéricos (espacios, guiones, paréntesis, etc.)
+  cleanedPhoneNumber = cleanedPhoneNumber.replace(/\D/g, ""); // Elimina todo lo que no sea un número
+
+  return cleanedPhoneNumber;
+}
+
+exports.checkTelefono = async (req, res) => {
+  try { 
+    const { telefono } = req.body;
+    const telefonoFormateado = cleanPhoneNumber(telefono);
+
+    // Verifica si el correo ya está registrado
+    console.log(telefonoFormateado);
+    const telefonoDuplicado = await Usuario.findOne({
+      telefono: telefonoFormateado,
+    });
+
+    if (telefonoDuplicado) {
       // Responde con un mensaje de error si el correo ya existe
       return res
         .status(400)
-        .json({ message: "El telefono ya está registrado" });
+        .json({ message: "El numero de telefono ya está registrado" });
     }
+
 
     // Respuesta de éxito si el email está disponible
     return res.status(200).json({ message: "El telefono está disponible" });
@@ -209,9 +224,9 @@ exports.crearUsuario = async (req, res) => {
     if (record) {
       return res.status(400).send({ message: "El email ya está registrado" });
     } // Eliminar espacios en el teléfono
-    
-    const telefonoSinEspacios = telefono?.replace(/\s/g, "") || null;
-    if (!telefonoSinEspacios) {
+
+    const telefonoFormateado = cleanPhoneNumber(telefono);
+    if (!telefonoFormateado) {
       return res
         .status(400)
         .send({ message: "El número telefónico no es válido" });
@@ -219,7 +234,7 @@ exports.crearUsuario = async (req, res) => {
 
     // Verificar si el número de teléfono ya está registrado
     const exist_number = await Usuario.findOne({
-      telefono: telefonoSinEspacios,
+      telefono: telefonoFormateado,
     });
     if (exist_number) {
       return res
