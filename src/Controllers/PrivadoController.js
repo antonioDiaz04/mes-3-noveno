@@ -111,15 +111,20 @@ exports.obtenerPoliticas = async (req, res) => {
       return res.status(404).json({ message: "No hay políticas disponibles" });
     }
     const fechaHoy = new Date();
+    fechaHoy.setHours(0, 0, 0, 0);
 
     // Actualizar el estado de las políticas que han pasado su fecha de vigencia
     for (const politica of politicas) {
+      const fechaVigencia = new Date(politica.fechaVigencia);
+
+      console.log("la fecha limite es: " + fechaVigencia.toISOString());
+
       if (
-        new Date(politica.fechaVigencia) < fechaHoy &&
+        fechaVigencia.toISOString() < fechaHoy &&
         politica.estado === "vigente"
       ) {
-        politica.estado = "no vigente"; // Cambiar estado a "no vigente"
-        await politica.save(); // Guardar los cambios
+        politica.estado = "no vigente";
+        await politica.save();
       }
     }
 
@@ -191,7 +196,6 @@ exports.eliminarPolitica = async (req, res) => {
       return res.status(404).json({ message: "Política no encontrada" });
     }
 
-    console.log(politica.estado);
     politica.estado = "eliminado";
 
     await politica.save();
@@ -278,10 +282,14 @@ exports.obtenerTerminosYCondiciones = async (req, res) => {
     }
 
     const fechaHoy = new Date();
+    fechaHoy.setHours(0, 0, 0, 0);
 
     for (const termino of terminos) {
+      const fechaVigencia = new Date(termino.fechaVigencia);
+
+      console.log("la fecha limite es: " + fechaVigencia.toISOString());
       if (
-        new Date(termino.fechaVigencia) < fechaHoy &&
+        fechaVigencia.toISOString() < fechaHoy &&
         termino.estado === "vigente"
       ) {
         termino.estado = "no vigente"; // Cambiar estado a "no vigente"
@@ -293,7 +301,8 @@ exports.obtenerTerminosYCondiciones = async (req, res) => {
     console.error("Error al obtener términos y condiciones:", error);
     return res.status(500).send("Error en el servidor: " + error);
   }
-};exports.obtenerTerminosYCondicionesVigentes = async (req, res) => {
+};
+exports.obtenerTerminosYCondicionesVigentes = async (req, res) => {
   try {
     // Buscar todos los términos que están vigentes
     const terminos = await TerminosYCondiciones.find({
@@ -302,9 +311,9 @@ exports.obtenerTerminosYCondiciones = async (req, res) => {
 
     // Si no hay términos vigentes, retornar 404
     if (terminos.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No hay términos y condiciones vigentes disponibles" });
+      return res.status(404).json({
+        message: "No hay términos y condiciones vigentes disponibles",
+      });
     }
 
     const fechaHoy = new Date();
@@ -328,8 +337,6 @@ exports.obtenerTerminosYCondiciones = async (req, res) => {
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
-
-
 
 exports.actualizarTerminosYCondiciones = async (req, res) => {
   try {
