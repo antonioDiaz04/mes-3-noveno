@@ -110,17 +110,17 @@ exports.obtenerPoliticas = async (req, res) => {
     if (!politicas) {
       return res.status(404).json({ message: "No hay políticas disponibles" });
     }
+
     const fechaHoy = new Date();
     fechaHoy.setHours(0, 0, 0, 0);
 
     // Actualizar el estado de las políticas que han pasado su fecha de vigencia
     for (const politica of politicas) {
       const fechaVigencia = new Date(politica.fechaVigencia);
-
-      console.log("la fecha limite es: " + fechaVigencia.toISOString());
+      fechaVigencia.setUTCHours(23, 59, 59, 999);
 
       if (
-        fechaVigencia.toISOString() < fechaHoy &&
+        fechaVigencia.getTime() < fechaHoy.getTime() &&
         politica.estado === "vigente"
       ) {
         politica.estado = "no vigente";
@@ -167,11 +167,20 @@ exports.actualizarPoliticas = async (req, res) => {
     politicaExistente.version = nuevaVersion;
     politicaExistente.fechaVigencia = fechaVigencia; // Actualizar la fecha de vigencia
 
-    // Verificar si la nueva fecha de vigencia es válida
-    if (new Date(fechaVigencia) > new Date()) {
-      politicaExistente.estado = "vigente"; // La política es vigente si la fecha es futura
+    const myFechaVigencia = new Date(politicaExistente.fechaVigencia);
+
+    const fechaHoy = new Date();
+
+    fechaHoy.setUTCHours(0, 0, 0, 0);
+    myFechaVigencia.setUTCHours(23, 59, 59, 999);
+
+    console.log(fechaHoy);
+    console.log(myFechaVigencia);
+
+    if (myFechaVigencia.getTime() < fechaHoy.getTime()) {
+      politicaExistente.estado = "no vigente";
     } else {
-      politicaExistente.estado = "no vigente"; // La política no es vigente si la fecha ya pasó
+      politicaExistente.estado = "vigente";
     }
 
     const politicaActualizada = await politicaExistente.save();
@@ -256,6 +265,7 @@ exports.crearTerminosYCondiciones = async (req, res) => {
       version: "1.0",
       estado: "vigente",
       fechaVigencia: fechaVigencia,
+      historial: [],
     });
 
     await nuevosTerminos.save();
@@ -451,6 +461,7 @@ exports.obtenerHistorialTerminosYCondiciones = async (req, res) => {
 exports.crearDeslindeLegal = async (req, res) => {
   try {
     const { titulo, contenido, fechaVigencia } = req.body;
+
     if (!fechaVigencia || isNaN(new Date(fechaVigencia).getTime())) {
       return res.status(400).json({ message: "Fecha de vigencia inválida" });
     }
@@ -461,6 +472,7 @@ exports.crearDeslindeLegal = async (req, res) => {
       version: "1.0",
       estado: "vigente",
       fechaVigencia: fechaVigencia,
+      historial: [],
     });
 
     await nuevoDeslinde.save();
@@ -489,11 +501,14 @@ exports.obtenerDeslindesLegales = async (req, res) => {
     }
 
     const fechaHoy = new Date();
+    fechaHoy.setHours(0, 0, 0, 0);
 
-    // Actualizar el estado de los deslindes que han pasado su fecha de vigencia
     for (const deslinde of deslindes) {
+      const fechaVigencia = new Date(deslinde.fechaVigencia);
+      fechaVigencia.setUTCHours(23, 59, 59, 999);
+
       if (
-        new Date(deslinde.fechaVigencia) < fechaHoy &&
+        fechaVigencia.getTime() < fechaHoy.getTime() &&
         deslinde.estado === "vigente"
       ) {
         deslinde.estado = "no vigente";
