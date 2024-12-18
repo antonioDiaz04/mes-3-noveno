@@ -15,19 +15,15 @@ const corsOptions = {
     "https://localhost:4200",
     "http://localhost:5278",
     "https://proyectoatr.com", // URL local para desarrollo
-    // "https://nhnwlf08-4200.usw3.devtunnels.ms/" // URL local para desarrollo
+   
   ],
-  // methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  credentials: true, // Permitir el envío de cookies
-  // optionsSuccessStatus: 200, // Responder exitosamente a solicitudes preflight
+  credentials: true,
 };
 
 app.use(cookieParser());
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 // Rutas padres
-// app.use(fileUpload());
-
 app.use("/api/v1/msj", require("./Routes/WhatsappRoute.js"));
 app.use("/api/v1/producto", require("./Routes/ProductRoute"));
 app.use("/api/v1/enviar-notificacion", require("./Routes/NotificacionRoute"));
