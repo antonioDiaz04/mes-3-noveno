@@ -11,6 +11,7 @@ router.post(
   upload.fields([{ name: "imagenPrincipal" }, { name: "otrasImagenes" }]),
   ProductController.crearProducto
 );
+router.get("/byId/:id", ProductController.obtenerProductoById);
 // router.post("/", upload.single("image"), ProductController.crearProducto);
 
 //   upload.fields([{ name: "imagenPrincipal" }, { name: "otrasImagenes" }]),

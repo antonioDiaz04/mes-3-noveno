@@ -162,3 +162,19 @@ exports.obtenerProducto = async (req, res) => {
     res.status(500).json({ message: "Error al obtener los productos", error });
   }
 };
+// Obtener todos los productos
+exports.obtenerProductoById = async (req, res) => {
+  try {
+    // Obtener el ID del producto desde los parámetros de la ruta
+    const productoId = req.params.id;
+
+    // Buscar el producto por su ID en la base de datos
+    const producto = await Producto.findById(productoId);
+
+    // Enviar la respuesta con el producto encontrado
+    res.status(200).json(producto);
+  } catch (error) {
+    // En caso de error, enviar una respuesta con código 500 y el mensaje de error
+    res.status(500).json({ message: "Error al obtener los detalles del producto", error });
+  }
+};

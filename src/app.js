@@ -26,6 +26,8 @@ app.use(bodyParser.json());
 // Rutas padres
 app.use("/api/v1/msj", require("./Routes/WhatsappRoute.js"));
 app.use("/api/v1/producto", require("./Routes/ProductRoute"));
+app.use("/api/v1/accesorio", require("./Routes/AccesorioRoute.js"));
+app.use("/api/v1/vestidos-accesorios", require("./Routes/VestidoAccesorioRoute.js"));
 app.use("/api/v1/enviar-notificacion", require("./Routes/NotificacionRoute"));
 app.use("/api/v1/enviar-correo", require("./Routes/CorreoRoute"));
 app.use("/api/v1/verificacion", require("./Routes/CorreoRoute"));
