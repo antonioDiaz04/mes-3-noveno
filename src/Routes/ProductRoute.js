@@ -18,5 +18,8 @@ router.get("/byId/:id", ProductController.obtenerProductoById);
 router.put("/editarProducto/:id", ProductController.editarProducto); // Corregido el endpoint de edición para consistencia
 router.delete("/:id", ProductController.eliminarProducto);
 router.get("/", ProductController.obtenerProducto);
+// Ruta en routes/productos.js
+router.get('/buscar/:query', ProductController.buscarVestidos);
+router.post('/buscarAvanzados/', ProductController.buscarProductosAvanzados);
 
 module.exports = router;

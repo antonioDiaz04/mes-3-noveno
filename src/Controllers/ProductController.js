@@ -178,3 +178,98 @@ exports.obtenerProductoById = async (req, res) => {
     res.status(500).json({ message: "Error al obtener los detalles del producto", error });
   }
 };
+
+
+
+exports.buscarVestidos = async (req, res) => {
+  try {
+      const query = req.params.query;
+      
+      // Validación de query
+      if (!query || query.trim().length < 2) {
+          return res.status(400).json({ 
+              mensaje: 'Término de búsqueda muy corto' 
+          });
+      }
+
+      // Dividir el término de búsqueda en palabras
+      const palabras = query.trim().split(' ').filter(palabra => palabra.length > 0);
+
+      // Construir la consulta con una búsqueda 'OR' para cada palabra en los campos
+      const resultados = await Producto.find({
+          $or: palabras.map(palabra => ({
+              $or: [
+                  { nombre: { $regex: palabra, $options: 'i' } },
+                  { descripcion: { $regex: palabra, $options: 'i' } },
+                  { categoria: { $regex: palabra, $options: 'i' } },
+                  { color: { $regex: palabra, $options: 'i' } },
+                  { 'tallasDisponibles.talla': { $regex: palabra, $options: 'i' } }
+              ]
+          }))
+      })
+      .select('nombre imagenPrincipal precio categoria tallasDisponibles')
+      .limit(50);
+
+      // Manejo de resultados
+      if (resultados.length === 0) {
+          return res.status(404).json({ 
+              mensaje: 'No se encontraron productos',
+              resultados: [] 
+          });
+      }
+
+      // Respuesta exitosa
+      res.status(200).json({
+          total: resultados.length,
+          resultados: resultados
+      });
+
+  } catch (error) {
+      console.error('Error en búsqueda:', error);
+      res.status(500).json({ 
+          mensaje: 'Error interno del servidor',
+          error: error.message 
+      });
+  }
+};
+exports.buscarProductosAvanzados = async (req, res) => {
+  const filtros = req.body || {};
+  const query = {}; // Objeto para construir los filtros dinámicamente
+
+  console.log('Filtros recibidos:', filtros);
+
+  // Filtrar por categoría si se proporciona
+  if (filtros.categoria) {
+    query.categoria = filtros.categoria;
+    console.log('Filtrando por categoría:', filtros.categoria);
+  }
+
+  // Filtrar por color si se proporciona
+  if (filtros.color) {
+    query.color = filtros.color;
+    console.log('Filtrando por color:', filtros.color);
+  }
+
+  // Filtrar por talla disponible, si se proporciona y no es 'todas'
+  if (filtros.tallaDisponible && filtros.tallaDisponible !== 'todas') {
+    query.tallasDisponible = filtros.tallaDisponible; // Buscar productos con la talla específica
+    console.log('Filtrando por talla disponible:', filtros.tallaDisponible);
+  }
+
+  try {
+    // Consulta a la base de datos con los filtros construidos
+    const productos = await Producto.find(({ color:  query.color, tallaDisponible: query.tallasDisponible  }))
+      .select('nombre imagenPrincipal precio categoria tallasDisponibles color')
+      .limit(50);
+
+    console.log('Productos encontrados:', productos);
+
+    // Enviar los resultados al cliente en formato JSON
+    res.status(200).json({ resultados: productos });
+  } catch (error) {
+    console.error('Error al buscar productos:', error);
+
+    // Responder al cliente con un error
+    res.status(500).json({ error: 'Error al buscar productos' });
+  }
+};

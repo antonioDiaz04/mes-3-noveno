@@ -72,7 +72,7 @@ exports.eliminarRelacion = async (req, res) => {
 exports.obtenerRelacionPorId = async (req, res) => {
   try {
     const { id } = req.params;
-    
+  xl
     const relacion = await VestidosAccesorioIncluidos.findById(id)
       .populate("vestido")
       .populate("accesorios");
