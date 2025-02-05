@@ -73,7 +73,7 @@ const VentaSchema = new mongoose.Schema({
   },
 
   // Información de Envío
-  envio: {
+  envio: {  
     direccion: {
       calle: { 
         type: String, 

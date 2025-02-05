@@ -102,6 +102,7 @@ exports.Login = async (req, res) => {
         .status(401)
         .json({ message: "El usuario no tiene un rol asignado" });
     }
+    
     const token = jwt.sign(
       { _id: usuario._id, rol: usuario.rol },
       process.env.JWT_SECRET || "secret",

@@ -134,7 +134,7 @@ function cleanPhoneNumber(phoneNumber) {
 }
 
 exports.checkTelefono = async (req, res) => {
-  try { 
+  try {
     const { telefono } = req.body;
     const telefonoFormateado = cleanPhoneNumber(telefono);
 
@@ -150,7 +150,6 @@ exports.checkTelefono = async (req, res) => {
         .status(400)
         .json({ message: "El numero de telefono ya está registrado" });
     }
-
 
     // Respuesta de éxito si el email está disponible
     return res.status(200).json({ message: "El telefono está disponible" });
@@ -248,8 +247,6 @@ exports.crearUsuario = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-   
-
     const { intentosPermitidos, tiempoDeBloqueo } = primerUsuario.estadoCuenta;
 
     // Crear un nuevo estado de cuenta
@@ -262,7 +259,7 @@ exports.crearUsuario = async (req, res) => {
     const usuario = new Usuario({
       nombre,
       email,
-      telefono: telefonoSinEspacios,
+      telefono: telefonoFormateado,
       password: hashedPassword,
       estadoCuenta: nuevoEstadoCuenta._id,
       token: "",
@@ -271,6 +268,19 @@ exports.crearUsuario = async (req, res) => {
     });
 
     const resultado = await usuario.save();
+    
+    const token = jwt.sign(
+      { _id: usuario._id, rol: usuario.rol },
+      process.env.JWT_SECRET || "secret",
+      { expiresIn: "24h" }
+    );
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 3600000,
+    });
 
     // Responder con éxito
     return res.json({
