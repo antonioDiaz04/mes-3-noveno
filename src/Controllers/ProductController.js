@@ -23,7 +23,6 @@ cloudinary.config({
 // const Producto = require('../models/Producto'); // Asegúrate de que la ruta del modelo sea correcta
 exports.crearProducto = async (req, res) => {
   try {
-    // Imprimir el contenido de req para depuración
     console.log("Contenido de req.body:", req.body);
     console.log("Contenido de req.files:", req.files);
 
@@ -50,17 +49,24 @@ exports.crearProducto = async (req, res) => {
         const resultadoOtraImagen = await cloudinary.uploader.upload(imagenFile.path, {
           folder: "ProductosAtelier",
         });
-        // Agregar solo la URL al array
         otrasImagenesSubidas.push(resultadoOtraImagen.url);
       }
     }
     console.log("paso aqui 2");
 
-    // Crea un nuevo objeto de Producto con los datos del cuerpo y las URLs de las imágenes
+    // Crea un nuevo objeto de Producto con los datos del formulario y las URLs de las imágenes
     const producto = new Producto({
       nombre: req.body.nombre,
       categoria: req.body.categoria,
+      color: req.body.color,
+      textura: req.body.textura,
+      talla: req.body.talla,
+      altura: req.body.altura,
+      cintura: req.body.cintura,
       precio: req.body.precio,
+      disponible: req.body.disponible === 'true', // Convertir string a booleano
+      tipoVenta: req.body.tipoVenta,
+      nuevo: req.body.nuevo === 'true', // Convertir string a booleano
       descripcion: req.body.descripcion,
       imagenPrincipal: resultadoCloudinary.url, // URL de la imagen principal
       otrasImagenes: otrasImagenesSubidas // Array de URLs de otras imágenes
@@ -82,9 +88,9 @@ exports.crearProducto = async (req, res) => {
     }
     console.log("paso aqui 5");
 
-
     // Enviar la respuesta con el producto creado
     res.status(201).json({ message: "Producto creado exitosamente", producto: resultadoProducto });
+
   } catch (error) {
     console.error("Error al crear el producto:", error);
     res.status(500).json({ error: "Ocurrió un error al crear el producto." });
@@ -252,14 +258,14 @@ exports.buscarProductosAvanzados = async (req, res) => {
 
   // Filtrar por talla disponible, si se proporciona y no es 'todas'
   if (filtros.tallaDisponible && filtros.tallaDisponible !== 'todas') {
-    query.tallasDisponible = filtros.tallaDisponible; // Buscar productos con la talla específica
+    query.tallaDisponible = filtros.tallaDisponible; // Buscar productos con la talla específica
     console.log('Filtrando por talla disponible:', filtros.tallaDisponible);
   }
 
   try {
     // Consulta a la base de datos con los filtros construidos
-    const productos = await Producto.find(({ color:  query.color, tallaDisponible: query.tallasDisponible  }))
-      .select('nombre imagenPrincipal precio categoria tallasDisponibles color')
+    const productos = await Producto.find(query) // Usar el objeto query completo
+      .select('nombre imagenPrincipal precio categoria tallaDisponible color')
       .limit(50);
 
     console.log('Productos encontrados:', productos);
@@ -273,3 +279,4 @@ exports.buscarProductosAvanzados = async (req, res) => {
     res.status(500).json({ error: 'Error al buscar productos' });
   }
 };
+
