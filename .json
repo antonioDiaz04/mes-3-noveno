@@ -1,0 +1,6 @@
+// XHRPOST
+// http://localhost:4000/api/v1/enviar-notificacion/ejemplo
+// [HTTP/1.1 200 OK 25ms]
+
+	
+// token	'{"endpoint":"https://updates.push.services.mozilla.com/wpush/v2/gAAAAABntCYCnenojzyZuU0R5iTNmnRPFrG2X7BT-g8nnXsDjVFpM9PGDCSmK9ibJTum8jz4FNtUqhohvO7_ki9hh6LfknqZs2mlr4v3V4TO5mNmupW8weDlPOsy9OI0w3jYFWnF-BnrBK4ar5VHbPapkJafvgsluCqkLEWywKZa8olxYXLxWZY","expirationTime":null,"keys":{"auth":"7KL9qfHVBvIwDR9S2y7T2A","p256dh":"BBLddPPBjt6XBA6tChMGvByIMOH3COci-abKt3SUqpg7FDDed1CGVtPcWenvTn2FtSKHPMq0kF12dk1Nq5esSXs"}}'
