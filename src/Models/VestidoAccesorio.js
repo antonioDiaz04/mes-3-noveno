@@ -13,6 +13,10 @@ const vestidosAccesorioIncluidosSchema = mongoose.Schema({
       required: true,
     },
   ],
+  fechaRegistro: {
+    type: Date,
+    default: Date.now, // Se asigna automáticamente la fecha actual
+  },
 });
 
 module.exports = mongoose.model("VestidosAccesorioIncluidos", vestidosAccesorioIncluidosSchema);

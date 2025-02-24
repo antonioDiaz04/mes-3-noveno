@@ -17,7 +17,9 @@ const UsuarioSchema = mongoose.Schema({
   token: { type: String, required: false },
   codigoVerificacion: { type: String, required: false },
   verificado: { type: Boolean, required: false },
-  rol: { type: String, required: false, default: "CLIENTE" },
+  rol: { 
+    type: String, required: false, default: "CLIENTE" 
+  },
   password: { type: String, required: false, default: "" },
   fechaDeRegistro: { type: Date, default: Date.now() },
   estadoCuenta: { type: mongoose.Schema.Types.ObjectId, ref: "EstadoCuenta" },

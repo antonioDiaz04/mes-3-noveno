@@ -15,11 +15,15 @@ router.get("/byId/:id", ProductController.obtenerProductoById);
 // router.post("/", upload.single("image"), ProductController.crearProducto);
 
 //   upload.fields([{ name: "imagenPrincipal" }, { name: "otrasImagenes" }]),
-router.put("/editarProducto/:id", ProductController.editarProducto); // Corregido el endpoint de edición para consistencia
+router.put(
+  "/editarProducto/:id",
+  upload.fields([{ name: "imagenPrincipal" }, { name: "otrasImagenes" }]),
+   ProductController.editarProducto
+); // Corregido el endpoint de edición para consistencia
 router.delete("/:id", ProductController.eliminarProducto);
 router.get("/", ProductController.obtenerProducto);
 // Ruta en routes/productos.js
-router.get('/buscar/:query', ProductController.buscarVestidos);
-router.post('/buscarAvanzados/', ProductController.buscarProductosAvanzados);
+router.get("/buscar/:query", ProductController.buscarVestidos);
+router.post("/buscarAvanzados/", ProductController.buscarProductosAvanzados);
 
 module.exports = router;

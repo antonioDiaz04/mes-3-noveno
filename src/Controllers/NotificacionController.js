@@ -1,9 +1,7 @@
 const webpush = require("web-push");
 const vapidKeys = {
-  publicKey:
-    "BPqUE0OuQtFwPMDzFFttBK-aM3oJePkk_vsQ0OPmRQVJwWYQY1gq1U7mxFPRuSUR85rwBiU1ynfCsExlCIt40fk",
-
-  privateKey: "UJjeVqP6X5M9EyNLILT4dxYG1TAz2yCaWfBwkOFr2io",
+  publicKey:"BLYrs4NfSkkjBeVIMgH2ANO4Hcd3FrGKYXabe5L6jpURiePXV9cbl4IewwLjzdszahWAb8SaiPNmyMz6mywr6KY",
+  privateKey:"keH3GwgD0noSJ7IHg_DLwMRP5WM8T0xlRRb2OG-bjFI",
 };
 
 webpush.setVapidDetails(
@@ -11,6 +9,59 @@ webpush.setVapidDetails(
   vapidKeys.publicKey,
   vapidKeys.privateKey
 );
+
+exports.enviarNotificacion = async (req, res) => {
+  try {
+    // Validar si el token está presente en la solicitud
+    if (!req.body.token) {
+      return res.status(400).json({ msg: "Token de suscripción no proporcionado" });
+    }
+
+    // Convertir el token JSON a un objeto JavaScript
+    const tokenData = JSON.parse(req.body.token);
+
+    // Extraer los valores necesarios
+    const { endpoint, keys } = tokenData;
+    if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
+      return res.status(400).json({ msg: "Datos de suscripción inválidos" });
+    }
+
+    const pushSubscription = {
+      endpoint,
+      keys: {
+        p256dh: keys.p256dh,
+        auth: keys.auth,
+      },
+    };
+
+    // Mensaje de notificación
+    const payload = {
+      notification: {
+        title: "¡Apartado Realizado!",
+        body: "Has realizado un apartado. Tienes 24 horas para completar el pago.",
+        icon: "https://cdn-icons-png.flaticon.com/512/189/189665.png", // Ícono representativo
+        image: "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+        actions: [
+          { action: "pay_now", title: "Completar Pago" },
+          { action: "cancel", title: "Cancelar Apartado" },
+        ],
+        vibrate: [200, 100, 200],
+      },
+    };
+
+    // Enviar notificación push
+    await webpush.sendNotification(pushSubscription, JSON.stringify(payload));
+
+    console.log("Notificación enviada con éxito");
+    res.status(200).json({ msg: "Notificación enviada con éxito" });
+
+  } catch (err) {
+    console.error("Error al enviar la notificación:", err);
+    res.status(500).json({ msg: "Error al enviar la notificación", error: err.message });
+  }
+};
+
+
 
 exports.enviarNotificacionyCuerpo = async (req, res) => {
   const pushSubscription = {
@@ -48,6 +99,28 @@ exports.enviarNotificacionyCuerpo = async (req, res) => {
     res.status(500).send("Error sending notification");
   }
 };
+
+
+
+// Enviar notificación a todas las suscripciones
+// exports.enviarNotificacion = async (req, res) => {
+//   const payload = JSON.stringify({
+//     notification: {
+//       title: "Hola Mundo",
+//       body: "¡Notificación enviada dinámicamente!",
+//     },
+//   });
+
+//   try {
+//     await Promise.all(suscripciones.map(sub => webpush.sendNotification(sub, payload)));
+//     res.json({ message: "Notificación enviada exitosamente" });
+//   } catch (error) {
+//     console.error("Error enviando notificación", error);
+//     res.status(500).json({ error: "Error enviando notificación" });
+//   }
+// };
+
+
 exports.enviarNotificacionCorreo = async (req, res) => {
   const pushSubscription = {
     endpoint:
