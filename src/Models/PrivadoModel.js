@@ -214,7 +214,7 @@ module.exports = {
     terminosYCondicionesSchema
   ),
   Deslindelegal: mongoose.model("Deslindelegal", DeslindelegalSchema),
-  AcercaDe: mongoose.model("AcercaDe", AcercaSchema),
-  Pregunta: mongoose.model("Pregunta", PreguntaSchema),
-  Contacto: mongoose.model("Contacto", ContactoSchema),
+  AcercaDe: mongoose.model("AcercaDe", AcercaSchema),//
+  Pregunta: mongoose.model("Pregunta", PreguntaSchema),//
+  Contacto: mongoose.model("Contacto", ContactoSchema),//
 };

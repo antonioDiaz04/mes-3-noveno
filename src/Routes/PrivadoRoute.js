@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-
 const {
   actualizarPoliticas,
   crearPoliticas,
@@ -14,43 +13,57 @@ const {
   actualizarTerminosYCondiciones,
   obtenerTerminosYCondiciones,
   eliminarTerminosYCondiciones,
-  obtenerHistorialTerminosYCondiciones,obtenerTerminosYCondicionesVigentes,
+  obtenerHistorialTerminosYCondiciones,
+  obtenerTerminosYCondicionesVigentes,
 } = require("../Controllers/PrivadoController");
 const {
-crearDeslindeLegal,actualizarDeslindeLegal,eliminarDeslindeLegal,obtenerDeslindesLegales,obtenerHistorialDeslindeLegal
+  crearDeslindeLegal,
+  actualizarDeslindeLegal,
+  eliminarDeslindeLegal,
+  obtenerDeslindesLegales,
+  obtenerHistorialDeslindeLegal,
 } = require("../Controllers/PrivadoController");
+const validarDatos = require("../Midlewares/validator.middleware");
+const { DocumentosLegales } = require("../schemas/authSchema");
 
-router.get("/obtenerPoliticas", obtenerPoliticas);
+// Terminos y condiciones
 router.get("/obtenerTerminosYCondiciones", obtenerTerminosYCondiciones);
 router.get(
   "/obtenerHistorialTerminosYCondiciones/:id",
   obtenerHistorialTerminosYCondiciones
 );
-router.get("/obtenerHistorialPoliticas/:id", obtenerHistorialPolitica);
-router.get("/obtenerTerminosYCondicionesVigentes", obtenerTerminosYCondicionesVigentes);
-
-router.post("/crearPoliticas", crearPoliticas);
-
-router.post("/crearTerminosYCondiciones", crearTerminosYCondiciones);
-router.put("/actualizarPoliticas/:id", actualizarPoliticas);
-
+router.get(
+  "/obtenerTerminosYCondicionesVigentes",
+  obtenerTerminosYCondicionesVigentes
+);
+router.post(
+  "/crearTerminosYCondiciones",
+  validarDatos(DocumentosLegales),
+  crearTerminosYCondiciones
+);
 router.put(
   "/actualizarTerminosYCondiciones/:id",
   actualizarTerminosYCondiciones
 );
-router.delete("/eliminarPolitica/:id", eliminarPolitica);
-
-
-
 router.delete(
   "/eliminarTerminosYCondiciones/:id",
   eliminarTerminosYCondiciones
 );
 
+// Rutas para Politicas
+router.post("/crearPoliticas", validarDatos(DocumentosLegales), crearPoliticas);
+router.get("/obtenerPoliticas", obtenerPoliticas);
+router.put("/actualizarPoliticas/:id", actualizarPoliticas);
+router.delete("/eliminarPolitica/:id", eliminarPolitica);
+router.get("/obtenerHistorialPoliticas/:id", obtenerHistorialPolitica);
 
 // Rutas para Deslinde Legal
+router.post(
+  "/crearDeslindeLegal",
+  validarDatos(DocumentosLegales),
+  crearDeslindeLegal
+);
 router.get("/obtenerDeslindesLegales", obtenerDeslindesLegales);
-router.post("/crearDeslindeLegal", crearDeslindeLegal);
 router.put("/actualizarDeslindeLegal/:id", actualizarDeslindeLegal);
 router.delete("/eliminarDeslindeLegal/:id", eliminarDeslindeLegal);
 router.get("/obtenerHistorialDeslindeLegal/:id", obtenerHistorialDeslindeLegal);

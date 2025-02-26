@@ -4,75 +4,13 @@ const {
   Deslindelegal,
 } = require("../Models/PrivadoModel");
 const { AcercaDe, Contacto, Pregunta } = require("../Models/PrivadoModel.js");
-
-// Acerca de
-exports.createAcercaDe = async (req, res) => {
-  try {
-    const { titulo, contenido } = req.body;
-
-    if (!titulo) return res.status(400).json({ message: "Título vacío" });
-    if (!contenido) return res.status(400).json({ message: "Contenido vacío" });
-
-    const acercaDe = new AcercaDe({ titulo, contenido });
-    await acercaDe.save();
-    res.status(201).json(acercaDe);
-  } catch (error) {
-    console.error("Error al crear AcercaDe:", error);
-    res.status(500).json({
-      mensaje: "Error interno del servidor",
-      error: error.message,
-    });
-  }
-};
-
-exports.deleteAcercaDe = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const acercaDe = await AcercaDe.findByIdAndDelete(id);
-    if (!acercaDe)
-      return res.status(404).json({ message: "AcercaDe no encontrado" });
-    res.status(204).send();
-  } catch (error) {
-    console.error("Error al eliminar AcercaDe:", error);
-    res.status(500).json({
-      mensaje: "Error interno del servidor",
-      error: error.message,
-    });
-  }
-};
-
-exports.updateAcercaDe = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { titulo, contenido } = req.body;
-
-    if (!id) return res.status(400).json({ message: "ID vacío" });
-    if (!titulo) return res.status(400).json({ message: "Título vacío" });
-    if (!contenido) return res.status(400).json({ message: "Contenido vacío" });
-
-    const acercaDe = await AcercaDe.findByIdAndUpdate(
-      id,
-      { titulo, contenido },
-      { new: true }
-    );
-
-    if (!acercaDe)
-      return res.status(404).json({ message: "AcercaDe no encontrado" });
-
-    res.status(200).json(acercaDe);
-  } catch (error) {
-    console.error("Error al actualizar AcercaDe:", error);
-    res.status(500).json({
-      mensaje: "Error interno del servidor",
-      error: error.message,
-    });
-  }
-};
+const sanitizeObject = require('../util/sanitize.js');
 
 //políticas
 exports.crearPoliticas = async (req, res) => {
   try {
     const { titulo, contenido, fechaVigencia } = req.body;
+    const sanitizedInput = sanitizeObject(userInput);
 
     if (!fechaVigencia || isNaN(new Date(fechaVigencia).getTime())) {
       return res.status(400).json({ message: "Fecha de vigencia inválida" });
@@ -105,7 +43,9 @@ exports.crearPoliticas = async (req, res) => {
 
 exports.obtenerPoliticas = async (req, res) => {
   try {
-    const politicas = await Politicas.find({ estado: { $ne: "eliminado" } });
+    const politicas = await Politicas.find({ estado: { $ne: "eliminado" } })
+      .lean()
+      .exec();
 
     if (!politicas) {
       return res.status(404).json({ message: "No hay políticas disponibles" });
@@ -248,6 +188,69 @@ exports.obtenerHistorialPolitica = async (req, res) => {
   } catch (error) {
     console.log("Error al obtener el historial de la política:", error);
     return res.status(500).send("Error en el servidor: " + error);
+  }
+};
+// Acerca de
+exports.createAcercaDe = async (req, res) => {
+  try {
+    const { titulo, contenido } = req.body;
+
+    if (!titulo) return res.status(400).json({ message: "Título vacío" });
+    if (!contenido) return res.status(400).json({ message: "Contenido vacío" });
+
+    const acercaDe = new AcercaDe({ titulo, contenido });
+    await acercaDe.save();
+    res.status(201).json(acercaDe);
+  } catch (error) {
+    console.error("Error al crear AcercaDe:", error);
+    res.status(500).json({
+      mensaje: "Error interno del servidor",
+      error: error.message,
+    });
+  }
+};
+
+exports.deleteAcercaDe = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const acercaDe = await AcercaDe.findByIdAndDelete(id);
+    if (!acercaDe)
+      return res.status(404).json({ message: "AcercaDe no encontrado" });
+    res.status(204).send();
+  } catch (error) {
+    console.error("Error al eliminar AcercaDe:", error);
+    res.status(500).json({
+      mensaje: "Error interno del servidor",
+      error: error.message,
+    });
+  }
+};
+
+exports.updateAcercaDe = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { titulo, contenido } = req.body;
+
+    if (!id) return res.status(400).json({ message: "ID vacío" });
+    if (!titulo) return res.status(400).json({ message: "Título vacío" });
+    if (!contenido) return res.status(400).json({ message: "Contenido vacío" });
+
+    const acercaDe = await AcercaDe.findByIdAndUpdate(
+      id,
+      { titulo, contenido },
+      { new: true }
+    );
+
+    if (!acercaDe)
+      return res.status(404).json({ message: "AcercaDe no encontrado" });
+
+    res.status(200).json(acercaDe);
+  } catch (error) {
+    console.error("Error al actualizar AcercaDe:", error);
+    res.status(500).json({
+      mensaje: "Error interno del servidor",
+      error: error.message,
+    });
   }
 };
 

@@ -15,33 +15,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// exports.enviarCorreoyCuerpo = async (req, res) => {
-//   try {
-//     const email = req.body.email;
-//     const codigo = Math.floor(1000 + Math.random() * 9000); // Generar un código de verificación de 4 dígitos
-
-//     console.log(`Email: ${email}, Código: ${codigo}`);
-
-//     if (!email) {
-//       return res.status(400).json({ msg: "El email es requerido" });
-//     }
-
-//     // Generar token con el código y una expiración de 15 minutos
-//     const token = jwt.sign({ codigo }, 'clave_secreta', { expiresIn: '15m' });
-
-//     // Enviar el código de verificación por correo
-//     await enviarCodigoVerficiacionActivaCuenta(email, codigo);
-
-//     res.status(200).json({ msg: "Correo electrónico enviado correctamente" });
-//   } catch (error) {
-//     console.error("Error en enviarCorreoyCuerpo:", error);
-//     res.status(500).json({ msg: "Error en el servidor" });
-//   }
-// };
-
-// Función para enviar el código de verificación por correo
-
-// const Joi = require('joi'); // Para validación de datos de entrada
 
 exports.confirmarVerficacion = async (req, res) => {
   try {
@@ -187,6 +160,30 @@ exports.validarCodigo = async (req, res) => {
     res.status(500).json({ msg: "Error en el servidor" });
   }
 };
+
+exports.activarCuenta = async (req, res) => {
+  try {
+    const { email, codigoVerificacion } = req.body;
+    const usuario = await Usuario.findOne({ email, codigoVerificacion });
+
+    console.log(req.body);
+
+    if (!usuario) {
+      return res.status(404).json({ msg: "Usuario no encontrado" });
+    }
+
+    // Actualiza el estado de verificación del usuario
+    usuario.verificado = true;
+    await usuario.save();
+
+    // Devuelve un mensaje en formato JSON
+    return res.status(200).json({ msg: "Cuenta activada con éxito" });
+  } catch (error) {
+    console.error("Error al activar la cuenta:", error);
+    return res.status(500).json({ msg: "Error en el servidor" });
+  }
+};
+
 // exports.verificarCodigo = async (req, res) => {
 //   try {
 //     const { email, codigo } = req.body;
@@ -231,26 +228,32 @@ exports.validarCodigo = async (req, res) => {
 //   }
 // };
 
-// const User = require("./models/User"); // Asegúrate de tener el modelo de usuario adecuado
-exports.activarCuenta = async (req, res) => {
-  try {
-    const { email, codigoVerificacion } = req.body;
-    const usuario = await Usuario.findOne({ email, codigoVerificacion });
 
-    console.log(req.body);
 
-    if (!usuario) {
-      return res.status(404).json({ msg: "Usuario no encontrado" });
-    }
+// exports.enviarCorreoyCuerpo = async (req, res) => {
+//   try {
+//     const email = req.body.email;
+//     const codigo = Math.floor(1000 + Math.random() * 9000); // Generar un código de verificación de 4 dígitos
 
-    // Actualiza el estado de verificación del usuario
-    usuario.verificado = true;
-    await usuario.save();
+//     console.log(`Email: ${email}, Código: ${codigo}`);
 
-    // Devuelve un mensaje en formato JSON
-    return res.status(200).json({ msg: "Cuenta activada con éxito" });
-  } catch (error) {
-    console.error("Error al activar la cuenta:", error);
-    return res.status(500).json({ msg: "Error en el servidor" });
-  }
-};
+//     if (!email) {
+//       return res.status(400).json({ msg: "El email es requerido" });
+//     }
+
+//     // Generar token con el código y una expiración de 15 minutos
+//     const token = jwt.sign({ codigo }, 'clave_secreta', { expiresIn: '15m' });
+
+//     // Enviar el código de verificación por correo
+//     await enviarCodigoVerficiacionActivaCuenta(email, codigo);
+
+//     res.status(200).json({ msg: "Correo electrónico enviado correctamente" });
+//   } catch (error) {
+//     console.error("Error en enviarCorreoyCuerpo:", error);
+//     res.status(500).json({ msg: "Error en el servidor" });
+//   }
+// };
+
+// Función para enviar el código de verificación por correo
+
+// const Joi = require('joi'); // Para validación de datos de entrada

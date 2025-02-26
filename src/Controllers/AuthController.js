@@ -2,6 +2,7 @@ const { Usuario } = require("../Models/UsuarioModel");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const sanitizeHtml = require('sanitize-html');
 
 const verifyTurnstile = async (captchaToken) => {
   try {
@@ -19,10 +20,17 @@ const verifyTurnstile = async (captchaToken) => {
     return false;
   }
 };
+// Función para sanitizar objetos
+
 
 exports.Login = async (req, res) => {
   try {
-    const { email, password, captchaToken } = req.body;
+    const sanitizedData = sanitizeObject(req.body);
+    const { email, password } = sanitizedData;
+
+
+    const {  captchaToken } = req.body;
+
     let usuario;
 
     usuario = await Usuario.findOne({ email }).populate("estadoCuenta");

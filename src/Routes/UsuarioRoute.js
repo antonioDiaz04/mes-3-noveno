@@ -3,10 +3,12 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jw = require("jsonwebtoken");
 const UsuarioController = require("../Controllers/usuarioController");
-
+const validarDatos = require("../Midlewares/validator.middleware");
+const { registerSchema } = require("../schemas/authSchema");
 // router.get("/admin", UsuarioController.adminRoute);
+
 // agrega cliente
-router.post("/", UsuarioController.crearUsuario);
+router.post("/", validarDatos(registerSchema), UsuarioController.crearUsuario);
 router.post("/check-email", UsuarioController.checkEmail);
 router.post("/check-telefono", UsuarioController.checkTelefono);
 
@@ -25,7 +27,7 @@ router.get("/:id", UsuarioController.obtenerUsuarioById);
 // router.get("/", UsuarioController.obtenerUsuarios);
 // busca un usuario por correo
 router.get("/:correo", UsuarioController.buscaUsuarioByCorreo);
-// colonias por clientes 
+// colonias por clientes
 router.get("/clientes/agrupados", UsuarioController.getColoniasPorClientes);
 router.put("/actualizaxCorreo", UsuarioController.actualizarPasswordxCorreo);
 router.put(
