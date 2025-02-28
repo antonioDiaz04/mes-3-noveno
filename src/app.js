@@ -5,8 +5,8 @@ const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
 require("dotenv").config(); // Cargar variables de entorno
-const helmet = require('helmet');
-
+const helmet = require("helmet");
+const { defaults } = require("joi");
 
 const app = express();
 
@@ -14,6 +14,7 @@ conectarDB();
 
 const corsOptions = {
   origin: process.env.CORS_ORIGINS.split(","), // Convierte la cadena en un array
+  methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 };
 
@@ -26,6 +27,31 @@ app.use(bodyParser.json());
 if (process.env.NODE_ENV !== "production") {
   app.use(morgan("dev"));
 }
+
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "trusted-scripts.com"],
+      styleSrc: ["'self'", "trusted-styles.com"],
+      imgSrc: ["'self'", "trusted-images.com"],
+    },
+  })
+);
+app.use((req, res, next) => {
+  res.setHeader("X-Frame-Options", "DENY");
+  next();
+});
+
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  next();
+});
+
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff"); // Prevenir MIME-sniffing
+  next();
+});
 
 // Ruta dinámica para la API
 const apiVersion = process.env.API_VERSION || "v1"; // Si no se define, usa 'v1'
@@ -52,6 +78,7 @@ app.use(
 app.use(`/api/${apiVersion}/Empresa`, require("./Routes/PerfilEmpresa.Routes"));
 app.use(`/api/${apiVersion}/autentificacion`, require("./Routes/AuthRoute"));
 app.use(`/api/${apiVersion}/renta`, require("./Routes/Renta&Venta"));
+app.use(`/api/${apiVersion}/estadisticas`, require("./Routes/EstadisticasRoute"));
 
 // Ruta para acciones con rol de Administrador de la página
 app.use(`/api/${apiVersion}/admin`, require("./Routes/PrivadoRoute"));

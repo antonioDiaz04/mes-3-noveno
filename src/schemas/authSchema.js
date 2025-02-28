@@ -20,6 +20,7 @@ const registerSchema = Joi.object({
   captchaToken: Joi.optional(),
 });
 
+
 const loginSchema = Joi.object({
   email: Joi.string()
     .email()
@@ -35,6 +36,7 @@ const loginSchema = Joi.object({
     .required(),
   captchaToken: Joi.optional(),
 });
+//a las politicas empresa, privacidad, 
 
 const DocumentosLegales = Joi.object({
   titulo: Joi.string().min(3).max(100).required(),

@@ -2,7 +2,7 @@ const { Usuario } = require("../Models/UsuarioModel");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const sanitizeHtml = require('sanitize-html');
+const sanitizeObject = require("../util/sanitize");
 
 const verifyTurnstile = async (captchaToken) => {
   try {
@@ -16,21 +16,17 @@ const verifyTurnstile = async (captchaToken) => {
     });
     return response.data.success ? true : false;
   } catch (error) {
-    console.error("Error al verificar el CAPTCHA:", error); 
+    console.error("Error al verificar el CAPTCHA:", error);
     return false;
   }
 };
 // Función para sanitizar objetos
 
-
 exports.Login = async (req, res) => {
   try {
     const sanitizedData = sanitizeObject(req.body);
     const { email, password } = sanitizedData;
-
-
-    const {  captchaToken } = req.body;
-
+    const { captchaToken } = req.body;
     let usuario;
 
     usuario = await Usuario.findOne({ email }).populate("estadoCuenta");
@@ -66,6 +62,7 @@ exports.Login = async (req, res) => {
     }
 
     const isPasswordValid = await bcrypt.compare(password, usuario.password);
+
     if (!isPasswordValid) {
       estadoCuenta.intentosFallidos += 1;
       estadoCuenta.fechaUltimoIntentoFallido = new Date();
@@ -110,7 +107,7 @@ exports.Login = async (req, res) => {
         .status(401)
         .json({ message: "El usuario no tiene un rol asignado" });
     }
-    
+
     const token = jwt.sign(
       { _id: usuario._id, rol: usuario.rol },
       process.env.JWT_SECRET || "secret",

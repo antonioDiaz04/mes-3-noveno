@@ -1,10 +1,9 @@
 const { Usuario } = require("../Models/UsuarioModel");
-
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
-// const webpush = require("../Shareds/webpush");
 let BLOCK_TIME_MINUTES = 1;
+
 exports.Login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -13,7 +12,7 @@ exports.Login = async (req, res) => {
     usuario = await Usuario.findOne({ email }).populate("estadoCuenta");
     console.table(["correo recibido:", email, "password recibido:", password]);
 
-   // Comprobar si el usuario está bloqueado
+    // Comprobar si el usuario está bloqueado
     if (usuario.estadoCuenta.estado === "bloqueado") {
       const now = new Date();
       const blockTime = new Date(usuario.estadoCuenta.tiempoDeBloqueo);
@@ -97,46 +96,3 @@ exports.Login = async (req, res) => {
     return res.status(500).send("Error en el servidor: " + error.message);
   }
 };
-
-// exports.verificarCodigo = async (req, res) => {
-//   try {
-//     const { email, codigo } = req.body;
-//     // let usuario;
-//     const usuario = await Usuario.findOne({ email, codigoVerificacion });
-
-//     console.table([
-//       "correo recibido:",
-//       email,
-//       "codigoVerificacion recibido:",
-//       codigoVerificacion,
-//     ]);
-//     // Verificar si el código es válido
-//     const isCodigoValido = await bcrypt.compare(
-//       codigo,
-//       usuario.codigoVerificacion
-//     );
-//     if (!isCodigoValido) {
-//       return res
-//         .status(401)
-//         .json({ message: "Código de verificación incorrecto." });
-//     }
-
-//     // Generar el token JWT
-//     const token = jwt.sign(
-//       { _id: usuario._id, rol: usuario.rol },
-//       process.env.JWT_SECRET || "secret",
-//       {
-//         expiresIn: "1h", // El token expirará en 1 hora
-//       }
-//     );
-
-//     console.log("aqui llego tambien :");
-
-//     // Si el usuario tiene un rol, firmar el token JWT con el rol incluido
-//     // const token = jwt.sign({ _id: usuario._id, rol: usuario.rol }, "secret");
-//     return res.status(200).json({ token, rol: usuario.rol });
-//   } catch (error) {
-//     console.log("ohh no :", error);
-//     return res.status(500).send("Error en el servidor: " + error);
-//   }
-// };

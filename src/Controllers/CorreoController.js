@@ -1,10 +1,11 @@
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
-const codigoVerificacion = Math.floor(1000 + Math.random() * 9000).toString();
-
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { Usuario } = require("../Models/UsuarioModel");
+
+const codigoVerificacion = Math.floor(1000 + Math.random() * 9000).toString();
+
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
@@ -15,7 +16,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-
 exports.confirmarVerficacion = async (req, res) => {
   try {
     const email = req.body.email;
@@ -23,7 +23,7 @@ exports.confirmarVerficacion = async (req, res) => {
     // Generar un código de verificación aleatorio de 4 dígitos
     const code = Math.floor(1000 + Math.random() * 9000);
 
-    console.log(code)
+    console.log(code);
     // Actualizar el código de verificación en la base de datos
     const result = await Usuario.updateOne(
       { email: email },
@@ -49,7 +49,6 @@ exports.confirmarVerficacion = async (req, res) => {
     console.error("Error en confirmarVerficacion:", error);
     res.status(500).json({ msg: "Error en el servidor" });
   }
-  
 };
 
 function enviarCorreo(correo) {
@@ -121,7 +120,9 @@ exports.enviarCorreoyCuerpo = async (req, res) => {
     const hashedCode = await bcrypt.hash(codigo.toString(), 10);
 
     // Generar token con el hash del código
-    const token = jwt.sign({ hashedCode }, "clave_secreta", { expiresIn: "15m" });
+    const token = jwt.sign({ hashedCode }, "clave_secreta", {
+      expiresIn: "15m",
+    });
 
     // Enviar correo con el código real
     await enviarCodigoVerficiacionActivaCuenta(email, codigo);
@@ -148,7 +149,10 @@ exports.validarCodigo = async (req, res) => {
     const { hashedCode } = decoded;
 
     // Comparar código ingresado con el hash
-    const isValid = await bcrypt.compare(codigoIngresado.toString(), hashedCode);
+    const isValid = await bcrypt.compare(
+      codigoIngresado.toString(),
+      hashedCode
+    );
 
     if (isValid) {
       res.status(200).json({ msg: "Código validado correctamente" });
@@ -227,8 +231,6 @@ exports.activarCuenta = async (req, res) => {
 //     return res.status(500).send("Error en el servidor: " + error);
 //   }
 // };
-
-
 
 // exports.enviarCorreoyCuerpo = async (req, res) => {
 //   try {
