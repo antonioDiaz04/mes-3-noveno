@@ -23,9 +23,9 @@ const logger  = createLogger({
       maxFiles: 100,
       filename: `${__dirname}/../logs/log-api.log`, // ruta de donde se guardaran los errores (el archivo log)
     }),
-    new transports.Console({
-      level: "debug",
-    }),
+    // new transports.Console({
+    //   level: "debug",
+    // }),
   ],
 });
 
@@ -45,7 +45,6 @@ const logHttpRequest = (req, res, responseTime) => {
     requestBody: body,
     responseStatus: statusCode,
     responseTime: `${responseTime}ms`,
-
   });
 };
 

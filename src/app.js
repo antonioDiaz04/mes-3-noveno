@@ -26,6 +26,8 @@ app.use(bodyParser.json());
 app.use((req, res, next) => {
   const start = Date.now(); //Se captura el tiempo actual en milisegundos
   res.on("finish", () => {
+    const ip = req.ip;
+    console.table(ip);
     const duration = Date.now() - start; // se calcula la duración de la solicitud restando el tiempo actual
     logHttpRequest(req, res, duration);
   });
@@ -90,7 +92,7 @@ app.use(
   require("./Routes/EstadisticasRoute")
 );
 
-// Ruta para acciones con rol de Administrador de la página
+// Ruta para acciones control de Administrador de la página
 app.use(`/api/${apiVersion}/admin`, require("./Routes/PrivadoRoute"));
 app.use(`/api/${apiVersion}/politicas`, require("./Routes/PoliticasRoute.js"));
 

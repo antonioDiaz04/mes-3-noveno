@@ -7,44 +7,15 @@ const VentaSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Usuarios",
       required: true,
-      index: true, // Índice para optimizar consultas por usuario
     },
-
-    // Estado de la Venta
-    estado: {
-      type: String,
-      enum: ["Pendiente", "Pagado", "Cancelado"],
-      default: "Pendiente",
-      index: true, // Índice para optimizar consultas por estado
-    },
-
-    // Fechas
-    fechaVenta: {
-      type: Date,
-      default: Date.now,
-      index: true, // Índice para optimizar consultas por fecha
-    },
-
     // Detalles de Productos
     productos: [
       {
-        producto: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Producto",
-          required: true,
-        },
-        cantidad: {
-          type: Number,
-          required: true,
-          min: 1,
-        },
-        precioUnitario: {
-          type: Number,
-          required: true,
-        },
-      },
+        producto: { type: mongoose.Schema.Types.ObjectId, ref: 'Producto' }, // Usa 'Producto', no 'producto'
+        cantidad: Number,
+        precioUnitario: Number
+      }
     ],
-
     // Información de Pago
     detallesPago: {
       metodoPago: {
@@ -88,8 +59,21 @@ const VentaSchema = new mongoose.Schema(
         type: Number,
         required: true,
         min: 0,
-        default: 0,
       },
+    },
+
+    // Estado de la Venta
+    estado: {
+      type: String,
+      enum: [
+        "Pendiente",
+        "Pagado",
+        "Enviado",
+        "Entregado",
+        "Cancelado",
+        "Recogido en Tienda", // Nueva opción agregada
+      ],
+      default: "Pendiente",
     },
 
     // Información Adicional
@@ -100,7 +84,6 @@ const VentaSchema = new mongoose.Schema(
   },
   { timestamps: true } // Manejo de createdAt y updatedAt automáticamente
 );
-
 // Método para calcular total
 VentaSchema.methods.calcularTotal = function () {
   if (!this.resumen) {
@@ -115,7 +98,6 @@ VentaSchema.methods.calcularTotal = function () {
   // Calcular total final
   const impuestos = Number(this.resumen.impuestos) || 0;
   this.resumen.subtotal = subtotalProductos;
-  this.resumen.total = subtotalProductos + impuestos;
 };
 
 // Middleware pre-save para calcular total antes de guardar

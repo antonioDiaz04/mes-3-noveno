@@ -43,7 +43,6 @@ const productoSchema = new mongoose.Schema({
     required: false,
     min: 0,
   },
-  // estado: {
   disponible: {
     type: Boolean,
     required: false,
