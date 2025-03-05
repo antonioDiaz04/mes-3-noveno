@@ -32,7 +32,6 @@ const RentaSchema = new mongoose.Schema({
       min: 1 
     }
   },
-
   // Estado de la Renta
   estado: { 
     type: String, 

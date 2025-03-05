@@ -27,8 +27,6 @@ router.get("/:id", UsuarioController.obtenerUsuarioById);
 // router.get("/", UsuarioController.obtenerUsuarios);
 // busca un usuario por correo
 router.get("/:correo", UsuarioController.buscaUsuarioByCorreo);
-// colonias por clientes
-router.get("/clientes/agrupados", UsuarioController.getColoniasPorClientes);
 router.put("/actualizaxCorreo", UsuarioController.actualizarPasswordxCorreo);
 router.put(
   "/actualizaxPregunta",

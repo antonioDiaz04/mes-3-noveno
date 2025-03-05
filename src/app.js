@@ -77,10 +77,10 @@ app.use(
 );
 app.use(`/api/${apiVersion}/Empresa`, require("./Routes/PerfilEmpresa.Routes"));
 app.use(`/api/${apiVersion}/autentificacion`, require("./Routes/AuthRoute"));
-app.use(`/api/${apiVersion}/renta`, require("./Routes/Renta&Venta"));
 app.use(`/api/${apiVersion}/estadisticas`, require("./Routes/EstadisticasRoute"));
+app.use(`/api/${apiVersion}/proceso`, require("./Routes/Renta&Venta"));
 
-// Ruta para acciones con rol de Administrador de la página
+// Ruta para acciones control de Administrador de la página
 app.use(`/api/${apiVersion}/admin`, require("./Routes/PrivadoRoute"));
 app.use(`/api/${apiVersion}/politicas`, require("./Routes/PoliticasRoute.js"));
 

@@ -61,38 +61,6 @@ exports.verifyTokenAndRole = (role) => (req, res, next) => {
   next();
 };
 
-exports.getColoniasPorClientes = async (req, res) => {
-  try {
-    const clientes = await Usuario.find({ rol: { $ne: "ADMINPG" } });
-
-    const resultado = {};
-
-    clientes.forEach((cliente) => {
-      const { municipio, colonia, nombre } = cliente;
-
-      if (!resultado[municipio]) {
-        resultado[municipio] = {};
-      }
-
-      if (!resultado[municipio][colonia]) {
-        resultado[municipio][colonia] = [];
-      }
-
-      resultado[municipio][colonia].push(nombre);
-    });
-
-    res.json(resultado);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error al obtener clientes agrupados", error });
-  }
-};
-// // Ruta protegida para administradores
-// exports.adminRoute = exports.verifyTokenAndRole("ADMIN");
-// // Ruta protegida para clientes
-// exports.clienteRoute = exports.verifyTokenAndRole("cliente");
-
 exports.EstadoUsuario = async (req, res) => {
   try {
     const cookie = req.cookies["jwt"];
@@ -505,46 +473,6 @@ exports.actualizarPasswordxPregunta = async (req, res) => {
       .json({ message: "Ocurrió un error al actualizar la contraseña" });
   }
 };
-// const mongoose = require("mongoose");
-// const { ObjectId } = mongoose.Types.ObjectId;
-
-// exports.eliminarCliente = async (req, res) => {
-//   try {
-//     const usuario = await Usuario.findById(req.params.id);
-
-//     if (!usuario) {
-//       return res.status(404).json({ msg: "No existe el Usuario" });
-//     }
-//     const clienteObjectId = usuario._id;
-//     const resultadoEliminacion = await exports.eliminarPuntoEntregaPorClienteId(
-//       clienteObjectId
-//     );
-//     await Usuario.findOneAndDelete({ _id: clienteObjectId });
-//     res.json({
-//       msg: "Usuario y puntos de entrega asociados eliminados con éxito",
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send("Ocurrió un error al eliminar el cliente");
-//   }
-// };
-
-// exports.eliminarCliente = async (req, res) => {
-//   try {
-//     let usuario = await Usuario.findById(req.params.id);
-
-//     if (!usuario) {
-//       res.status(404).json({ msg: "No existe el Usuario" });
-//     }
-
-//     await Usuario.findOneAndDelete({ _id: req.params.id });
-
-//     res.json({ msg: "Usuario eliminado con exito" });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).send("ocurrio un error");
-//   }
-// };
 
 exports.listarSecretas = async (req, res) => {
   try {

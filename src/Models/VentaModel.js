@@ -8,27 +8,14 @@ const VentaSchema = new mongoose.Schema(
       ref: "Usuarios",
       required: true,
     },
-
     // Detalles de Productos
     productos: [
       {
-        producto: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Producto",
-          required: true,
-        },
-        cantidad: {
-          type: Number,
-          required: true,
-          min: 1,
-        },
-        precioUnitario: {
-          type: Number,
-          required: true,
-        },
-      },
+        producto: { type: mongoose.Schema.Types.ObjectId, ref: 'Producto' }, // Usa 'Producto', no 'producto'
+        cantidad: Number,
+        precioUnitario: Number
+      }
     ],
-
     // Información de Pago
     detallesPago: {
       metodoPago: {
@@ -75,39 +62,18 @@ const VentaSchema = new mongoose.Schema(
       },
     },
 
-    // Información de Envío
-    envio: {
-      direccion: {
-        calle: {
-          type: String,
-          required: true,
-        },
-        ciudad: {
-          type: String,
-          required: true,
-        },
-        estado: {
-          type: String,
-          required: true,
-        },
-        codigoPostal: {
-          type: String,
-          required: true,
-        },
-        pais: {
-          type: String,
-          default: "México",
-        },
-      },
-      metodoEnvio: {
-        type: String,
-        enum: ["Estándar", "Express", "Prioritario"],
-        default: "Estándar",
-      },
-      costoEnvio: {
-        type: Number,
-        default: 0,
-      },
+    // Estado de la Venta
+    estado: {
+      type: String,
+      enum: [
+        "Pendiente",
+        "Pagado",
+        "Enviado",
+        "Entregado",
+        "Cancelado",
+        "Recogido en Tienda", // Nueva opción agregada
+      ],
+      default: "Pendiente",
     },
 
     // Estado de la Venta
@@ -136,7 +102,6 @@ const VentaSchema = new mongoose.Schema(
     timestamps: true, // Añade createdAt y updatedAt
   }
 );
-
 // Método para calcular total
 VentaSchema.methods.calcularTotal = function () {
   // Calcular subtotal de productos
@@ -146,11 +111,6 @@ VentaSchema.methods.calcularTotal = function () {
 
   // Calcular total final
   this.resumen.subtotal = subtotalProductos;
-  this.resumen.total =
-    subtotalProductos +
-    this.resumen.impuestos -
-    this.resumen.descuentos +
-    this.envio.costoEnvio;
 };
 
 // Middleware pre-save para calcular total
@@ -162,19 +122,6 @@ VentaSchema.pre("save", function (next) {
 
   // Calcular total
   this.calcularTotal();
-
-  // Establecer fecha de entrega estimada
-  if (!this.fechaEntregaEstimada) {
-    const diasEntrega =
-      this.envio.metodoEnvio === "Express"
-        ? 3
-        : this.envio.metodoEnvio === "Prioritario"
-        ? 1
-        : 7;
-    this.fechaEntregaEstimada = new Date(
-      Date.now() + diasEntrega * 24 * 60 * 60 * 1000
-    );
-  }
 
   next();
 });
