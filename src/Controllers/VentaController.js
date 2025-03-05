@@ -1,6 +1,7 @@
 const Venta = require("../Models/VentaModel");
 const Producto = require("../Models/ProductModel");
-const {logger} = require("../util/logger");
+const { logger } = require("../util/logger");
+const sanitizeObject = require("../util/sanitize");
 
 exports.obtenerProductosCompradoByIdUser = async (req, res) => {
   try {
@@ -8,26 +9,26 @@ exports.obtenerProductosCompradoByIdUser = async (req, res) => {
 
     // Obtener las ventas asociadas a un usuario
     const productosVendidos = await Venta.find({ usuario: usuarioId })
-      .populate({ path: 'productos.producto', select: 'nombre precio imagenPrincipal' }) // Populate en productos.producto
+      .populate({
+        path: "productos.producto",
+        select: "nombre precio imagenPrincipal",
+      }) // Populate en productos.producto
       .sort({ fechaVenta: -1 });
 
     res.status(200).json(productosVendidos);
   } catch (error) {
-    console.error('Error al obtener productos vendidos:', error);
-    res.status(500).json({ mensaje: 'Error al obtener los productos vendidos', error: error.message });
+    console.error("Error al obtener productos vendidos:", error);
+    res.status(500).json({
+      mensaje: "Error al obtener los productos vendidos",
+      error: error.message,
+    });
   }
 };
 
 exports.crearVenta = async (req, res) => {
   try {
     // Destructurar datos del body
-    const { 
-      usuarioId, 
-      productos, 
-      detallesPago, 
-      envio,
-      resumen 
-    } = req.body;
+    const { usuarioId, productos, detallesPago, envio, resumen } = sanitizeObject(req.body);
 
     // Validar productos
     const productosValidados = await Promise.all(
@@ -63,7 +64,8 @@ exports.crearVenta = async (req, res) => {
         subtotal: subtotal,
         impuestos: resumen?.impuestos || 0,
         descuentos: resumen?.descuentos || 0,
-        total: subtotal + (resumen?.impuestos || 0) - (resumen?.descuentos || 0)
+        total:
+          subtotal + (resumen?.impuestos || 0) - (resumen?.descuentos || 0),
       },
       envio: {
         direccion: {
@@ -71,11 +73,11 @@ exports.crearVenta = async (req, res) => {
           ciudad: envio.direccion.ciudad,
           estado: envio.direccion.estado,
           codigoPostal: envio.direccion.codigoPostal,
-          pais: envio.direccion.pais || 'México'
+          pais: envio.direccion.pais || "México",
         },
-        metodoEnvio: envio.metodoEnvio || 'Estándar',
-        costoEnvio: envio.costoEnvio || 0
-      }
+        metodoEnvio: envio.metodoEnvio || "Estándar",
+        costoEnvio: envio.costoEnvio || 0,
+      },
     });
 
     // Guardar venta
@@ -93,7 +95,6 @@ exports.crearVenta = async (req, res) => {
     });
   }
 };
-
 
 // Listar Ventas de Usuario
 exports.listarVentasUsuario = async (req, res) => {
@@ -144,14 +145,12 @@ exports.obtenerDetalleVenta = async (req, res) => {
   }
 };
 
-
-
 // Función para obtener todas las ventas
 exports.obtenerVentas = async (req, res) => {
   try {
     // Obtener todas las ventas sin filtro por usuario
     const ventas = await Venta.find({})
-      .populate('productos', 'nombre imagenPrincipal categoria precio') // Poblar la información del producto
+      .populate("productos", "nombre imagenPrincipal categoria precio") // Poblar la información del producto
       .sort({ fechaDeRegistro: -1 }); // Ordenar las ventas por fecha de registro
 
     // Retornar las ventas
@@ -159,11 +158,10 @@ exports.obtenerVentas = async (req, res) => {
       ventas,
     });
   } catch (error) {
-    console.error('Error al obtener ventas:', error);
+    console.error("Error al obtener ventas:", error);
     res.status(500).json({
-      mensaje: 'Error al obtener ventas',
+      mensaje: "Error al obtener ventas",
       error: error.message,
     });
   }
 };
-

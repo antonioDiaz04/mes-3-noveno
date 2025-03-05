@@ -24,8 +24,10 @@ const verifyTurnstile = async (captchaToken) => {
 
 exports.Login = async (req, res) => {
   try {
+    console.table(req.body)
     const sanitizedData = sanitizeObject(req.body);
 
+    console.table(sanitizedData)
     const { email, password } = sanitizedData;
 
     const { captchaToken } = req.body;
