@@ -2,23 +2,25 @@ const { Usuario, EstadoCuenta } = require("../Models/UsuarioModel");
 require("../Routes/UsuarioRoute");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const {logger} = require("../util/logger");
 
 exports.perfilUsuario = async (req, res) => {
   try {
     const { correo } = req.params.correo;
-    // Buscar el usuario por correo en la base de datos
+
     const usuario = await Usuario.findOne({ correo })
       .populate("municipioId.municipio")
       .populate("coloniaId.colonia");
     // Verificar si el usuario existe
     if (!usuario) {
+      logger.warn(`Usuario no encontrado: ${correo}`); // Advertencia
       return res.status(404).json({ mensaje: "Usuario no encontrado" });
     }
 
     // Devolver los datos del perfil del usuario
     return res.status(200).json({ datos: usuario });
   } catch (error) {
-    console.error(error);
+    logger.error(`Error en perfilUsuario: ${error.message}`);
     return res.status(500).json({ mensaje: "Error en el servidor" });
   }
 };
@@ -27,14 +29,14 @@ exports.perfilUsuario = async (req, res) => {
 exports.VerificaTipoRolAcceso = (req, res) => {
   const token = req.headers.authorization;
   if (!token) {
+    logger.warn("Token no proporcionado");
     return res.status(403).json({ message: "Token no proporcionado" });
   }
-
-  jwt.verify(token, "secret_key", (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
+      logger.error(`Token inválido: ${err.message}`);
       return res.status(401).json({ message: "Token inválido" });
     }
-
     req.user = decoded;
     next();
   });
@@ -42,8 +44,6 @@ exports.VerificaTipoRolAcceso = (req, res) => {
 
 // Middleware para verificar el token y el rol del usuario
 exports.verifyTokenAndRole = (role) => (req, res, next) => {
-  // Verificar si el usuario está autenticado
-  console.log(role);
   if (!req.user) {
     return res
       .status(401)
@@ -52,6 +52,7 @@ exports.verifyTokenAndRole = (role) => (req, res, next) => {
 
   // Verificar si el usuario tiene el rol adecuado
   if (req.user.role !== role) {
+    logger.warn("Acceso denegado. Debes iniciar sesión.");
     return res
       .status(403)
       .json({ message: `Acceso denegado. Debes ser ${role}.` });
@@ -83,25 +84,25 @@ exports.getColoniasPorClientes = async (req, res) => {
 
     res.json(resultado);
   } catch (error) {
+    logger.error(`Error al obtener clientes agrupados: ${error.message}`);
     res
       .status(500)
       .json({ message: "Error al obtener clientes agrupados", error });
   }
 };
-// // Ruta protegida para administradores
-// exports.adminRoute = exports.verifyTokenAndRole("ADMIN");
-// // Ruta protegida para clientes
-// exports.clienteRoute = exports.verifyTokenAndRole("cliente");
 
 exports.EstadoUsuario = async (req, res) => {
   try {
     const cookie = req.cookies["jwt"];
     if (!cookie) {
+      logger.warn("No autentificado: Cookie no proporcionada");
       return res.status(401).send({
         message: "no autentificado",
       });
     }
     const claims = jwt.verify(cookie, "secret");
+    logger.warn("No autentificado: Token inválido");
+
     if (!claims) {
       return res.status(401).send({
         message: "no  autentificado",
@@ -109,6 +110,7 @@ exports.EstadoUsuario = async (req, res) => {
     }
     const usuario = await Usuario.findOne({ _id: claims._id });
     if (!usuario) {
+      logger.warn("Usuario no encontrado");
       return res.status(401).send({
         message: "Usuario no encontrado",
       });
@@ -117,6 +119,7 @@ exports.EstadoUsuario = async (req, res) => {
     const { password, ...data } = await usuario.toJSON();
     res.send(data);
   } catch (error) {
+    logger.error(`Error en EstadoUsuario: ${error.message}`);
     return res.status(401).send({
       message: "no autentificado",
     });
@@ -124,12 +127,9 @@ exports.EstadoUsuario = async (req, res) => {
 };
 
 function cleanPhoneNumber(phoneNumber) {
-  // Elimina cualquier prefijo internacional (ejemplo: +52, +1, +34, etc.)
-  let cleanedPhoneNumber = phoneNumber.replace(/^\+?\d{1,4}\s?/g, ""); // Elimina cualquier prefijo de país
+  let cleanedPhoneNumber = phoneNumber.replace(/^\+?\d{1,4}\s?/g, "");
 
-  // Elimina todos los caracteres no numéricos (espacios, guiones, paréntesis, etc.)
-  cleanedPhoneNumber = cleanedPhoneNumber.replace(/\D/g, ""); // Elimina todo lo que no sea un número
-
+  cleanedPhoneNumber = cleanedPhoneNumber.replace(/\D/g, "");
   return cleanedPhoneNumber;
 }
 
@@ -138,14 +138,12 @@ exports.checkTelefono = async (req, res) => {
     const { telefono } = req.body;
     const telefonoFormateado = cleanPhoneNumber(telefono);
 
-    // Verifica si el correo ya está registrado
-    console.log(telefonoFormateado);
     const telefonoDuplicado = await Usuario.findOne({
       telefono: telefonoFormateado,
     });
 
     if (telefonoDuplicado) {
-      // Responde con un mensaje de error si el correo ya existe
+      logger.warn("El número de teléfono ya está registrado");
       return res
         .status(400)
         .json({ message: "El numero de telefono ya está registrado" });
@@ -154,8 +152,7 @@ exports.checkTelefono = async (req, res) => {
     // Respuesta de éxito si el email está disponible
     return res.status(200).json({ message: "El telefono está disponible" });
   } catch (error) {
-    console.error(error);
-    // Responde con un mensaje de error en caso de excepción
+    logger.error(`Error en checkTelefono: ${error.message}`);
     res
       .status(500)
       .json({ message: "Error en el servidor", error: error.toString() });
@@ -165,20 +162,17 @@ exports.checkTelefono = async (req, res) => {
 exports.checkEmail = async (req, res) => {
   try {
     let email = req.body.email;
-    console.log(req.body);
-    // Verifica si el correo ya está registrado
+
     const record = await Usuario.findOne({ email: email });
 
     if (record) {
-      // Responde con un mensaje de error si el correo ya existe
+      logger.warn("El email ya está registrado");
       return res.status(400).json({ message: "El email ya está registrado" });
     }
 
-    // Respuesta de éxito si el email está disponible
     return res.status(200).json({ message: "El email está disponible" });
   } catch (error) {
-    console.error(error);
-    // Responde con un mensaje de error en caso de excepción
+    logger.error(`Error en checkEmail: ${error.message}`);
     res
       .status(500)
       .json({ message: "Error en el servidor", error: error.toString() });
@@ -187,20 +181,18 @@ exports.checkEmail = async (req, res) => {
 exports.checkCode = async (req, res) => {
   try {
     let code = req.body.code;
-    console.log(req.body);
-    // Verifica si el correo ya está registrado
+
     const record = await Usuario.findOne({ codigoVerificacion: code });
 
     if (!record) {
-      // Responde con un mensaje de error si el correo ya existe
+      logger.warn("El código es incorrecto");
       return res.status(400).json({ message: "El codigo es incorrecto" });
     }
 
     // Respuesta de éxito si el email está disponible
     return res.status(200).json({ message: "El codigo es correcto" });
   } catch (error) {
-    console.error(error);
-    // Responde con un mensaje de error en caso de excepción
+    logger.error(`Error en checkCode: ${error.message}`);
     res
       .status(500)
       .json({ message: "Error en el servidor", error: error.toString() });
@@ -213,6 +205,7 @@ exports.crearUsuario = async (req, res) => {
 
     // Validar que todos los campos estén presentes
     if (!nombre || !telefono || !email || !password) {
+      logger.warn("Todos los campos son obligatorios");
       return res
         .status(400)
         .send({ message: "Todos los campos son obligatorios" });
@@ -221,11 +214,13 @@ exports.crearUsuario = async (req, res) => {
     // Verificar si el email ya está registrado
     const record = await Usuario.findOne({ email: email });
     if (record) {
+      logger.warn("El email ya está registrado");
       return res.status(400).send({ message: "El email ya está registrado" });
     } // Eliminar espacios en el teléfono
 
     const telefonoFormateado = cleanPhoneNumber(telefono);
     if (!telefonoFormateado) {
+      logger.warn("El número telefónico no es válido");
       return res
         .status(400)
         .send({ message: "El número telefónico no es válido" });
@@ -236,6 +231,7 @@ exports.crearUsuario = async (req, res) => {
       telefono: telefonoFormateado,
     });
     if (exist_number) {
+      logger.warn("El número telefónico ya está registrado");
       return res
         .status(400)
         .send({ message: "El número telefónico ya está registrado" });
@@ -268,10 +264,10 @@ exports.crearUsuario = async (req, res) => {
     });
 
     const resultado = await usuario.save();
-    
+
     const token = jwt.sign(
       { _id: usuario._id, rol: usuario.rol },
-      process.env.JWT_SECRET || "secret",
+      process.env.JWT_SECRET,
       { expiresIn: "24h" }
     );
 
@@ -288,8 +284,7 @@ exports.crearUsuario = async (req, res) => {
       message: "Usuario creado exitosamente",
     });
   } catch (error) {
-    console.log(error);
-    // Responder con error del servidor
+    logger.error(`Error en crearUsuario: ${error.message}`);
     return res
       .status(500)
       .send({ message: "Error en el servidor", error: error.toString() });
@@ -301,18 +296,22 @@ exports.eliminarUsuario = async (req, res) => {
     const { id } = req.params;
     const result = await Usuario.deleteOne({ _id: id });
     if (result) {
+      logger.info("Usuario eliminado con éxito");
       res.status(200).json({ message: "Usuario eliminado con éxito." });
     }
   } catch (error) {
-    console.log(error);
+    logger.error(`Error en eliminarUsuario: ${error.message}`);
     res.status(500).send("Error en el servidor: " + error);
   }
 };
+
 exports.editarUsuario = async (req, res) => {
   try {
     const { nombre, telefono, email, password } = req.body;
     const usuario = await Usuario.findOne({ email: email });
+
     if (!usuario) {
+      logger.warn("Usuario no encontrado");
       return res.status(404).send("Usuario no encontrado.");
     }
     // Encripta la nueva contraseña
@@ -323,10 +322,11 @@ exports.editarUsuario = async (req, res) => {
     usuario.telefono = telefono;
     usuario.password = hashedPassword;
     await usuario.save();
-    console.log("Usuario actualizado correctamente.");
+
+    logger.info("Usuario actualizado correctamente");
     res.status(200).send("Usuario actualizado correctamente.");
   } catch (error) {
-    console.log(error);
+    logger.error(`Error en editarUsuario: ${error.message}`);
     res.status(500).send("Error en el servidor: " + error);
   }
 };
@@ -335,11 +335,12 @@ exports.obtenerUsuarioById = async (req, res) => {
   try {
     const usuario = await Usuario.findById(req.params.id);
     if (!usuario) {
+      logger.warn("Usuario no encontrado");
       return res.status(404).json({ msg: "usuario Not Found" });
     }
     res.json(usuario);
   } catch (error) {
-    console.log(error);
+    logger.error(`Error en obtenerUsuarioById: ${error.message}`);
     res.status(404).send("ucurrio un error");
   }
 };
@@ -353,10 +354,11 @@ exports.buscaUsuarioByCorreo = async (req, res) => {
     if (usuario) {
       res.json({ usuarioId: usuario._id });
     } else {
+      logger.warn("Usuario no encontrado");
       res.json({ msg: "Usuario no encontrado" });
     }
   } catch (error) {
-    console.error(error);
+    logger.error(`Error en buscaUsuarioByCorreo: ${error.message}`);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 };
@@ -367,13 +369,14 @@ exports.BuscaUsuarioByCorreo = async (req, res) => {
 
     const usuario = await Usuario.findOne({ correo });
     if (!usuario) {
+      logger.warn("Usuario no encontrado");
       return res
         .status(404)
         .json({ message: "usuario con este correo no encontrado" });
     }
     res.json(usuario);
   } catch (error) {
-    console.log(error);
+    logger.error(`Error en buscaUsuarioByCorreo: ${error.message}`);
     res.status(404).send("ocurrio un error");
   }
 };
@@ -383,13 +386,14 @@ exports.BuscaUsuarioByToken = async (req, res) => {
     const { correo, token } = req.body;
 
     const usuario = await Usuario.findOne({ correo: correo, token: token });
-    console.log(usuario);
+
     if (!usuario) {
+      logger.warn("Usuario no encontrado");
       return res.status(404).json({ message: "usuario no encontrado" });
     }
     res.json(usuario);
   } catch (error) {
-    console.log(error);
+    logger.error(`Error en BuscaUsuarioByToken: ${error.message}`);
     res.status(404).send("ocurrio un error");
   }
 };
@@ -402,13 +406,14 @@ exports.BuscaUsuarioByPreguntayRespuesta = async (req, res) => {
       pregunta: pregunta,
       respuesta: respuesta,
     });
-    console.log(usuario);
+
     if (!usuario) {
+      logger.warn("Usuario no encontrado");
       return res.status(404).json({ message: "usuario no encontrado" });
     }
     res.json(usuario);
   } catch (error) {
-    console.log(error);
+    logger.error(`Error en BuscaUsuarioByPreguntayRespuesta: ${error.message}`);
     res.status(404).send("ocurrio un error");
   }
 };
@@ -419,18 +424,17 @@ exports.obtenerUsuarios = async (req, res) => {
     const usuarios = await Usuario.find({ rol: { $ne: "ADMIN" } });
     res.json(usuarios);
   } catch (error) {
-    console.log("error de consulta");
+    logger.error(`Error en obtenerUsuarios: ${error.message}`);
   }
 };
 exports.actualizarPasswordxCorreo = async (req, res) => {
   try {
     let { email } = req.body; // Corrección aquí
     let nuevaPassword = req.body.nueva;
-    console.table(req.body);
 
     // Verificar si nuevaPassword está definido y no es una cadena vacía
     if (!nuevaPassword || typeof nuevaPassword !== "string") {
-      console.log(nuevaPassword);
+      logger.warn("La nueva contraseña es inválida");
       return res
         .status(400)
         .json({ message: "La nueva contraseña es inválida" });
@@ -442,6 +446,7 @@ exports.actualizarPasswordxCorreo = async (req, res) => {
     const usuario = await Usuario.findOne({ email: email });
 
     if (!usuario) {
+      logger.warn("Usuario no encontrado");
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
@@ -452,8 +457,7 @@ exports.actualizarPasswordxCorreo = async (req, res) => {
     // Devuelve una respuesta exitosa
     res.status(200).json({ message: "Contraseña actualizada correctamente" });
   } catch (error) {
-    // Maneja los errores y devuelve una respuesta de error
-    console.error(error);
+    logger.error(`Error en actualizarPasswordxCorreo: ${error.message}`);
     res
       .status(500)
       .json({ message: "Ocurrió un error al actualizar la contraseña" });
@@ -465,12 +469,10 @@ exports.actualizarPasswordxPregunta = async (req, res) => {
     let { pregunta } = req.body.pregunta;
     let { respuesta } = req.body.respuesta;
     let nuevaPassword = req.body.nueva;
-    console.log("pregunta=>", pregunta);
-    console.log("respuesta=>", respuesta);
-    console.log("nuevaPassword=>", nuevaPassword);
+
     // Verificar si nuevaPassword está definido y no es una cadena vacía
     if (!nuevaPassword || typeof nuevaPassword !== "string") {
-      console.log(nuevaPassword);
+      logger.warn("La nueva contraseña es inválida");
       return res
         .status(400)
         .json({ message: "La nueva contraseña es inválida" });
@@ -488,6 +490,7 @@ exports.actualizarPasswordxPregunta = async (req, res) => {
 
     // Si no se encuentra el usuario, devuelve un mensaje de error
     if (!usuario) {
+      logger.warn("Usuario no encontrado");
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
@@ -499,7 +502,7 @@ exports.actualizarPasswordxPregunta = async (req, res) => {
     res.status(200).json({ message: "Contraseña actualizada correctamente" });
   } catch (error) {
     // Maneja los errores y devuelve una respuesta de error
-    console.error(error);
+    logger.error(`Error en actualizarPasswordxPregunta: ${error.message}`);
     res
       .status(500)
       .json({ message: "Ocurrió un error al actualizar la contraseña" });
@@ -553,8 +556,7 @@ exports.listarSecretas = async (req, res) => {
 
     res.json(preguntas);
   } catch (error) {
-    // Manejar errores
-    console.error("Error al obtener las preguntas secretas:", error);
+    logger.error(`Error al obtener las preguntas secretas: ${error.message}`);
     res.status(500).json({ error: "Error al obtener las preguntas secretas" });
   }
 };
@@ -573,6 +575,7 @@ exports.actualizaRolUsuario = async (req, res) => {
     );
 
     if (!usuarioActualizado) {
+      logger.warn(`Usuario no encontrado: ${id}`); 
       return res.status(404).json({ mensaje: "Usuario no encontrado" });
     }
 
@@ -581,7 +584,7 @@ exports.actualizaRolUsuario = async (req, res) => {
       usuario: usuarioActualizado,
     });
   } catch (error) {
-    console.error("Error al actualizar el rol del usuario:", error);
+    logger.error(`Error al actualizar el rol del usuario: ${error.message}`);
     res.status(500).json({ mensaje: "Error interno del servidor" });
   }
 };
@@ -592,9 +595,11 @@ exports.actualizaDatos = async (req, res) => {
     const { id } = req.params;
     const { nombre, email, longitud, latitud, telefono, numCasa, estatus } =
       req.body;
-    // Busca y actualiza el usuario en la base de datos
+   
+
     let cliente = await Usuario.findById(req.params.id);
     if (!cliente) {
+      logger.warn(`Usuario no encontrado: ${id}`);
       return res.status(404).json({ mensaje: "Usuario no encontrado" });
     }
 
@@ -605,26 +610,12 @@ exports.actualizaDatos = async (req, res) => {
       { new: true }
     );
 
-    console.log("Registro exitoso:"); // Mensaje de éxito en la consola
-
     res.status(200).json({
       mensaje: "Rol actualizado correctamente",
       usuario: usuarioActualizado,
     });
   } catch (error) {
-    console.error("Error al actualizar el rol del usuario:", error);
+    logger.error(`Error al actualizar los datos del usuario: ${error.message}`); 
     res.status(500).json({ mensaje: "Error interno del servidor" });
   }
 };
-
-// "estatus": "Activo",
-// "fechaDeRegistro": "2024-05-25T00:40:33.378Z",
-// "_id": "6650d1b66aba6920beec5449",
-// "nombre": "Toni",
-// "email": "toni.tonni@gmail.com",
-// "password1": "$2a$10$rVHysM/9EGa7ZtsnHhDAy.ScW0NBuo8FyBoeKGuuyEoiptwg7xwi.",
-// "longitud": "-98.52107347143587",
-// "latitud": "21.18937867390761",
-// "telefono": "122121212",
-// "numCasa": "8",
-// "rol": "cliente",

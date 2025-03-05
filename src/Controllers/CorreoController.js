@@ -1,29 +1,34 @@
 const nodemailer = require("nodemailer");
-const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { Usuario } = require("../Models/UsuarioModel");
+const {logger} = require("../util/logger");
+const sanitizeObject = require("../util/sanitize");
 
 const codigoVerificacion = Math.floor(1000 + Math.random() * 9000).toString();
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 465,
+  port: 465, //el numero de la suerte xD
   secure: true,
   auth: {
-    user: "driftspotky@gmail.com",
-    pass: "bdpwlrccwlzwcxeu",
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   },
 });
 
 exports.confirmarVerficacion = async (req, res) => {
   try {
-    const email = req.body.email;
+    const { email } = sanitizeObject(req.body);
+
+    if (!email) {
+      logger.warn("Intento de verificación sin proporcionar email.");
+      return res.status(400).json({ msg: "Debe proporcionar un email." });
+    }
 
     // Generar un código de verificación aleatorio de 4 dígitos
     const code = Math.floor(1000 + Math.random() * 9000);
 
-    console.log(code);
     // Actualizar el código de verificación en la base de datos
     const result = await Usuario.updateOne(
       { email: email },
@@ -31,6 +36,7 @@ exports.confirmarVerficacion = async (req, res) => {
     );
 
     if (result.modifiedCount > 0) {
+      logger.warn(`No se encontró un usuario con el email: ${email}`);
       console.log("Código de verificación actualizado exitosamente.");
     } else {
       console.log("No se encontró un usuario con ese email.");
@@ -109,10 +115,12 @@ async function enviarCodigoVerficiacionActivaCuenta(email, code) {
 
 exports.enviarCorreoyCuerpo = async (req, res) => {
   try {
-    const email = req.body.email;
+    const {email} = sanitizeObject(req.body);
+
     const codigo = Math.floor(1000 + Math.random() * 9000); // Código de 4 dígitos
 
     if (!email) {
+      logger.warn("Intento de envío de correo sin email.");
       return res.status(400).json({ msg: "El email es requerido" });
     }
 
@@ -130,6 +138,7 @@ exports.enviarCorreoyCuerpo = async (req, res) => {
     // Devolver el token al cliente
     res.status(200).json({ msg: "Correo enviado", token });
   } catch (error) {
+    logger.error("Error en enviarCorreoyCuerpo:", error);
     console.error("Error en enviarCorreoyCuerpo:", error);
     res.status(500).json({ msg: "Error en el servidor" });
   }
@@ -141,6 +150,7 @@ exports.validarCodigo = async (req, res) => {
     const { token, codigoIngresado } = req.body;
 
     if (!token || !codigoIngresado) {
+      logger.warn("Intento de validación de código sin token o código.");
       return res.status(400).json({ msg: "Token y código son requeridos" });
     }
 
@@ -155,11 +165,13 @@ exports.validarCodigo = async (req, res) => {
     );
 
     if (isValid) {
+      logger.warn("Código de verificación incorrecto.");
       res.status(200).json({ msg: "Código validado correctamente" });
     } else {
       res.status(400).json({ msg: "Código inválido" });
     }
   } catch (error) {
+    logger.error("Error en validarCodigo:", error);
     console.error("Error en validarCodigo:", error);
     res.status(500).json({ msg: "Error en el servidor" });
   }
@@ -167,12 +179,13 @@ exports.validarCodigo = async (req, res) => {
 
 exports.activarCuenta = async (req, res) => {
   try {
-    const { email, codigoVerificacion } = req.body;
+    const { codigoVerificacion } = req.body;
+    const {email} = sanitizeObject(req.body);
+
     const usuario = await Usuario.findOne({ email, codigoVerificacion });
 
-    console.log(req.body);
-
     if (!usuario) {
+      logger.warn(`Usuario no encontrado o código incorrecto para ${email}`);
       return res.status(404).json({ msg: "Usuario no encontrado" });
     }
 
@@ -183,6 +196,7 @@ exports.activarCuenta = async (req, res) => {
     // Devuelve un mensaje en formato JSON
     return res.status(200).json({ msg: "Cuenta activada con éxito" });
   } catch (error) {
+    logger.error("Error al activar la cuenta:", error);
     console.error("Error al activar la cuenta:", error);
     return res.status(500).json({ msg: "Error en el servidor" });
   }

@@ -7,15 +7,15 @@ const registerSchema = Joi.object({
     .required(),
   email: Joi.string()
     .email()
-    .pattern(
-      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|org|net|edu|gov|io|info|biz|mx|us|uk|es|fr|de|ca|au|jp|xyz|me|tech|co|tv|cloud|ai)$/
-    )
+    // .pattern(
+    //   /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|org|net|edu|gov|io|info|biz|mx|us|uk|es|fr|de|ca|au|jp|xyz|me|tech|co|tv|cloud|ai)$/
+    // )
     .required(),
   password: Joi.string()
     .min(6)
-    .pattern(
-      /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
-    )
+    // .pattern(
+    //   /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+    // )
     .required(),
   captchaToken: Joi.optional(),
 });
@@ -24,15 +24,15 @@ const registerSchema = Joi.object({
 const loginSchema = Joi.object({
   email: Joi.string()
     .email()
-    .pattern(
-      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|org|net|edu|gov|io|info|biz|mx|us|uk|es|fr|de|ca|au|jp|xyz|me|tech|co|tv|cloud|ai)$/
-    )
+    // .pattern(
+    //   /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|org|net|edu|gov|io|info|biz|mx|us|uk|es|fr|de|ca|au|jp|xyz|me|tech|co|tv|cloud|ai)$/
+    // )
     .required(),
   password: Joi.string()
     .min(6)
-    .pattern(
-      /^(?=(.*[A-Z]){3,})(?=(.*[a-z]){4,})(?=(.*\d){4,})(?=(.*[!@#$&*]){5,}).{16,}$/
-    )
+    // .pattern(
+    //   /^(?=(.*[A-Z]){3,})(?=(.*[a-z]){4,})(?=(.*\d){4,})(?=(.*[!@#$&*]){5,}).{16,}$/
+    // )
     .required(),
   captchaToken: Joi.optional(),
 });

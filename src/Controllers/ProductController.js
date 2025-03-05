@@ -1,26 +1,10 @@
-// const { v2: cloudinary } = require("cloudinary");
-// const { uploadImage } = require("../cloudinary/cloudinary");
 const fs = require("fs-extra");
-const Producto = require("../Models/ProductModel"); // Asegúrate de importar tu modelo de producto
-// import path from 'path'
-// Importa multerConfig
+const Producto = require("../Models/ProductModel"); 
 const upload = require('../Midlewares/multer');
-
-
 const cloudinary = require("cloudinary").v2;
-// const Producto = require("../models/Producto"); // Importa el modelo de Producto
-// const fs = require("fs/promises");
+const {logger} = require("../util/logger");
+// const { uploadImage, deleteImage } = require("../cloudinary/cloudinaryConfig");
 
-// Configuración de Cloudinary
-cloudinary.config({
-  cloud_name: "dvvhnrvav",
-  api_key: "982632489651298",
-  api_secret: "TTIZcgIMiC8F4t8cE-t6XkQnPyQ",
-});
-
-// const fs = require('fs').promises; // Asegúrate de usar 'fs/promises' para funciones asíncronas
-// const cloudinary = require('cloudinary').v2;
-// const Producto = require('../models/Producto'); // Asegúrate de que la ruta del modelo sea correcta
 exports.crearProducto = async (req, res) => {
   try {
     console.log("Contenido de req.body:", req.body);

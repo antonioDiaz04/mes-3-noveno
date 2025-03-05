@@ -1,7 +1,9 @@
 const webpush = require("web-push");
+const {logger} = require("../util/logger");
+
 const vapidKeys = {
-  publicKey:"BLYrs4NfSkkjBeVIMgH2ANO4Hcd3FrGKYXabe5L6jpURiePXV9cbl4IewwLjzdszahWAb8SaiPNmyMz6mywr6KY",
-  privateKey:"keH3GwgD0noSJ7IHg_DLwMRP5WM8T0xlRRb2OG-bjFI",
+  publicKey: process.env.VAPID_PUBLIC_KEY,
+  privateKey: process.env.VAPID_PRIVATE_KEY,
 };
 
 webpush.setVapidDetails(
@@ -14,7 +16,10 @@ exports.enviarNotificacion = async (req, res) => {
   try {
     // Validar si el token está presente en la solicitud
     if (!req.body.token) {
-      return res.status(400).json({ msg: "Token de suscripción no proporcionado" });
+      logger.warn("Token de suscripción no proporcionado");
+      return res
+        .status(400)
+        .json({ msg: "Token de suscripción no proporcionado" });
     }
 
     // Convertir el token JSON a un objeto JavaScript
@@ -23,6 +28,7 @@ exports.enviarNotificacion = async (req, res) => {
     // Extraer los valores necesarios
     const { endpoint, keys } = tokenData;
     if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
+      logger.warn("Datos de suscripción inválidos");
       return res.status(400).json({ msg: "Datos de suscripción inválidos" });
     }
 
@@ -40,7 +46,8 @@ exports.enviarNotificacion = async (req, res) => {
         title: "¡Apartado Realizado!",
         body: "Has realizado un apartado. Tienes 24 horas para completar el pago.",
         icon: "https://cdn-icons-png.flaticon.com/512/189/189665.png", // Ícono representativo
-        image: "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+        image:
+          "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
         actions: [
           { action: "pay_now", title: "Completar Pago" },
           { action: "cancel", title: "Cancelar Apartado" },
@@ -49,19 +56,17 @@ exports.enviarNotificacion = async (req, res) => {
       },
     };
 
-    // Enviar notificación push
-    await webpush.sendNotification(pushSubscription, JSON.stringify(payload));
+    await enviarNotificacion(pushSubscription, payload);
 
     console.log("Notificación enviada con éxito");
     res.status(200).json({ msg: "Notificación enviada con éxito" });
-
   } catch (err) {
-    console.error("Error al enviar la notificación:", err);
-    res.status(500).json({ msg: "Error al enviar la notificación", error: err.message });
+    logger.error(`Error al enviar la notificación: ${err.message}`);
+    res
+      .status(500)
+      .json({ msg: "Error al enviar la notificación", error: err.message });
   }
 };
-
-
 
 exports.enviarNotificacionyCuerpo = async (req, res) => {
   const pushSubscription = {
@@ -88,10 +93,8 @@ exports.enviarNotificacionyCuerpo = async (req, res) => {
   };
 
   try {
-    const response = await webpush.sendNotification(
-      pushSubscription,
-      JSON.stringify(payload)
-    );
+    await enviarNotificacion(pushSubscription, payload);
+
     console.log("Notification sent successfully");
     res.status(200).send("Notification sent successfully");
   } catch (err) {
@@ -99,8 +102,6 @@ exports.enviarNotificacionyCuerpo = async (req, res) => {
     res.status(500).send("Error sending notification");
   }
 };
-
-
 
 // Enviar notificación a todas las suscripciones
 // exports.enviarNotificacion = async (req, res) => {
@@ -119,7 +120,6 @@ exports.enviarNotificacionyCuerpo = async (req, res) => {
 //     res.status(500).json({ error: "Error enviando notificación" });
 //   }
 // };
-
 
 exports.enviarNotificacionCorreo = async (req, res) => {
   const pushSubscription = {
@@ -147,10 +147,8 @@ exports.enviarNotificacionCorreo = async (req, res) => {
   };
 
   try {
-    const response = await webpush.sendNotification(
-      pushSubscription,
-      JSON.stringify(payload)
-    );
+    await enviarNotificacion(pushSubscription, payload);
+
     console.log("Notification sent successfully");
     // Enviar la respuesta como JSON
     res.status(200).json({ msg: "Notification sent successfully" });

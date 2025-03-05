@@ -1,23 +1,22 @@
 const VestidosAccesorioIncluidos = require("../Models/VestidoAccesorio"); // Asegúrate de importar tu modelo
 const Producto = require("../Models/ProductModel"); // Asegúrate de importar tu modelo de Vestido
 const Accesorio = require("../Models/AccesorioModel"); // Asegúrate de importar tu modelo de Accesorio
+const {logger} = require("../util/logger");
 
 // Crear una nueva relación entre un vestido y sus accesorios
 exports.crearRelacion = async (req, res) => {
   try {
     const { vestidoId, accesorios } = req.body;
 
-
-     console.log(req.body)
-    // Verificar que el vestido existe
     const vestido = await Producto.findById(vestidoId);
     if (!vestido) {
+      logger.warn(`Vestido no encontrado: ${vestidoId}`);
       return res.status(404).json({ message: "Vestido no encontrado" });
     }
 
-    // Verificar que todos los accesorios existen
     const accesoriosEncontrados = await Accesorio.find({ _id: { $in: accesorios } });
     if (accesoriosEncontrados.length !== accesorios.length) {
+      logger.warn("Uno o más accesorios no encontrados")
       return res.status(404).json({ message: "Uno o más accesorios no encontrados" });
     }
 
@@ -31,7 +30,7 @@ exports.crearRelacion = async (req, res) => {
     
     res.status(201).json({ message: "Relación creada exitosamente", relacion: resultado });
   } catch (error) {
-    console.error("Error al crear la relación:", error);
+    logger.error(`Error al crear la relación: ${error.message}`);
     res.status(500).json({ error: "Ocurrió un error al crear la relación." });
   }
 };
@@ -45,7 +44,7 @@ exports.obtenerRelaciones = async (req, res) => {
 
     res.status(200).json(relaciones);
   } catch (error) {
-    console.error("Error al obtener las relaciones:", error);
+    logger.error(`Error al obtener las relaciones: ${error.message}`);
     res.status(500).json({ message: "Error al obtener las relaciones", error });
   }
 };

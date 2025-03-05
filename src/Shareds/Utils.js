@@ -8,11 +8,10 @@ class Utils {
     return `${dia}-${mes}-${año}`;
   }
 
- isValidEmail(email) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
+  isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
 }
 
 module.exports = Utils;

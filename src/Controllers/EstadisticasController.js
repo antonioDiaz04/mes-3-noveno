@@ -1,14 +1,44 @@
 const Venta = require("../Models/VentaModel");
 const Renta = require("../Models/RentaModel");
+const redis = require("redis");
+const {logger} = require("../util/logger");
 
-// Obtener total de compras y rentas
+const client = redis.createClient();
+
+// Función para obtener cliente frecuente
+const obtenerClienteFrecuente = async (modelo, campo) => {
+  try {
+    const clienteMasFrecuente = await modelo.aggregate([
+      { $group: { _id: campo, total: { $sum: 1 } } },
+      { $sort: { total: -1 } },
+      { $limit: 1 },
+    ]);
+    return clienteMasFrecuente;
+  } catch (error) {
+    logger.error("Error al obtener cliente frecuente:", error);
+    throw new Error("Error interno del servidor");
+  }
+};
+
+// Obtener totales de compras y rentas
 exports.obtenerTotales = async (req, res) => {
   try {
-    const totalCompras = await Venta.countDocuments();
-    const totalRentas = await Renta.countDocuments();
-    res.status(200).json({ totalCompras, totalRentas });
+    client.get("totales", async (err, data) => {
+      if (data) {
+        return res.status(200).json(JSON.parse(data)); // Si está cacheado, lo devolvemos
+      } else {
+        const [totalCompras, totalRentas] = await Promise.all([
+          Venta.countDocuments(),
+          Renta.countDocuments(),
+        ]);
+        const result = { totalCompras, totalRentas };
+        client.setex("totales", 3600, JSON.stringify(result)); // Cacheamos por 1 hora
+        res.status(200).json(result);
+      }
+    });
   } catch (error) {
-    console.error("Error al obtener totales:", error);
+    logger.error("Error al obtener totales:", error);
+
     res
       .status(500)
       .json({ mensaje: "Error interno del servidor", error: error.message });
@@ -36,7 +66,8 @@ exports.obtenerIngresosTotales = async (req, res) => {
       ingresosRentas: totalIngresosRentas[0]?.totalIngresos || 0,
     });
   } catch (error) {
-    console.error("Error al obtener ingresos totales:", error);
+    logger.error("Error al obtener ingresos totales:", error);
+
     res
       .status(500)
       .json({ mensaje: "Error interno del servidor", error: error.message });
@@ -66,7 +97,8 @@ exports.obtenerProductosPopulares = async (req, res) => {
 
     res.status(200).json({ productoMasVendido, productoMasRentado });
   } catch (error) {
-    console.error("Error al obtener productos populares:", error);
+    logger.error("Error al obtener productos populares:", error);
+
     res
       .status(500)
       .json({ mensaje: "Error interno del servidor", error: error.message });
@@ -85,7 +117,8 @@ exports.obtenerClientesActivos = async (req, res) => {
 
     res.status(200).json({ totalClientesActivos });
   } catch (error) {
-    console.error("Error al obtener clientes activos:", error);
+    logger.error("Error al obtener clientes activos:", error);
+
     res
       .status(500)
       .json({ mensaje: "Error interno del servidor", error: error.message });
@@ -108,7 +141,8 @@ exports.obtenerIngresosPorMes = async (req, res) => {
 
     res.status(200).json(ingresosPorMes);
   } catch (error) {
-    console.error("Error al obtener ingresos por mes:", error);
+    logger.error("Error al obtener ingresos por mes:", error);
+
     res
       .status(500)
       .json({ mensaje: "Error interno del servidor", error: error.message });
@@ -125,7 +159,8 @@ exports.obtenerMetodosPago = async (req, res) => {
 
     res.status(200).json(metodosPago);
   } catch (error) {
-    console.error("Error al obtener métodos de pago:", error);
+    logger.error("Error al obtener métodos de pago:", error);
+
     res
       .status(500)
       .json({ mensaje: "Error interno del servidor", error: error.message });
@@ -139,11 +174,14 @@ exports.obtenerRentasRetrasadas = async (req, res) => {
     const rentasRetrasadas = await Renta.find({
       "detallesRenta.fechaFin": { $lt: hoy },
       estado: { $nin: ["Completado", "Cancelado"] },
-    }).populate("usuario", "nombre email");
+    })
+      .populate("usuario", "nombre email")
+      .lean(); // Usamos lean() para mejorar el rendimiento
 
     res.status(200).json(rentasRetrasadas);
   } catch (error) {
-    console.error("Error al obtener rentas retrasadas:", error);
+    logger.error("Error al obtener rentas retrasadas:", error);
+
     res
       .status(500)
       .json({ mensaje: "Error interno del servidor", error: error.message });
@@ -153,21 +191,13 @@ exports.obtenerRentasRetrasadas = async (req, res) => {
 // Obtener clientes con más compras y rentas
 exports.obtenerClientesFrecuentes = async (req, res) => {
   try {
-    const clienteMasCompras = await Venta.aggregate([
-      { $group: { _id: "$usuario", totalCompras: { $sum: 1 } } },
-      { $sort: { totalCompras: -1 } },
-      { $limit: 1 },
-    ]);
-
-    const clienteMasRentas = await Renta.aggregate([
-      { $group: { _id: "$usuario", totalRentas: { $sum: 1 } } },
-      { $sort: { totalRentas: -1 } },
-      { $limit: 1 },
-    ]);
+    const clienteMasCompras = await obtenerClienteFrecuente(Venta, "usuario");
+    const clienteMasRentas = await obtenerClienteFrecuente(Renta, "usuario");
 
     res.status(200).json({ clienteMasCompras, clienteMasRentas });
   } catch (error) {
-    console.error("Error al obtener clientes frecuentes:", error);
+    logger.error("Error al obtener clientes frecuentes:", error);
+
     res
       .status(500)
       .json({ mensaje: "Error interno del servidor", error: error.message });
@@ -184,53 +214,10 @@ exports.obtenerGastoPromedio = async (req, res) => {
 
     res.status(200).json({ gastoPromedio: gastoPromedio[0]?.promedio || 0 });
   } catch (error) {
-    console.error("Error al obtener gasto promedio:", error);
+    logger.error("Error al obtener gasto promedio:", error);
+
     res
       .status(500)
       .json({ mensaje: "Error interno del servidor", error: error.message });
   }
 };
-
-// // Controlador principal que agrupa todas las funciones
-// exports.obtenerEstadisticas = async (req, res) => {
-//   try {
-//     const [
-//       totales,
-//       ingresos,
-//       productosPopulares,
-//       clientesActivos,
-//       ingresosPorMes,
-//       metodosPago,
-//       rentasRetrasadas,
-//       clientesFrecuentes,
-//       gastoPromedio,
-//     ] = await Promise.all([
-//       Venta.countDocuments(),
-//       exports.obtenerIngresosTotales(req, res),
-//       exports.obtenerProductosPopulares(req, res),
-//       exports.obtenerClientesActivos(req, res),
-//       exports.obtenerIngresosPorMes(req, res),
-//       exports.obtenerMetodosPago(req, res),
-//       exports.obtenerRentasRetrasadas(req, res),
-//       exports.obtenerClientesFrecuentes(req, res),
-//       exports.obtenerGastoPromedio(req, res),
-//     ]);
-
-//     res.status(200).json({
-//       totales,
-//       ingresos,
-//       productosPopulares,
-//       clientesActivos,
-//       ingresosPorMes,
-//       metodosPago,
-//       rentasRetrasadas,
-//       clientesFrecuentes,
-//       gastoPromedio,
-//     });
-//   } catch (error) {
-//     console.error("Error al obtener estadísticas:", error);
-//     res
-//       .status(500)
-//       .json({ mensaje: "Error interno del servidor", error: error.message });
-//   }
-// };

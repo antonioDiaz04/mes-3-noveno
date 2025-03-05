@@ -1,0 +1,2 @@
+
+{"timestamp":"2025-03-05T17:45:01.544Z","level":"info","message":"HTTP Request","method":"POST","endpoint":"/api/v1/autentificacion/signIn","queryParams":{},"userId":null,"ip":"::1","userAgent":"PostmanRuntime/7.39.1","requestBody":{"email":"eduardocasrtro110@gmail.com","password":"Eduar1111@@@@@AA "},"responseStatus":403,"responseTime":"1669ms"}

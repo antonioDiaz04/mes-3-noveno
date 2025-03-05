@@ -3,6 +3,7 @@ const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const sanitizeObject = require("../util/sanitize");
+const {logger} = require("../util/logger");
 
 const verifyTurnstile = async (captchaToken) => {
   try {
@@ -14,25 +15,36 @@ const verifyTurnstile = async (captchaToken) => {
         response: captchaToken,
       },
     });
-    return response.data.success ? true : false;
+    return response.data.success;
   } catch (error) {
-    console.error("Error al verificar el CAPTCHA:", error);
+    logger.error("Error al verificar el CAPTCHA:", error.message);
     return false;
   }
 };
-// Función para sanitizar objetos
 
 exports.Login = async (req, res) => {
   try {
     const sanitizedData = sanitizeObject(req.body);
+
     const { email, password } = sanitizedData;
+
     const { captchaToken } = req.body;
+
     let usuario;
 
-    usuario = await Usuario.findOne({ email }).populate("estadoCuenta");
+    if (!email || !password) {
+      logger.warn("Intento de inicio de sesión sin email o password.");
+      return res
+        .status(400)
+        .json({ message: "Email y contraseña son requeridos." });
+    }
 
+    usuario = await Usuario.findOne({ email }).populate("estadoCuenta");
     if (!usuario) {
-      return res.status(401).json({ message: " El correo no esta registrado" });
+      logger.warn(
+        `Intento de inicio de sesión con email no registrado: ${email}`
+      );
+      return res.status(400).json({ message: "Usuario no encontrado." });
     }
 
     const estadoCuenta = usuario.estadoCuenta;
@@ -45,6 +57,11 @@ exports.Login = async (req, res) => {
         ahora;
 
       if (tiempoRestante > 0) {
+        logger.warn(
+          `Cuenta bloqueada para el usuario: ${email}, tiempo restante: ${Math.ceil(
+            tiempoRestante / 1000
+          )}s`
+        );
         return res.status(403).json({
           message: `Cuenta bloqueada. Intenta nuevamente en ${Math.ceil(
             tiempoRestante / 1000
@@ -66,6 +83,9 @@ exports.Login = async (req, res) => {
     if (!isPasswordValid) {
       estadoCuenta.intentosFallidos += 1;
       estadoCuenta.fechaUltimoIntentoFallido = new Date();
+      logger.warn(
+        `Intento fallido de inicio de sesión para ${email}, intento ${estadoCuenta.intentosFallidos}/${estadoCuenta.intentosPermitidos}`
+      );
 
       if (estadoCuenta.intentosFallidos >= estadoCuenta.intentosPermitidos) {
         estadoCuenta.estado = "bloqueada";
@@ -78,6 +98,9 @@ exports.Login = async (req, res) => {
           ahora;
         await estadoCuenta.save();
 
+        logger.error(
+          `Cuenta bloqueada para el usuario: ${email}, demasiados intentos fallidos.`
+        );
         return res.status(403).json({
           message: `Cuenta bloqueada. Intenta nuevamente en ${Math.ceil(
             tiempoRestante / 1000
@@ -95,6 +118,7 @@ exports.Login = async (req, res) => {
 
     const isCaptchaValid = await verifyTurnstile(captchaToken);
     if (!isCaptchaValid) {
+      logger.warn(`Captcha inválido para el usuario: ${email}`);
       return res.status(400).json({ message: "Captcha inválido" });
     }
 
@@ -102,7 +126,8 @@ exports.Login = async (req, res) => {
     await estadoCuenta.save();
 
     if (!usuario.rol) {
-      console.log("Error: El usuario no tiene un rol asignado");
+      logger.error("Error: El usuario no tiene un rol asignado");
+
       return res
         .status(401)
         .json({ message: "El usuario no tiene un rol asignado" });
@@ -110,7 +135,7 @@ exports.Login = async (req, res) => {
 
     const token = jwt.sign(
       { _id: usuario._id, rol: usuario.rol },
-      process.env.JWT_SECRET || "secret",
+      process.env.JWT_SECRET ,
       { expiresIn: "24h" }
     );
 
@@ -126,51 +151,9 @@ exports.Login = async (req, res) => {
       .json({ token, rol: usuario.rol, captchaValid: isCaptchaValid });
   } catch (error) {
     console.error("Error en el servidor:", error);
+    logger.error("Error en Login:", error.message);
     return res
       .status(500)
       .json({ message: "Error en el servidor: " + error.message });
   }
 };
-
-// exports.verificarCodigo = async (req, res) => {
-//   try {
-//     const { email, codigo } = req.body;
-//     // let usuario;
-//     const usuario = await Usuario.findOne({ email, codigoVerificacion });
-
-//     console.table([
-//       "correo recibido:",
-//       email,
-//       "codigoVerificacion recibido:",
-//       codigoVerificacion,
-//     ]);
-//     // Verificar si el código es válido
-//     const isCodigoValido = await bcrypt.compare(
-//       codigo,
-//       usuario.codigoVerificacion
-//     );
-//     if (!isCodigoValido) {
-//       return res
-//         .status(401)
-//         .json({ message: "Código de verificación incorrecto." });
-//     }
-
-//     // Generar el token JWT
-//     const token = jwt.sign(
-//       { _id: usuario._id, rol: usuario.rol },
-//       process.env.JWT_SECRET || "secret",
-//       {
-//         expiresIn: "1h", // El token expirará en 1 hora
-//       }
-//     );
-
-//     console.log("aqui llego tambien :");
-
-//     // Si el usuario tiene un rol, firmar el token JWT con el rol incluido
-//     // const token = jwt.sign({ _id: usuario._id, rol: usuario.rol }, "secret");
-//     return res.status(200).json({ token, rol: usuario.rol });
-//   } catch (error) {
-//     console.log("ohh no :", error);
-//     return res.status(500).send("Error en el servidor: " + error);
-//   }
-// };

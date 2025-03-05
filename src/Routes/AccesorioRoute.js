@@ -10,7 +10,7 @@ router.post(
   AccesorioController.crearAccesorio
 );
 
-router.get("/", AccesorioController.obtenerAccesorio);
+router.get("/", AccesorioController.obtenerAccesorios);
 
 router.get("/byId/:id", AccesorioController.obtenerAccesorioById);
 

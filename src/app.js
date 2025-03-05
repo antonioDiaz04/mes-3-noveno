@@ -1,12 +1,12 @@
 const express = require("express");
+const morgan = require("morgan");
+// require("dotenv").config();
 const conectarDB = require("./Server/Conexion");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
-const morgan = require("morgan");
-require("dotenv").config(); // Cargar variables de entorno
 const helmet = require("helmet");
-const { defaults } = require("joi");
+const { logHttpRequest } = require("./util/logger.js");
 
 const app = express();
 
@@ -23,7 +23,16 @@ app.use(cookieParser());
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
-// Solo habilitar logging en desarrollo
+app.use((req, res, next) => {
+  const start = Date.now(); //Se captura el tiempo actual en milisegundos
+  res.on("finish", () => {
+    const duration = Date.now() - start; // se calcula la duración de la solicitud restando el tiempo actual
+    logHttpRequest(req, res, duration);
+  });
+  next();
+});
+
+// Solo habilitamos los mensajes por consola en el modo de desarrollo
 if (process.env.NODE_ENV !== "production") {
   app.use(morgan("dev"));
 }
@@ -35,6 +44,7 @@ app.use(
       scriptSrc: ["'self'", "trusted-scripts.com"],
       styleSrc: ["'self'", "trusted-styles.com"],
       imgSrc: ["'self'", "trusted-images.com"],
+      connectSrc: ["'self'", "api.trusted.com"],
     },
   })
 );
@@ -71,14 +81,14 @@ app.use(
 app.use(`/api/${apiVersion}/enviar-correo`, require("./Routes/CorreoRoute"));
 app.use(`/api/${apiVersion}/verificacion`, require("./Routes/CorreoRoute"));
 app.use(`/api/${apiVersion}/verificar`, require("./Routes/catpch"));
-app.use(
-  `/api/${apiVersion}/pruebaSubirImagen`,
-  require("./Routes/cloudinary.Routes")
-);
+
 app.use(`/api/${apiVersion}/Empresa`, require("./Routes/PerfilEmpresa.Routes"));
 app.use(`/api/${apiVersion}/autentificacion`, require("./Routes/AuthRoute"));
 app.use(`/api/${apiVersion}/renta`, require("./Routes/Renta&Venta"));
-app.use(`/api/${apiVersion}/estadisticas`, require("./Routes/EstadisticasRoute"));
+app.use(
+  `/api/${apiVersion}/estadisticas`,
+  require("./Routes/EstadisticasRoute")
+);
 
 // Ruta para acciones con rol de Administrador de la página
 app.use(`/api/${apiVersion}/admin`, require("./Routes/PrivadoRoute"));
@@ -86,10 +96,5 @@ app.use(`/api/${apiVersion}/politicas`, require("./Routes/PoliticasRoute.js"));
 
 // Ruta para acciones con rol de Administrador
 app.use(`/api/${apiVersion}/usuarios`, require("./Routes/UsuarioRoute"));
-
-app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).json({ mensaje: "Error interno del servidor" });
-});
 
 module.exports = app;

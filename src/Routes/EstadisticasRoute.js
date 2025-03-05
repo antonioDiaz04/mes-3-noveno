@@ -1,15 +1,14 @@
 const express = require("express");
 const {
-  // obtenerEstadisticas,
-  obtenerTotales,
-  obtenerIngresosTotales,
-  obtenerProductosPopulares,
-  obtenerClientesActivos,
-  obtenerIngresosPorMes,
-  obtenerMetodosPago,
-  obtenerRentasRetrasadas,
   obtenerClientesFrecuentes,
-  obtenerGastoPromedio
+  obtenerClientesActivos,
+  obtenerGastoPromedio,
+  obtenerIngresosPorMes,
+  obtenerIngresosTotales,
+  obtenerMetodosPago,
+  obtenerProductosPopulares,
+  obtenerRentasRetrasadas,
+  obtenerTotales,
 } = require("../Controllers/EstadisticasController.js");
 
 const router = express.Router();

@@ -1,45 +1,81 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const request = require("request");
+const { logger } = require("../util/logger");
+require("dotenv").config();
 
-const SALT_ROUNDS = 10; // Define la cantidad de rondas para el hash
 function generarCodigoVerificacion() {
-  return Math.floor(100000 + Math.random() * 900000);  // Genera un código de 6 dígitos
+  return Math.floor(100000 + Math.random() * 900000); // Genera un código de 6 dígitos
 }
+
 // Controlador para enviar el mensaje de WhatsApp con código de verificación personalizado
 exports.enviarMensaje = (req, res) => {
   // Generar un código de verificación
   const codigoVerificacion = generarCodigoVerificacion();
-  
+
   // Definir los parámetros de la solicitud
-  const targetURL = 'https://api.smsmasivos.com.mx/whatsapp/send';
+  const targetURL = "https://api.smsmasivos.com.mx/whatsapp/send";
 
   // Configurar la solicitud POST con el código de verificación generado
   request.post(
     {
       url: targetURL,
       headers: {
-        "apikey": "35b2ca1a0d6af4a4b475372fd4ea9cdde5d6d583"  // Tu clave API
+        apikey: process.env.SMS_API_KEY, // Tu clave API
       },
       form: {
-        "instance_id": "r3pptb71-t3ww-wv65-w9of-vbcp9so85b23",  // Tu ID de instancia
-        "type": "text",  // Tipo de mensaje (puede ser "text" o "media")
-        "number": "7711403469",  // Número al que enviar el mensaje
-        "country_code": "52",  // Código de país (por ejemplo, "52" para México)
-        "message": `Hola, tu código de verificación es: ${codigoVerificacion}. No lo compartas con nadie.`  // Mensaje personalizado
-      }
+        instance_id: process.env.SMS_INSTANCE_ID, // Tu ID de instancia
+        type: "text", // Tipo de mensaje (puede ser "text" o "media")
+        number: process.env.SMS_TARGET_NUMBER, // Número al que enviar el mensaje
+        country_code: process.env.SMS_COUNTRY_CODE, // Código de país (por ejemplo, "52" para México)
+        message: `Hola, tu código de verificación es: ${codigoVerificacion}. No lo compartas con nadie.`, // Mensaje personalizado
+      },
     },
     (err, response, body) => {
       if (err) {
-        console.error('Error al enviar el mensaje:', err);
-        return res.status(500).json({ error: 'Error al enviar el mensaje' });
+        logger.error("Error al enviar el mensaje:", err);
+
+        return res.status(500).json({ error: "Error al enviar el mensaje" });
       }
-      
+
       // Retorna la respuesta del API de SMS Masivos
-      console.log('Mensaje enviado:', body);
-      return res.status(200).json({ message: 'Mensaje enviado con éxito', body: JSON.parse(body) });
+      console.log("Mensaje enviado:", body);
+      return res
+        .status(200)
+        .json({ message: "Mensaje enviado con éxito", body: JSON.parse(body) });
     }
   );
+};
+
+// Validación del código
+exports.validarCodigo = async (req, res) => {
+  try {
+    const { token, codigoIngresado } = req.body;
+
+    if (!token || !codigoIngresado) {
+      return res.status(400).json({ msg: "Token y código son requeridos" });
+    }
+
+    // Verificar y decodificar el token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { hashedCode } = decoded;
+
+    // Comparar el código ingresado con el hash almacenado
+    const isMatch = await bcrypt.compare(
+      codigoIngresado.toString(),
+      hashedCode
+    );
+
+    if (isMatch) {
+      return res.status(200).json({ msg: "Código verificado correctamente" });
+    } else {
+      return res.status(400).json({ msg: "Código incorrecto" });
+    }
+  } catch (error) {
+    logger.error("Error en validarCodigo:", error);
+
+    res.status(500).json({ msg: "Error en el servidor" });
+  }
 };
 
 // exports.enviarMensaje = async (req, res) => {
@@ -95,33 +131,3 @@ exports.enviarMensaje = (req, res) => {
 //     res.status(500).json({ msg: "Error en el servidor" });
 //   }
 // };
-
-// Validación del código
-exports.validarCodigo = async (req, res) => {
-  try {
-    const { token, codigoIngresado } = req.body;
-
-    if (!token || !codigoIngresado) {
-      return res.status(400).json({ msg: "Token y código son requeridos" });
-    }
-
-    // Verificar y decodificar el token
-    const decoded = jwt.verify(token, "clave_secreta");
-    const { hashedCode } = decoded;
-
-    // Comparar el código ingresado con el hash almacenado
-    const isMatch = await bcrypt.compare(
-      codigoIngresado.toString(),
-      hashedCode
-    );
-
-    if (isMatch) {
-      return res.status(200).json({ msg: "Código verificado correctamente" });
-    } else {
-      return res.status(400).json({ msg: "Código incorrecto" });
-    }
-  } catch (error) {
-    console.error("Error en validarCodigo:", error);
-    res.status(500).json({ msg: "Error en el servidor" });
-  }
-};
