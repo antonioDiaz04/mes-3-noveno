@@ -35,6 +35,7 @@ const DatosAtelierSchema = mongoose.Schema({
     type: String,
   },
 });
+
 const redesSocialesSchema = mongoose.Schema([
   {
     plataforma: {

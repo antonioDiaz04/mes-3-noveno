@@ -1,7 +1,5 @@
 const { DatosAtelier, RedesSociales } = require("../Models/EmpresaModel.js");
 const { Usuario, EstadoCuenta } = require("../Models/UsuarioModel.js");
-// const { uploadImage, deleteImage } = require("../cloudinary/cloudinary");
-const fs = require("fs-extra");
 const {logger} = require("../util/logger");
 const sanitizeObject = require("../util/sanitize");
 
@@ -16,7 +14,7 @@ exports.crearPerfilEmpresa = async (req, res) => {
     if (!req.files || Object.keys(req.files).length === 0) {
       return res
         .status(400)
-        .json({ mensaje: "No se proporcionaron imágenes para subir" });
+        .json({ message: "No se proporcionaron imágenes para subir" });
     }
 
     // // Obtiene el primer archivo de imagen
@@ -43,17 +41,10 @@ exports.crearPerfilEmpresa = async (req, res) => {
       logger.warn("redesSociales debe ser un arreglo");
       return res
         .status(400)
-        .json({ mensaje: "redesSociales debe ser un arreglo" });
+        .json({ message: "redesSociales debe ser un arreglo" });
     }
-    const nuevoPerfil = new DatosAtelier({
-      // logo: result.secure_url, // Guarda la URL de la imagen subida
-      redesSociales: redesSocialesGuardadas,
-      slogan,
-      tituloPagina,
-      direccion,
-      correoElectronico,
-      telefono,
-    });
+    
+    
 
     await nuevoPerfil.save();
     res.status(201).json(nuevoPerfil);
@@ -61,7 +52,7 @@ exports.crearPerfilEmpresa = async (req, res) => {
     logger.error("Error al crear el perfil de la empresa:", error);
     res
       .status(500)
-      .json({ mensaje: "Error interno del servidor", error: error.message });
+      .json({ message: "Error interno del servidor", error: error.message });
   }
 };
 
@@ -73,7 +64,7 @@ exports.obtenerPerfilesEmpresa = async (req, res) => {
     logger.error("Error al obtener perfiles de la empresa:", error);
     res
       .status(500)
-      .json({ mensaje: "Error interno del servidor", error: error.message });
+      .json({ message: "Error interno del servidor", error: error.message });
   }
 };
 
@@ -102,7 +93,7 @@ exports.editarPerfilEmpresa = async (req, res) => {
     const perfilExistente = await DatosAtelier.findOne({});
     if (!perfilExistente) {
       logger.error("Perfil no encontrado");
-      return res.status(404).json({ mensaje: "Perfil no encontrado" });
+      return res.status(404).json({ message: "Perfil no encontrado" });
     }
 
     // Actualiza otros campos
@@ -123,7 +114,7 @@ exports.editarPerfilEmpresa = async (req, res) => {
     logger.error("Error al editar el perfil de la empresa:", error);
     res
       .status(500)
-      .json({ mensaje: "Error interno del servidor", error: error.message });
+      .json({ message: "Error interno del servidor", error: error.message });
   }
 };
 
@@ -141,7 +132,7 @@ exports.eliminarImagenesPerfil = async (req, res) => {
       logger.error("No se proporcionaron imágenes para eliminar");
       return res
         .status(400)
-        .json({ mensaje: "No se proporcionaron imágenes para eliminar" });
+        .json({ message: "No se proporcionaron imágenes para eliminar" });
     }
 
     // Busca el perfil de la empresa por ID
@@ -150,7 +141,7 @@ exports.eliminarImagenesPerfil = async (req, res) => {
       logger.error("Perfil de empresa no encontrado");
       return res
         .status(404)
-        .json({ mensaje: "Perfil de empresa no encontrado" });
+        .json({ message: "Perfil de empresa no encontrado" });
     }
 
     // Elimina las imágenes de Cloudinary
@@ -177,12 +168,12 @@ exports.eliminarImagenesPerfil = async (req, res) => {
     await perfil.save();
     res
       .status(200)
-      .json({ mensaje: "Imágenes eliminadas correctamente", perfil });
+      .json({ message: "Imágenes eliminadas correctamente", perfil });
   } catch (error) {
     logger.error("Error al eliminar imágenes del perfil de la empresa:", error);
     res
       .status(500)
-      .json({ mensaje: "Error interno del servidor", error: error.message });
+      .json({ message: "Error interno del servidor", error: error.message });
   }
 };
 
@@ -221,7 +212,7 @@ exports.consultarConfigurarEmpresa = async (req, res) => {
     });
   } catch (error) {
     logger.error("Error al consultar la configuración:", error);
-    res.status(500).json({ message: "Error al consultar la configuración" });
+    res.status(500).json({ message: "Error interno del servidor", error: error.message });
   }
 };
 exports.editarConfigurarEmpresa = async (req, res) => {
@@ -286,10 +277,7 @@ exports.editarConfigurarEmpresa = async (req, res) => {
       : res.status(500).json({ message: "Error al actualizar los usuarios" });
   } catch (error) {
     logger.error("Error en editarConfigurarEmpresa:", error);
-    res.status(500).json({
-      message: "Error al actualizar la configuración",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Error interno del servidor", error: error.message });
   }
 };
 
@@ -320,7 +308,7 @@ exports.guardarRedSocial = async (req, res) => {
       .json({ message: "Red social guardada correctamente." });
   } catch (error) {
      logger.error("Error al guardar la red social:", error); 
-    return res.status(500).json({ error: "Error al guardar la red social." });
+     res.status(500).json({ message: "Error interno del servidor", error: error.message });
   }
 };
 exports.obtenerRedesSociales = async (req, res) => {
@@ -341,7 +329,7 @@ exports.obtenerRedesSociales = async (req, res) => {
       .json({ message: "Red social guardada correctamente." });
   } catch (error) {
     logger.error("Error al obtener las redes sociales:", error);
-    return res.status(500).json({ error: "Error al guardar la red social." });
+    res.status(500).json({ message: "Error interno del servidor", error: error.message });
   }
 };
 
@@ -391,6 +379,6 @@ exports.eliminarRedSocial = async (req, res) => {
       .json({ message: "Red social eliminada correctamente." });
   } catch (error) {
     logger.error("Error al eliminar la red social:", error);
-    return res.status(500).json({ error: "Error al eliminar la red social." });
+    res.status(500).json({ message: "Error interno del servidor", error: error.message });
   }
 };

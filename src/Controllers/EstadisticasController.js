@@ -41,7 +41,7 @@ exports.obtenerTotales = async (req, res) => {
 
     res
       .status(500)
-      .json({ mensaje: "Error interno del servidor", error: error.message });
+      .json({ message: "Error interno del servidor", error: error.message });
   }
 };
 
@@ -70,7 +70,7 @@ exports.obtenerIngresosTotales = async (req, res) => {
 
     res
       .status(500)
-      .json({ mensaje: "Error interno del servidor", error: error.message });
+      .json({ message: "Error interno del servidor", error: error.message });
   }
 };
 
@@ -101,7 +101,7 @@ exports.obtenerProductosPopulares = async (req, res) => {
 
     res
       .status(500)
-      .json({ mensaje: "Error interno del servidor", error: error.message });
+      .json({ message: "Error interno del servidor", error: error.message });
   }
 };
 
@@ -121,7 +121,7 @@ exports.obtenerClientesActivos = async (req, res) => {
 
     res
       .status(500)
-      .json({ mensaje: "Error interno del servidor", error: error.message });
+      .json({ message: "Error interno del servidor", error: error.message });
   }
 };
 
@@ -145,7 +145,7 @@ exports.obtenerIngresosPorMes = async (req, res) => {
 
     res
       .status(500)
-      .json({ mensaje: "Error interno del servidor", error: error.message });
+      .json({ message: "Error interno del servidor", error: error.message });
   }
 };
 
@@ -163,7 +163,7 @@ exports.obtenerMetodosPago = async (req, res) => {
 
     res
       .status(500)
-      .json({ mensaje: "Error interno del servidor", error: error.message });
+      .json({ message: "Error interno del servidor", error: error.message });
   }
 };
 
@@ -184,7 +184,7 @@ exports.obtenerRentasRetrasadas = async (req, res) => {
 
     res
       .status(500)
-      .json({ mensaje: "Error interno del servidor", error: error.message });
+      .json({ message: "Error interno del servidor", error: error.message });
   }
 };
 
@@ -200,7 +200,7 @@ exports.obtenerClientesFrecuentes = async (req, res) => {
 
     res
       .status(500)
-      .json({ mensaje: "Error interno del servidor", error: error.message });
+      .json({ message: "Error interno del servidor", error: error.message });
   }
 };
 
@@ -218,6 +218,6 @@ exports.obtenerGastoPromedio = async (req, res) => {
 
     res
       .status(500)
-      .json({ mensaje: "Error interno del servidor", error: error.message });
+      .json({ message: "Error interno del servidor", error: error.message });
   }
 };

@@ -3,7 +3,7 @@ const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const sanitizeObject = require("../util/sanitize");
-const {logger} = require("../util/logger");
+const { logger } = require("../util/logger");
 
 const verifyTurnstile = async (captchaToken) => {
   try {
@@ -24,10 +24,8 @@ const verifyTurnstile = async (captchaToken) => {
 
 exports.Login = async (req, res) => {
   try {
-    console.table(req.body)
     const sanitizedData = sanitizeObject(req.body);
 
-    console.table(sanitizedData)
     const { email, password } = sanitizedData;
 
     const { captchaToken } = req.body;
@@ -35,18 +33,14 @@ exports.Login = async (req, res) => {
     let usuario;
 
     if (!email || !password) {
-      logger.warn("Intento de inicio de sesión sin email o password.");
       return res
         .status(400)
-        .json({ message: "Email y contraseña son requeridos." });
+        .json({ message: "Datos de acceso incompletos." });
     }
 
     usuario = await Usuario.findOne({ email }).populate("estadoCuenta");
     if (!usuario) {
-      logger.warn(
-        `Intento de inicio de sesión con email no registrado: ${email}`
-      );
-      return res.status(400).json({ message: "Usuario no encontrado." });
+      return res.status(400).json({ message: "Credenciales inválidas." });
     }
 
     const estadoCuenta = usuario.estadoCuenta;
@@ -59,11 +53,6 @@ exports.Login = async (req, res) => {
         ahora;
 
       if (tiempoRestante > 0) {
-        logger.warn(
-          `Cuenta bloqueada para el usuario: ${email}, tiempo restante: ${Math.ceil(
-            tiempoRestante / 1000
-          )}s`
-        );
         return res.status(403).json({
           message: `Cuenta bloqueada. Intenta nuevamente en ${Math.ceil(
             tiempoRestante / 1000
@@ -85,9 +74,6 @@ exports.Login = async (req, res) => {
     if (!isPasswordValid) {
       estadoCuenta.intentosFallidos += 1;
       estadoCuenta.fechaUltimoIntentoFallido = new Date();
-      logger.warn(
-        `Intento fallido de inicio de sesión para ${email}, intento ${estadoCuenta.intentosFallidos}/${estadoCuenta.intentosPermitidos}`
-      );
 
       if (estadoCuenta.intentosFallidos >= estadoCuenta.intentosPermitidos) {
         estadoCuenta.estado = "bloqueada";
@@ -129,7 +115,6 @@ exports.Login = async (req, res) => {
 
     if (!usuario.rol) {
       logger.error("Error: El usuario no tiene un rol asignado");
-
       return res
         .status(401)
         .json({ message: "El usuario no tiene un rol asignado" });
@@ -137,7 +122,7 @@ exports.Login = async (req, res) => {
 
     const token = jwt.sign(
       { _id: usuario._id, rol: usuario.rol },
-      process.env.JWT_SECRET ,
+      process.env.JWT_SECRET,
       { expiresIn: "24h" }
     );
 
@@ -152,7 +137,6 @@ exports.Login = async (req, res) => {
       .status(200)
       .json({ token, rol: usuario.rol, captchaValid: isCaptchaValid });
   } catch (error) {
-    console.error("Error en el servidor:", error);
     logger.error("Error en Login:", error.message);
     return res
       .status(500)

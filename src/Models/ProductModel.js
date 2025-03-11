@@ -37,7 +37,6 @@ const productoSchema = new mongoose.Schema({
     altura: { type: Number, required: false }, // en cm
     cintura: { type: Number, required: false }, // en cm
   },
-  
   precio: {
     type: Number,
     required: false,

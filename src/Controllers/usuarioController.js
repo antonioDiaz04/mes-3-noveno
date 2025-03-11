@@ -25,22 +25,7 @@ exports.perfilUsuario = async (req, res) => {
   }
 };
 
-// ruta de verificacion de tipo de acceso
-exports.VerificaTipoRolAcceso = (req, res) => {
-  const token = req.headers.authorization;
-  if (!token) {
-    logger.warn("Token no proporcionado");
-    return res.status(403).json({ message: "Token no proporcionado" });
-  }
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      logger.error(`Token inválido: ${err.message}`);
-      return res.status(401).json({ message: "Token inválido" });
-    }
-    req.user = decoded;
-    next();
-  });
-};
+
 
 // Middleware para verificar el token y el rol del usuario
 exports.verifyTokenAndRole = (role) => (req, res, next) => {

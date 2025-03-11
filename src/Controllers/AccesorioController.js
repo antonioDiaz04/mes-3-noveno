@@ -120,7 +120,7 @@ exports.eliminarAccesorio = async (req, res) => {
 exports.obtenerAccesorios = async (req, res) => {
   try {
     const accesorios = await Accesorio.find();
-
+    
     res.status(200).json(accesorios);
   } catch (error) {
     logger.error("Error al obtener los accesorios:", error);

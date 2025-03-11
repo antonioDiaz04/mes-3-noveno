@@ -23,7 +23,7 @@ exports.confirmarVerficacion = async (req, res) => {
 
     if (!email) {
       logger.warn("Intento de verificación sin proporcionar email.");
-      return res.status(400).json({ msg: "Debe proporcionar un email." });
+      return res.status(400).json({ message: "Debe proporcionar un email." });
     }
 
     // Generar un código de verificación aleatorio de 4 dígitos
@@ -45,15 +45,15 @@ exports.confirmarVerficacion = async (req, res) => {
     if (result.matchedCount === 0) {
       return res
         .status(200)
-        .json({ msg: "Si el correo existe, se enviará un código" });
+        .json({ message: "Si el correo existe, se enviará un código" });
     }
     // Enviar el correo con el código de verificación
     await enviarCodigoVerficiacionActivaCuenta(email, code);
 
-    res.status(200).json({ msg: "Si el correo existe, se enviará un código" });
+    res.status(200).json({ message: "Si el correo existe, se enviará un código" });
   } catch (error) {
     console.error("Error en confirmarVerficacion:", error);
-    res.status(500).json({ msg: "Error en el servidor" });
+    res.status(500).json({ message: "Error en el servidor" });
   }
 };
 
@@ -121,7 +121,7 @@ exports.enviarCorreoyCuerpo = async (req, res) => {
 
     if (!email) {
       logger.warn("Intento de envío de correo sin email.");
-      return res.status(400).json({ msg: "El email es requerido" });
+      return res.status(400).json({ message: "El email es requerido" });
     }
 
     // Hashear el código
@@ -136,11 +136,10 @@ exports.enviarCorreoyCuerpo = async (req, res) => {
     await enviarCodigoVerficiacionActivaCuenta(email, codigo);
 
     // Devolver el token al cliente
-    res.status(200).json({ msg: "Correo enviado", token });
+    res.status(200).json({ message: "Correo enviado", token });
   } catch (error) {
     logger.error("Error en enviarCorreoyCuerpo:", error);
-    console.error("Error en enviarCorreoyCuerpo:", error);
-    res.status(500).json({ msg: "Error en el servidor" });
+    res.status(500).json({ message: "Error en el servidor" });
   }
 };
 
@@ -151,7 +150,7 @@ exports.validarCodigo = async (req, res) => {
 
     if (!token || !codigoIngresado) {
       logger.warn("Intento de validación de código sin token o código.");
-      return res.status(400).json({ msg: "Token y código son requeridos" });
+      return res.status(400).json({ message: "Token y código son requeridos" });
     }
 
     // Verificar token y obtener el hash
@@ -166,14 +165,14 @@ exports.validarCodigo = async (req, res) => {
 
     if (isValid) {
       logger.warn("Código de verificación incorrecto.");
-      res.status(200).json({ msg: "Código validado correctamente" });
+      res.status(200).json({ message: "Código validado correctamente" });
     } else {
-      res.status(400).json({ msg: "Código inválido" });
+      res.status(400).json({ message: "Código inválido" });
     }
   } catch (error) {
     logger.error("Error en validarCodigo:", error);
     console.error("Error en validarCodigo:", error);
-    res.status(500).json({ msg: "Error en el servidor" });
+    res.status(500).json({ message: "Error en el servidor" });
   }
 };
 
@@ -186,7 +185,7 @@ exports.activarCuenta = async (req, res) => {
 
     if (!usuario) {
       logger.warn(`Usuario no encontrado o código incorrecto para ${email}`);
-      return res.status(404).json({ msg: "Usuario no encontrado" });
+      return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
     // Actualiza el estado de verificación del usuario
@@ -194,11 +193,11 @@ exports.activarCuenta = async (req, res) => {
     await usuario.save();
 
     // Devuelve un mensaje en formato JSON
-    return res.status(200).json({ msg: "Cuenta activada con éxito" });
+    return res.status(200).json({ message: "Cuenta activada con éxito" });
   } catch (error) {
     logger.error("Error al activar la cuenta:", error);
     console.error("Error al activar la cuenta:", error);
-    return res.status(500).json({ msg: "Error en el servidor" });
+    return res.status(500).json({ message: "Error en el servidor" });
   }
 };
 

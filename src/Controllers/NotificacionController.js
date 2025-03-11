@@ -19,7 +19,7 @@ exports.enviarNotificacion = async (req, res) => {
       logger.warn("Token de suscripción no proporcionado");
       return res
         .status(400)
-        .json({ msg: "Token de suscripción no proporcionado" });
+        .json({ message: "Token de suscripción no proporcionado" });
     }
 
     // Convertir el token JSON a un objeto JavaScript
@@ -29,7 +29,7 @@ exports.enviarNotificacion = async (req, res) => {
     const { endpoint, keys } = tokenData;
     if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
       logger.warn("Datos de suscripción inválidos");
-      return res.status(400).json({ msg: "Datos de suscripción inválidos" });
+      return res.status(400).json({ message: "Datos de suscripción inválidos" });
     }
 
     const pushSubscription = {
@@ -59,12 +59,12 @@ exports.enviarNotificacion = async (req, res) => {
     await enviarNotificacion(pushSubscription, payload);
 
     console.log("Notificación enviada con éxito");
-    res.status(200).json({ msg: "Notificación enviada con éxito" });
+    res.status(200).json({ message: "Notificación enviada con éxito" });
   } catch (err) {
     logger.error(`Error al enviar la notificación: ${err.message}`);
     res
       .status(500)
-      .json({ msg: "Error al enviar la notificación", error: err.message });
+      .json({ message: "Error al enviar la notificación", error: err.message });
   }
 };
 
@@ -151,9 +151,9 @@ exports.enviarNotificacionCorreo = async (req, res) => {
 
     console.log("Notification sent successfully");
     // Enviar la respuesta como JSON
-    res.status(200).json({ msg: "Notification sent successfully" });
+    res.status(200).json({ message: "Notification sent successfully" });
   } catch (err) {
     console.error("Error sending notification", err);
-    res.status(500).json({ msg: "Error sending notification" });
+    res.status(500).json({ message: "Error sending notification" });
   }
 };

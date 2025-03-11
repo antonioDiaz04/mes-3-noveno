@@ -77,14 +77,13 @@ exports.crearProducto = async (req, res) => {
 
   } catch (error) {
     console.error("Error al crear el producto:", error);
-    res.status(500).json({ error: "Ocurrió un error al crear el producto." });
+    return res.status(500).json({ mensaje: "Error interno del servidor", error: error.message });
   }
 };
 
 
 exports.editarProducto = async (req, res) => {
 
-  
   try {
     const { imagenPrincipal, otrasImagenes, ...productoData } = req.body;
 

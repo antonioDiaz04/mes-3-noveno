@@ -22,7 +22,7 @@ const RentaSchema = new mongoose.Schema({
       required: true, 
       default: Date.now 
     },
-    fechaFin: { 
+    fechaFin: {  
       type: Date, 
       required: true 
     },
