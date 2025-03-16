@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "dev": "nodemon ./index.js",
-    "start": "node ./index.js"
+    "start": "node ./index.js",
+    "test": "jest"
   },
   "author": "Antonio Diaz",
   "license": "ISC",
