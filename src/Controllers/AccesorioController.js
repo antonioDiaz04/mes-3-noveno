@@ -2,28 +2,24 @@ const fs = require("fs-extra");
 const Accesorio = require("../Models/AccesorioModel");
 const { uploadImage, deleteImage } = require("../cloudinary/cloudinaryConfig");
 const sanitizeObject = require("../util/sanitize");
-const {logger} = require("../util/logger");
+const { logger } = require("../util/logger");
 
 // Crear un accesorio
 exports.crearAccesorio = async (req, res) => {
   try {
     if (!req.file) {
-      logger.warn("No se proporcionó imagen principal.");
       return res
         .status(400)
         .json({ error: "Debe proporcionar una imagen principal." });
     }
 
     const resultadoCloudinary = await uploadImage(req.file.path);
-    const {nombre, disponible}= sanitizeObject(req.body);
+    const { nombre, disponible } = sanitizeObject(req.body);
 
     // Crear accesorio
     const accesorio = new Accesorio({
       nombre: nombre,
-      imagenPrincipal: {
-        public_id: resultadoCloudinary.public_id,
-        secure_url: resultadoCloudinary.secure_url,
-      },
+      imagenPrincipal: resultadoCloudinary.secure_url,
       estado: {
         disponible: disponible,
       },
@@ -31,8 +27,13 @@ exports.crearAccesorio = async (req, res) => {
 
     const resultadoAccesorio = await accesorio.save();
 
-    // Eliminar archivo temporal
-    await fs.unlink(req.file.path);
+    // Verifica si el archivo existe antes de eliminarlo
+    if (req.file && req.file.path) {
+      try {
+        await fs.unlink(req.file.path);
+      } catch (unlinkError) {
+      }
+    }
 
     res.status(201).json({
       message: "Accesorio creado exitosamente",
@@ -52,7 +53,6 @@ exports.editarAccesorio = async (req, res) => {
   try {
     const accesorioExistente = await Accesorio.findById(req.params.id);
     if (!accesorioExistente) {
-      logger.warn(`Accesorio con ID ${req.params.id} no encontrado.`);
       return res.status(404).json({ message: "Accesorio no encontrado" });
     }
 
@@ -120,7 +120,7 @@ exports.eliminarAccesorio = async (req, res) => {
 exports.obtenerAccesorios = async (req, res) => {
   try {
     const accesorios = await Accesorio.find();
-    
+
     res.status(200).json(accesorios);
   } catch (error) {
     logger.error("Error al obtener los accesorios:", error);

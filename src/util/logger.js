@@ -1,59 +1,65 @@
 const { createLogger, format, transports } = require("winston");
-const Log = require("../Models/loggerModel.js");
+const path = require("path");
+const Log = require("../Models/loggerModel.js"); // Modelo de MongoDB donde se almacenarán los logs
 
 // Función para formatear el log de la petición HTTP
 const httpLogFormat = format.printf((info) => {
-  const { timestamp, level, message, ...meta } = info;
-  return JSON.stringify({
-    timestamp,
-    level,
-    message,
-    ...meta,
-  });
-});
-
-const logger = createLogger({
-  format: format.combine(
-    format.timestamp(), // Obtener el tiempo
-    httpLogFormat
-  ),
-
-  //Codigo para guardar los errores en un archivo
-  transports: [
-    new transports.File({
-      maxsize: 5120000,
-      maxFiles: 100,
-      filename: `${__dirname}/../logs/log-api.log`, // ruta de donde se guardaran los errores (el archivo log)
-    }),
-  ],
-});
-
-const logHttpRequest = async (req, res, responseTime) => {
-  const { method, originalUrl, query, body, ip, headers } = req;
-  const { statusCode } = res;
-
-  try {
-    const logEntry = new Log({
-      timestamp: new Date(),
-      level: "info",
-      message: "HTTP Request",
-      method,
-      endpoint: originalUrl,
-      queryParams: query,
-      userId: req.user ? req.user.id : null, 
-      ip,
-      userAgent: headers["user-agent"],
-      requestBody: body,
-      responseStatus: statusCode,
-      responseTime: `${responseTime}ms`,
+    const { timestamp, level, message, ...meta } = info;
+    return JSON.stringify({
+        timestamp,
+        level,
+        message,
+        ...meta,
     });
+});
 
-    await logEntry.save();
-  } catch (error) {
-    
-    logger.error("Error al verificar el CAPTCHA:", error.message);
-    console.error("Error guardando el log en MongoDB:", error);
-  }
+// Configuración del logger con Winston
+const logger = createLogger({
+    format: format.combine(
+        format.timestamp(), // Obtener el tiempo
+        httpLogFormat
+    ),
+    transports: [
+        new transports.File({
+          level: "warn",
+            maxsize: 5120000, // Máximo 5MB por archivo
+            maxFiles: 100, // Hasta 100 archivos históricos
+            filename: path.join(__dirname, "../logs/log-api.log"), // Ruta del archivo de logs
+        }),
+    ],
+});
+
+
+const logHttpRequest = async (req, res, responseTime, level = "warn", message = "HTTP Request") => {
+    const { method, originalUrl, query, body, ip, headers } = req;
+    const { statusCode } = res;
+
+    const logData = {
+        timestamp: new Date().toISOString(),
+        level,
+        message,
+        method,
+        endpoint: originalUrl,
+        queryParams: query,
+        userId: req.user ? req.user.id : null,
+        ip,
+        userAgent: headers["user-agent"],
+        requestBody: body,
+        responseStatus: statusCode,
+        responseTime: `${responseTime}ms`,
+    };
+
+    try {
+        // Guardar en MongoDB
+        const logEntry = new Log(logData);
+        await logEntry.save();
+    } catch (error) {
+        logger.error("Error al guardar log en MongoDB", { originalError: error.message });
+    }
+
+    // Guardar en archivo de logs
+    logger.log(level, message, logData);
 };
 
+// Exportar funciones
 module.exports = { logger, logHttpRequest };

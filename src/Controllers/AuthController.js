@@ -34,13 +34,13 @@ exports.Login = async (req, res) => {
 
     if (!email || !password) {
       return res
-        .status(400)
-        .json({ message: "Datos de acceso incompletos." });
+        .status(401)
+        .json({ message: "Credenciales inválidas." });
     }
 
     usuario = await Usuario.findOne({ email }).populate("estadoCuenta");
     if (!usuario) {
-      return res.status(400).json({ message: "Credenciales inválidas." });
+      return res.status(401).json({ message: "Credenciales inválidas." });
     }
 
     const estadoCuenta = usuario.estadoCuenta;
@@ -100,7 +100,7 @@ exports.Login = async (req, res) => {
 
       await estadoCuenta.save();
       return res.status(401).json({
-        message: `Contraseña incorrecta,\n Numero de intentos fallidos: ${estadoCuenta.intentosFallidos}`,
+        message: `Credenciales inválidas.`,
       });
     }
 
