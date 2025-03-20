@@ -50,6 +50,74 @@ exports.confirmarVerficacion = async (req, res) => {
     res.status(500).json({ msg: "Error en el servidor" });
   }
 };
+exports.confirmarVerficacionPregunta = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Buscar el usuario por su correo electrónico
+    const usuario = await Usuario.findOne({ email: email });
+
+    // Si el usuario no existe, devolver un mensaje
+    if (!usuario) {
+      return res.status(200).json({
+        msg: "No se encontró un usuario con ese correo electrónico.",
+        preguntaSecreta: null, // No hay pregunta secreta porque el usuario no existe
+      });
+    }
+
+    // Devolver la pregunta secreta del usuario
+    res.status(200).json({
+      msg: "Pregunta secreta encontrada.",
+      preguntaSecreta: usuario.preguntaSecreta, // Devolver la pregunta secreta
+    });
+  } catch (error) {
+    console.error("Error en confirmarVerficacionPregunta:", error);
+    res.status(500).json({ msg: "Error en el servidor" });
+  }
+};
+
+ // Verificar la respuesta secreta
+// Método para verificar la respuesta secreta
+exports.verificarRespuestaSecreta = async (req, res) => {
+  const { email, respuesta } = req.body;
+
+  // Validar que los campos estén presentes
+  if (!email || !respuesta) {
+    return res.status(400).json({ valido: false, mensaje: 'Faltan campos obligatorios' });
+  }
+
+  try {
+    // Buscar el usuario por su correo electrónico
+    const usuario = await Usuario.findOne({ email: email });
+
+    // Si el usuario no existe, devolver un mensaje
+    if (!usuario) {
+      return res.status(200).json({
+        valido: false,
+        mensaje: 'Usuario no encontrado',
+      });
+    }
+
+    // Verificar si la respuesta coincide
+    if (usuario.respuestaSegura === respuesta) {
+      return res.status(200).json({
+        valido: true,
+        mensaje: 'Respuesta correcta',
+      });
+    } else {
+      return res.status(200).json({
+        valido: false,
+        mensaje: 'Respuesta incorrecta',
+      });
+    }
+  } catch (error) {
+    console.error('Error al verificar la respuesta:', error);
+    res.status(500).json({ valido: false, mensaje: 'Error en el servidor' });
+  }
+};
+
+
+
 
 function enviarCorreo(correo) {
   const mailOptions = {
