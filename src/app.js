@@ -7,6 +7,7 @@ const morgan = require("morgan");
 require("dotenv").config(); // Cargar variables de entorno
 const helmet = require("helmet");
 const { defaults } = require("joi");
+const categoriaRoutes = require('./Routes/CategoriaRoutes');
 
 const app = express();
 
@@ -60,6 +61,9 @@ const apiVersion = process.env.API_VERSION || "v1"; // Si no se define, usa 'v1'
 
 // Rutas padres
 app.use(`/api/${apiVersion}/msj`, require("./Routes/WhatsappRoute.js"));
+app.use(`/api/${apiVersion}/categoria`, categoriaRoutes);
+
+
 app.use(`/api/${apiVersion}/producto`, require("./Routes/ProductRoute"));
 app.use(`/api/${apiVersion}/accesorio`, require("./Routes/AccesorioRoute.js"));
 app.use(
