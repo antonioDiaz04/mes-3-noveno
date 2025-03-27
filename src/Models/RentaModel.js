@@ -2,10 +2,10 @@ const mongoose = require("mongoose");
 
 const RentaSchema = new mongoose.Schema({
   // Referencia a Usuario
-  usuario: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "Usuarios", 
-    required: true 
+  usuario: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Usuarios",
+    required: true,
   },
   // Referencia a Producto
   producto: { 
@@ -13,7 +13,6 @@ const RentaSchema = new mongoose.Schema({
     ref: "Producto", 
     required: true 
   },
-
   // Detalles de Renta
   detallesRenta: {
     fechaInicio: { 
