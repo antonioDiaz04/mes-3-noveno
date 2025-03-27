@@ -6,7 +6,7 @@ const productoSchema = new mongoose.Schema({
     required: true, // Requerido
     trim: true,
   },
-  talla: { // Cambiado de "talla" a "tallaDisponible"
+  talla: {
     type: String,
     required: true, // Requerido
   },
@@ -27,7 +27,7 @@ const productoSchema = new mongoose.Schema({
     required: true, // Requerido
     min: 0, // Precio no puede ser negativo
   },
-  opcionesTipoTransaccion: { // Cambiado de "tipoVenta" a "opcionesTipoTransaccion"
+  opcionesTipoTransaccion: {
     type: String,
     required: true, // Requerido
     default: "Venta", // Valor por defecto
@@ -63,14 +63,19 @@ const productoSchema = new mongoose.Schema({
     required: false, // Opcional
     trim: true,
   },
-  imagenes: { // Array de imágenes
+  imagenes: {
     type: [String],
     default: [], // Valor por defecto
   },
-  fechaCreacion: { // Fecha de creación del producto
+  fechaCreacion: {
     type: Date,
     required: true,
     default: Date.now, // Valor por defecto
+  },
+  idCategoria: { // Relación con la categoría
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Categoria", // Referencia al modelo de categoría
+    required: true, // Requerido
   },
 });
 

@@ -21,8 +21,6 @@ exports.crearProducto = async (req, res) => {
 
     const imagenesSubidas = [];
 
-
-
     if (req.files?.imagenes) {
       for (const imagenFile of req.files.imagenes) {
         try {
@@ -51,7 +49,6 @@ exports.crearProducto = async (req, res) => {
     }
     console.log("Imágenes subidas exitosamente");
 
-
     console.log("paso aqui 1");
 
     // Crea un nuevo objeto de Producto con los datos del formulario y las URLs de las imágenes
@@ -70,6 +67,7 @@ exports.crearProducto = async (req, res) => {
       tipoHombro: req.body.tipoHombro,
       descripcion: req.body.descripcion,
       imagenes: imagenesSubidas, // Array de strings (URLs)
+      idCategoria: req.body.idCategoria, // Relación con la categoría
     });
 
     console.log("Producto a guardar:", producto); // Imprimir el objeto del producto
@@ -101,15 +99,13 @@ exports.crearProducto = async (req, res) => {
 
     res.status(500).json({ error: "Ocurrió un error al crear el producto." });
   }
-
 };
-
 exports.editarProducto = async (req, res) => {
   try {
     const { id } = req.params;
-    const { imagenes: imagenesString, ...productoData } = req.body;
+    const { imagenes: imagenesString, idCategoria, ...productoData } = req.body;
 
-    console.log("Datos recibidos:", { ...productoData, imagenes: imagenesString });
+    console.log("Datos recibidos:", { ...productoData, imagenes: imagenesString, idCategoria });
     console.log("Archivos nuevos:", req.files);
 
     // 1. Buscar el producto existente
@@ -155,10 +151,10 @@ exports.editarProducto = async (req, res) => {
       }
     }
 
-    // 4. Actualizar el producto (sin eliminar imágenes existentes)
+    // 4. Actualizar el producto (incluyendo idCategoria y sin eliminar imágenes existentes)
     const productoActualizado = await Producto.findByIdAndUpdate(
       id,
-      { ...productoData, imagenes: imagenesFinales },
+      { ...productoData, imagenes: imagenesFinales, idCategoria },
       { new: true }
     );
 
@@ -178,7 +174,6 @@ exports.editarProducto = async (req, res) => {
     });
   }
 };
-
 // Eliminar un producto
 exports.eliminarProducto = async (req, res) => {
   try {
