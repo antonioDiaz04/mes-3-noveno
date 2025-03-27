@@ -7,7 +7,6 @@ const RentaSchema = new mongoose.Schema({
     ref: "Usuarios", 
     required: true 
   },
-
   // Referencia a Producto
   producto: { 
     type: mongoose.Schema.Types.ObjectId, 

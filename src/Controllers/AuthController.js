@@ -21,18 +21,21 @@ const verifyTurnstile = async (captchaToken) => {
   }
 };
 // Función para sanitizar objetos
-
 exports.Login = async (req, res) => {
   try {
     const sanitizedData = sanitizeObject(req.body);
-    const { email, password } = sanitizedData;
-    const { captchaToken } = req.body;
+    const { email, password, telefono, captchaToken } = sanitizedData;
     let usuario;
 
-    usuario = await Usuario.findOne({ email }).populate("estadoCuenta");
+    // Buscar por correo electrónico o número de teléfono
+    if (email) {
+      usuario = await Usuario.findOne({ email }).populate("estadoCuenta");
+    } else if (telefono) {
+      usuario = await Usuario.findOne({ telefono }).populate("estadoCuenta");
+    }
 
     if (!usuario) {
-      return res.status(401).json({ message: " El correo no esta registrado" });
+      return res.status(401).json({ message: "El correo o número de teléfono no está registrado" });
     }
 
     const estadoCuenta = usuario.estadoCuenta;
@@ -61,6 +64,7 @@ exports.Login = async (req, res) => {
       await estadoCuenta.save();
     }
 
+    // Verificar la contraseña
     const isPasswordValid = await bcrypt.compare(password, usuario.password);
 
     if (!isPasswordValid) {
@@ -81,7 +85,7 @@ exports.Login = async (req, res) => {
         return res.status(403).json({
           message: `Cuenta bloqueada. Intenta nuevamente en ${Math.ceil(
             tiempoRestante / 1000
-          )}  segundos.`,
+          )} segundos.`,
           tiempo: `${Math.ceil(tiempoRestante / 1000)}`,
           numeroDeIntentos: estadoCuenta.intentosFallidos,
         });
@@ -89,10 +93,11 @@ exports.Login = async (req, res) => {
 
       await estadoCuenta.save();
       return res.status(401).json({
-        message: `Contraseña incorrecta,\n Numero de intentos fallidos: ${estadoCuenta.intentosFallidos}`,
+        message: `Contraseña incorrecta,\n Número de intentos fallidos: ${estadoCuenta.intentosFallidos}`,
       });
     }
 
+    // Verificar CAPTCHA
     const isCaptchaValid = await verifyTurnstile(captchaToken);
     if (!isCaptchaValid) {
       return res.status(400).json({ message: "Captcha inválido" });
@@ -108,12 +113,14 @@ exports.Login = async (req, res) => {
         .json({ message: "El usuario no tiene un rol asignado" });
     }
 
+    // Generar el token JWT
     const token = jwt.sign(
       { _id: usuario._id, rol: usuario.rol },
       process.env.JWT_SECRET || "secret",
       { expiresIn: "24h" }
     );
 
+    // Enviar el token en una cookie
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -121,13 +128,9 @@ exports.Login = async (req, res) => {
       maxAge: 3600000,
     });
 
-    return res
-      .status(200)
-      .json({ token, rol: usuario.rol, captchaValid: isCaptchaValid });
+    return res.status(200).json({ token, rol: usuario.rol, captchaValid: isCaptchaValid });
   } catch (error) {
     console.error("Error en el servidor:", error);
-    return res
-      .status(500)
-      .json({ message: "Error en el servidor: " + error.message });
+    return res.status(500).json({ message: "Error en el servidor: " + error.message });
   }
 };

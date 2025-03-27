@@ -113,69 +113,6 @@ const crearRenta = async (req, res) => {
     res.status(500).json({ mensaje: 'Error al crear renta', error: error.message });
   }
 };
-
-// // Crear Nueva Renta desde Frontend
-// const crearRenta = async (req, res) => {
-//   try {
-//     const { 
-//       usuarioId,
-//       productoId, 
-//       fechaInicio, 
-//       fechaFin, 
-//       metodoPago,
-//       precioRenta,
-//       token // Token de notificación
-//     } = req.body;
-
-//     // Validar si los campos requeridos están presentes
-//     if (!usuarioId || !productoId || !fechaInicio || !fechaFin || !metodoPago || !precioRenta) {
-//       return res.status(400).json({ mensaje: 'Todos los campos son obligatorios' });
-//     }
-
-//     // Verificar si el producto existe
-//     const producto = await Producto.findById(productoId);
-//     if (!producto) {
-//       return res.status(404).json({ mensaje: 'Producto no encontrado' });
-//     }
-
-//     // Validar que la fecha de fin sea posterior a la fecha de inicio
-//     if (new Date(fechaFin) <= new Date(fechaInicio)) {
-//       return res.status(400).json({ mensaje: 'La fecha de fin debe ser posterior a la fecha de inicio' });
-//     }
-
-//     // Crear nueva renta
-//     const nuevaRenta = new Renta({
-//       usuario: usuarioId,
-//       producto: productoId,
-//       detallesRenta: {
-//         fechaInicio: new Date(fechaInicio),
-//         fechaFin: new Date(fechaFin),
-//         duracionDias: calcularDiasDiferencia(fechaInicio, fechaFin)
-//       },
-//       detallesPago: {
-//         precioRenta: precioRenta,
-//         metodoPago: metodoPago
-//       },
-//       estado: 'Activo'
-//     });
-
-//     // Guardar la renta y actualizar el producto
-//     const rentaGuardada = await nuevaRenta.save();
-//     await Producto.findByIdAndUpdate(productoId, { $set: { disponibleParaRenta: false } });
-
-//     // Enviar notificación si existe token
-//     if (token) {
-//       // await enviarNotificacion(token, 'Renta creada', 'Tu renta ha sido procesada con éxito.');
-//     }
-
-//     res.status(201).json({ mensaje: 'Renta creada exitosamente', renta: rentaGuardada });
-//   } catch (error) {
-//     console.error('Error en creación de renta:', error);
-//     res.status(500).json({ mensaje: 'Error al crear renta', error: error.message });
-//   }
-// };
-
-// Listar Rentas de un Usuario Específico
 const listarRentasUsuario = async (req, res) => {
   try {
     const { usuarioId } = req.params;

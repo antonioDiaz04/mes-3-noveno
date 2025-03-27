@@ -3,64 +3,74 @@ const mongoose = require("mongoose");
 const productoSchema = new mongoose.Schema({
   nombre: {
     type: String,
-    required: false,
+    required: true, // Requerido
     trim: true,
   },
-  imagenPrincipal: {
+  talla: { // Cambiado de "talla" a "tallaDisponible"
     type: String,
-    required: true,
+    required: true, // Requerido
   },
-  otrasImagenes: {
-    type: [String], // Array de URLs de imágenes
-    default: [],
+  altura: {
+    type: Number,
+    required: true, // Requerido
   },
-  categoria: {
-    type: String,
-    required: false,
-    enum: ["venta", "renta"], // Ejemplo de categorías
+  cintura: {
+    type: Number,
+    required: true, // Requerido
   },
   color: {
     type: String,
-    required: false,
+    required: true, // Requerido
   },
-  textura: {
-    type: String,
-    required: false, // Puede ser opcional
-  },
-
-  talla: {
-    type: String,
-    enum: ["XS", "S", "M", "L", "XL", "XXL", "Otro"],
-    required: false,
-  },
-  medidas: {
-    altura: { type: Number, required: false }, // en cm
-    cintura: { type: Number, required: false }, // en cm
-  },
-  
   precio: {
     type: Number,
-    required: false,
-    min: 0,
+    required: true, // Requerido
+    min: 0, // Precio no puede ser negativo
+  },
+  opcionesTipoTransaccion: { // Cambiado de "tipoVenta" a "opcionesTipoTransaccion"
+    type: String,
+    required: true, // Requerido
+    default: "Venta", // Valor por defecto
+  },
+  nuevo: {
+    type: Boolean,
+    required: true, // Requerido
+    default: true, // Valor por defecto
   },
   disponible: {
     type: Boolean,
-    required: false,
-    default: true,
+    required: false, // Requerido
+    default: true, // Valor por defecto
   },
-  
-  nuevo: {
-    type: Boolean, // Indica si es nuevo o usado
+  tipoCuello: {
+    type: String,
+    required: true, // Requerido
+  },
+  tipoCola: {
+    type: String,
+    required: true, // Requerido
+  },
+  tipoCapas: {
+    type: String,
+    required: true, // Requerido
+  },
+  tipoHombro: {
+    type: String,
+    required: true, // Requerido
   },
   descripcion: {
     type: String,
-    required: false,
+    required: false, // Opcional
     trim: true,
   },
-  fechaCreacion: {
+  imagenes: { // Array de imágenes
+    type: [String],
+    default: [], // Valor por defecto
+  },
+  fechaCreacion: { // Fecha de creación del producto
     type: Date,
     required: true,
-    default: Date.now,
+    default: Date.now, // Valor por defecto
   },
 });
 
