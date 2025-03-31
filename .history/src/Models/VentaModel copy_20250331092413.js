@@ -112,7 +112,9 @@ const VentaSchema = new mongoose.Schema(
   {
     timestamps: true, // Añade createdAt y updatedAt
   }
-);
+}, {
+  timestamps: true // Añade createdAt y updatedAt automáticamente
+});
 
 // Método para calcular total
 VentaSchema.methods.calcularTotal = function () {

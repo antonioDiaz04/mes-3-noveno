@@ -1,12 +1,12 @@
 const axios = require("axios");
+const sanitizeObject = require("../util/sanitize");
 
-const RECAPTCHA_SECRET_KEY = "6LdBsWMqAAAAAAkHOGSNK6S81AGtqac1Y_w8Pnm1";
+
+const RECAPTCHA_SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY;
 
 exports.VerificarCaptcha = async (req, res) => {
   try {
-    // Cambiado a req.body.token si lo envías en el cuerpo
-    const token = req.body.token; // Asegúrate de que el cliente envíe el token en el cuerpo de la solicitud
-    console.log("Token recibido:", token);
+    const token = sanitizeObject(req.body.token); // Sanitizar el token de reCAPTCHA
 
     if (!token) {
       return res.status(400).json({ message: "Token de reCAPTCHA faltante" });
@@ -17,7 +17,6 @@ exports.VerificarCaptcha = async (req, res) => {
       response: token,
       // remoteip: req.connection.remoteAddress, // Opcional
     };
-    
 
     const response = await axios.post(
       "https://www.google.com/recaptcha/api/siteverify",

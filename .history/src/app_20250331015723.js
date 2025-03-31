@@ -6,6 +6,7 @@ const bodyParser = require("body-parser");
 const morgan = require("morgan");
 require("dotenv").config(); // Cargar variables de entorno
 const helmet = require("helmet");
+const { defaults } = require("joi");
 const categoriaRoutes = require('./Routes/CategoriaRoutes');
 
 const app = express();

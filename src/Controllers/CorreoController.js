@@ -4,7 +4,8 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { Usuario } = require("../Models/UsuarioModel");
 
-const codigoVerificacion = Math.floor(1000 + Math.random() * 9000).toString();
+const codigoVerificacion =
+  (crypto.randomBytes(2).readUInt16BE(0) % 9000) + 1000; // Generar un código de 4 dígitos
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -18,10 +19,10 @@ const transporter = nodemailer.createTransport({
 
 exports.confirmarVerficacion = async (req, res) => {
   try {
-    const email = req.body.email;
+    const email = sanitizeObject(req.body.email);
 
     // Generar un código de verificación aleatorio de 4 dígitos
-    const code = Math.floor(1000 + Math.random() * 9000);
+    const code = (crypto.randomBytes(2).readUInt16BE(0) % 9000) + 1000
 
     console.log(code);
     // Actualizar el código de verificación en la base de datos
@@ -52,7 +53,7 @@ exports.confirmarVerficacion = async (req, res) => {
 };
 exports.confirmarVerficacionPregunta = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email } = sanitizeObject(req.body);
 
     // Buscar el usuario por su correo electrónico
     const usuario = await Usuario.findOne({ email: email });
@@ -76,14 +77,16 @@ exports.confirmarVerficacionPregunta = async (req, res) => {
   }
 };
 
- // Verificar la respuesta secreta
+// Verificar la respuesta secreta
 // Método para verificar la respuesta secreta
 exports.verificarRespuestaSecreta = async (req, res) => {
-  const { email, respuesta } = req.body;
+  const { email, respuesta } = sanitizeObject(req.body);
 
   // Validar que los campos estén presentes
   if (!email || !respuesta) {
-    return res.status(400).json({ valido: false, mensaje: 'Faltan campos obligatorios' });
+    return res
+      .status(400)
+      .json({ valido: false, mensaje: "Faltan campos obligatorios" });
   }
 
   try {
@@ -94,7 +97,7 @@ exports.verificarRespuestaSecreta = async (req, res) => {
     if (!usuario) {
       return res.status(200).json({
         valido: false,
-        mensaje: 'Usuario no encontrado',
+        mensaje: "Usuario no encontrado",
       });
     }
 
@@ -102,22 +105,19 @@ exports.verificarRespuestaSecreta = async (req, res) => {
     if (usuario.respuestaSegura === respuesta) {
       return res.status(200).json({
         valido: true,
-        mensaje: 'Respuesta correcta',
+        mensaje: "Respuesta correcta",
       });
     } else {
       return res.status(200).json({
         valido: false,
-        mensaje: 'Respuesta incorrecta',
+        mensaje: "Respuesta incorrecta",
       });
     }
   } catch (error) {
-    console.error('Error al verificar la respuesta:', error);
-    res.status(500).json({ valido: false, mensaje: 'Error en el servidor' });
+    console.error("Error al verificar la respuesta:", error);
+    res.status(500).json({ valido: false, mensaje: "Error en el servidor" });
   }
 };
-
-
-
 
 function enviarCorreo(correo) {
   const mailOptions = {
@@ -177,8 +177,8 @@ async function enviarCodigoVerficiacionActivaCuenta(email, code) {
 
 exports.enviarCorreoyCuerpo = async (req, res) => {
   try {
-    const email = req.body.email;
-    const codigo = Math.floor(1000 + Math.random() * 9000); // Código de 4 dígitos
+    const email = sanitizeObject(req.body.email);
+    const codigo =  (crypto.randomBytes(2).readUInt16BE(0) % 9000) + 1000;  // Código de 4 dígitos
 
     if (!email) {
       return res.status(400).json({ msg: "El email es requerido" });
@@ -206,7 +206,7 @@ exports.enviarCorreoyCuerpo = async (req, res) => {
 // Validar el código ingresado
 exports.validarCodigo = async (req, res) => {
   try {
-    const { token, codigoIngresado } = req.body;
+    const { token, codigoIngresado } =  sanitizeObject(req.body);
 
     if (!token || !codigoIngresado) {
       return res.status(400).json({ msg: "Token y código son requeridos" });
@@ -235,7 +235,7 @@ exports.validarCodigo = async (req, res) => {
 
 exports.activarCuenta = async (req, res) => {
   try {
-    const { email, codigoVerificacion } = req.body;
+    const { email, codigoVerificacion } =  sanitizeObject(req.body);
     const usuario = await Usuario.findOne({ email, codigoVerificacion });
 
     console.log(req.body);

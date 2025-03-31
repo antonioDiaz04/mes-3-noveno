@@ -2,42 +2,40 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const request = require("request");
 
-const SALT_ROUNDS = 10; // Define la cantidad de rondas para el hash
 function generarCodigoVerificacion() {
-  return Math.floor(100000 + Math.random() * 900000);  // Genera un código de 6 dígitos
+  return crypto.randomBytes(3).toString("hex");
 }
-// Controlador para enviar el mensaje de WhatsApp con código de verificación personalizado
-exports.enviarMensaje = (req, res) => {
-  // Generar un código de verificación
-  const codigoVerificacion = generarCodigoVerificacion();
-  
-  // Definir los parámetros de la solicitud
-  const targetURL = 'https://api.smsmasivos.com.mx/whatsapp/send';
 
-  // Configurar la solicitud POST con el código de verificación generado
+exports.enviarMensaje = (req, res) => {
+  const codigoVerificacion = generarCodigoVerificacion();
+
+  const targetURL = "https://api.smsmasivos.com.mx/whatsapp/send";
+
   request.post(
     {
       url: targetURL,
       headers: {
-        "apikey": "35b2ca1a0d6af4a4b475372fd4ea9cdde5d6d583"  // Tu clave API
+        apikey: "35b2ca1a0d6af4a4b475372fd4ea9cdde5d6d583",
       },
       form: {
-        "instance_id": "r3pptb71-t3ww-wv65-w9of-vbcp9so85b23",  // Tu ID de instancia
-        "type": "text",  // Tipo de mensaje (puede ser "text" o "media")
-        "number": "7711403469",  // Número al que enviar el mensaje
-        "country_code": "52",  // Código de país (por ejemplo, "52" para México)
-        "message": `Hola, tu código de verificación es: ${codigoVerificacion}. No lo compartas con nadie.`  // Mensaje personalizado
-      }
+        instance_id: "r3pptb71-t3ww-wv65-w9of-vbcp9so85b23", // Tu ID de instancia
+        type: "text", // Tipo de mensaje (puede ser "text" o "media")
+        number: "7711403469", // Número al que enviar el mensaje
+        country_code: "52", // Código de país (por ejemplo, "52" para México)
+        message: `Hola, tu código de verificación es: ${codigoVerificacion}. No lo compartas con nadie.`, // Mensaje personalizado
+      },
     },
     (err, response, body) => {
       if (err) {
-        console.error('Error al enviar el mensaje:', err);
-        return res.status(500).json({ error: 'Error al enviar el mensaje' });
+        console.error("Error al enviar el mensaje:", err);
+        return res.status(500).json({ error: "Error al enviar el mensaje" });
       }
-      
+
       // Retorna la respuesta del API de SMS Masivos
-      console.log('Mensaje enviado:', body);
-      return res.status(200).json({ message: 'Mensaje enviado con éxito', body: JSON.parse(body) });
+      console.log("Mensaje enviado:", body);
+      return res
+        .status(200)
+        .json({ message: "Mensaje enviado con éxito", body: JSON.parse(body) });
     }
   );
 };
@@ -99,7 +97,7 @@ exports.enviarMensaje = (req, res) => {
 // Validación del código
 exports.validarCodigo = async (req, res) => {
   try {
-    const { token, codigoIngresado } = req.body;
+    const { token, codigoIngresado } = sanitizeObject(req.body);
 
     if (!token || !codigoIngresado) {
       return res.status(400).json({ msg: "Token y código son requeridos" });
