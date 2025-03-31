@@ -1,5 +1,8 @@
 const { Usuario } = require("../Models/UsuarioModel");
 const axios = require("axios");
+
+
+
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const sanitizeObject = require("../util/sanitize");
@@ -36,7 +39,7 @@ exports.Login = async (req, res) => {
     const { email, password, telefono, captchaToken } = sanitizedData;
 
     // Contexto adicional para logs
-    
+
     const logContext = { 
       ...logBase,
       email: email || null,
