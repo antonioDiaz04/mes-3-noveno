@@ -186,13 +186,43 @@ exports.eliminarProducto = async (req, res) => {
   }
 };
 
-// Obtener todos los productos
+const logger = require('../logger');
+
+
 exports.obtenerProducto = async (req, res) => {
+  const logMetadata = {
+    ip: req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress,
+    userAgent: req.headers['user-agent'],
+    method: req.method,
+    url: req.originalUrl,
+    queryParams: req.query,
+    body: req.body
+  };
+
+  logger.info('Inicio de obtención de productos', logMetadata);
+
   try {
     const productos = await Producto.find();
+    logger.info(`Productos encontrados: ${productos.length}`, { 
+      ...logMetadata,
+      count: productos.length 
+    });
+
     res.status(200).json(productos);
   } catch (error) {
-    res.status(500).json({ message: "Error al obtener los productos", error });
+    logger.error('Error al obtener productos', {
+      ...logMetadata,
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      }
+    });
+
+    res.status(500).json({ 
+      message: "Error interno del servidor",
+      errorId: new Date().getTime() // ID único para referencia en logs
+    });
   }
 };
 // Obtener todos los productos
