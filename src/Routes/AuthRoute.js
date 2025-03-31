@@ -10,6 +10,7 @@ router.post("/signIn",
     // validarDatos(loginSchema),
      AutController.Login);
 // router.post("/enviar-confirmar", AutController.enviarConfirmar);
+//autentificacion/signIn-Google-Facebook
 // router.post("/verficar-codigo", AutController.verificarCodigo);
 
 module.exports = router;

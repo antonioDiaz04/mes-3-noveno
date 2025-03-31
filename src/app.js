@@ -17,6 +17,7 @@ const corsOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(",").map(origin => origin.trim()) 
   : [];
 
+  
 const corsOptions = {
   origin: corsOrigins.length > 0 ? corsOrigins : false, // Evita problemas si no hay orígenes definidos
   methods: ["GET", "POST", "PUT", "DELETE"],

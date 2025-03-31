@@ -12,7 +12,7 @@ const upload = multer({
     }
   }),
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png'];//Permite solo archivos JPEG y PNG 
+    const allowedTypes = ['image/jpeg', 'image/png'];
     cb(null, allowedTypes.includes(file.mimetype));
   },
   limits: {
