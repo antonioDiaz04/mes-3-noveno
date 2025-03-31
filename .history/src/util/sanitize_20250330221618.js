@@ -17,4 +17,3 @@ const sanitizeObject = (obj) => {
 
 // Exportar la función
 module.exports = sanitizeObject;
-    
