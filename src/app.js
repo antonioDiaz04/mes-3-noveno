@@ -8,16 +8,36 @@ require("dotenv").config(); // Cargar variables de entorno
 const helmet = require("helmet");
 const { defaults } = require("joi");
 const categoriaRoutes = require('./Routes/CategoriaRoutes');
+//importa el cliente oficial de elasticseach
+
+
 
 const app = express();
 
 conectarDB();
+
+
 
 const corsOptions = {
   origin: process.env.CORS_ORIGINS.split(","), // Convierte la cadena en un array
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 };
+const esClient = require('../config/elasticsearch.js');
+
+app.use((req, res, next) => {
+  esClient.index({
+    index: 'http-logs',
+    document: {
+      timestamp: new Date(),
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip,
+    },
+  }).catch(error => console.error('Error al enviar log a Elasticsearch:', error));
+
+  next();
+});
 
 app.use(helmet());
 app.use(cookieParser());
