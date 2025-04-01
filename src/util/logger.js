@@ -1,65 +1,75 @@
 const { createLogger, format, transports } = require("winston");
 const path = require("path");
-const Log = require("../Models/loggerModel.js"); // Modelo de MongoDB donde se almacenarán los logs
+const DailyRotateFile = require('winston-daily-rotate-file');
 
-// Función para formatear el log de la petición HTTP
-const httpLogFormat = format.printf((info) => {
-    const { timestamp, level, message, ...meta } = info;
-    return JSON.stringify({
-        timestamp,
-        level,
-        message,
-        ...meta,
-    });
+// 1. Filtro para excluir favicon.ico
+const excludeFavicon = format((info) => {
+  const isFavicon = info.endpoint?.includes('favicon.ico') || 
+                   info.message?.includes('favicon.ico');
+  return isFavicon ? false : info;
 });
 
-// Configuración del logger con Winston
+// 2. Configuración de archivos rotativos
+const fileRotateTransport = new DailyRotateFile({
+  filename: path.join(__dirname, '../logs/logs-application-%DATE%.log'),
+  datePattern: 'YYYY-MM-DD',
+  zippedArchive: true,
+  maxSize: '20m',
+  maxFiles: '7d',
+  format: format.combine(
+    format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+    excludeFavicon(),
+    format.json()
+  )
+});
+
+// 3. Configuración del logger principal
 const logger = createLogger({
-    format: format.combine(
-        format.timestamp(), // Obtener el tiempo
-        httpLogFormat
-    ),
-    transports: [
-        new transports.File({
-          level: "warn",
-            maxsize: 5120000, // Máximo 5MB por archivo
-            maxFiles: 100, // Hasta 100 archivos históricos
-            filename: path.join(__dirname, "../logs/log-api.log"), // Ruta del archivo de logs
-        }),
-    ],
+  format: format.combine(
+    format.timestamp(),
+    format.metadata({ fillExcept: ['message', 'level', 'timestamp'] })
+  ),
+  transports: [
+    new transports.Console({
+      format: format.combine(
+        format.colorize(),
+        format.printf(info => {
+          const { timestamp, level, message, ...meta } = info;
+          return `${timestamp} [${level}]: ${message} ${JSON.stringify(meta)}`;
+        })
+      )
+    }),
+    fileRotateTransport
+  ],
+  exceptionHandlers: [
+    new transports.File({ 
+      filename: path.join(__dirname, '../logs/exceptions.log')
+    })
+  ]
 });
 
+// 4. Función para registrar peticiones HTTP
+const logHttpRequest = (req, res, responseTime, level = 'info') => {
+  // Excluir favicon y otros recursos estáticos
+  const excluded = ['favicon.ico', '.css', '.js', '.png', '.jpg', '.svg'];
+  if (excluded.some(ext => req.originalUrl.includes(ext))) {
+    return;
+  }
 
-const logHttpRequest = async (req, res, responseTime, level = "warn", message = "HTTP Request") => {
-    const { method, originalUrl, query, body, ip, headers } = req;
-    const { statusCode } = res;
+  const { method, originalUrl, query, body, ip, headers } = req;
+  const { statusCode } = res;
 
-    const logData = {
-        timestamp: new Date().toISOString(),
-        level,
-        message,
-        method,
-        endpoint: originalUrl,
-        queryParams: query,
-        userId: req.user ? req.user.id : null,
-        ip,
-        userAgent: headers["user-agent"],
-        requestBody: body,
-        responseStatus: statusCode,
-        responseTime: `${responseTime}ms`,
-    };
-
-    try {
-        // Guardar en MongoDB
-        const logEntry = new Log(logData);
-        await logEntry.save();
-    } catch (error) {
-        logger.error("Error al guardar log en MongoDB", { originalError: error.message });
-    }
-
-    // Guardar en archivo de logs
-    logger.log(level, message, logData);
+  logger.log(level, 'HTTP Request', {
+    method,
+    endpoint: originalUrl,
+    queryParams: query || {},
+    userId: req.user?.id || null,
+    ip,
+    userAgent: headers['user-agent'],
+    requestBody: body || {},
+    responseStatus: statusCode,
+    responseTime: `${responseTime}ms`
+  });
 };
 
-// Exportar funciones
 module.exports = { logger, logHttpRequest };

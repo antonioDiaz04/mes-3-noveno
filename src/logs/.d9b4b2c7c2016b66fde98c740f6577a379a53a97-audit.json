@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 7
+    },
+    "auditLog": "D:\\atelier\\proyecto-ATR-backend\\src\\logs\\.d9b4b2c7c2016b66fde98c740f6577a379a53a97-audit.json",
+    "files": [
+        {
+            "date": 1743532720685,
+            "name": "D:\\atelier\\proyecto-ATR-backend\\src\\logs\\logs-application-2025-04-01.log",
+            "hash": "9db137eab51334d081598bdb191d7d44f0758c1ad595235b9b171d2f0d8c9f86"
+        }
+    ],
+    "hashType": "sha256"
+}
