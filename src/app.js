@@ -143,10 +143,10 @@ app.use(`/api/${apiVersion}/verificar`, require("./Routes/catpch"));
 app.use(`/api/${apiVersion}/Empresa`, require("./Routes/PerfilEmpresa.Routes"));
 app.use(`/api/${apiVersion}/autentificacion`, require("./Routes/AuthRoute"));
 app.use(`/api/${apiVersion}/renta`, require("./Routes/Renta&Venta"));
-app.use(
-  `/api/${apiVersion}/estadisticas`,
-  require("./Routes/EstadisticasRoute")
-);
+// app.use(
+//   `/api/${apiVersion}/estadisticas`,
+//   require("./Routes/EstadisticasRoute")
+// );
 
 // Ruta para acciones control de Administrador de la página
 app.use(`/api/${apiVersion}/admin`, require("./Routes/PrivadoRoute"));
