@@ -1,9 +1,8 @@
 const Venta = require("../Models/VentaModel");
 const Renta = require("../Models/RentaModel");
-const redis = require("redis");
 const {logger} = require("../util/logger");
-
-const client = redis.createClient();
+const { createClient } = require('redis');
+const client =createClient();
 
 // Función para obtener cliente frecuente
 const obtenerClienteFrecuente = async (modelo, campo) => {
