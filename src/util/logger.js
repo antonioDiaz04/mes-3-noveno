@@ -1,75 +1,26 @@
-const { createLogger, format, transports } = require("winston");
-const path = require("path");
-const DailyRotateFile = require('winston-daily-rotate-file');
+const { createLogger, format, transports } = require('winston');
+const { ElasticsearchTransport } = require('winston-elasticsearch');
+const esClient = require('../../config/elasticsearch'); // Asegúrate de que esta ruta sea correcta
 
-// 1. Filtro para excluir favicon.ico
-const excludeFavicon = format((info) => {
-  const isFavicon = info.endpoint?.includes('favicon.ico') || 
-                   info.message?.includes('favicon.ico');
-  return isFavicon ? false : info;
+// Configuración del transporte de Elasticsearch
+const esTransport = new ElasticsearchTransport({
+  level: 'info',
+  client: esClient,
+  indexPrefix: 'app-logs', // Nombre del índice en Elasticsearch
 });
 
-// 2. Configuración de archivos rotativos
-const fileRotateTransport = new DailyRotateFile({
-  filename: path.join(__dirname, '../logs/logs-application-%DATE%.log'),
-  datePattern: 'YYYY-MM-DD',
-  zippedArchive: true,
-  maxSize: '20m',
-  maxFiles: '7d',
-  format: format.combine(
-    format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
-    excludeFavicon(),
-    format.json()
-  )
-});
-
-// 3. Configuración del logger principal
+// Configuración del logger
 const logger = createLogger({
+  level: 'info',
   format: format.combine(
     format.timestamp(),
-    format.metadata({ fillExcept: ['message', 'level', 'timestamp'] })
+    format.json()
   ),
   transports: [
-    new transports.Console({
-      format: format.combine(
-        format.colorize(),
-        format.printf(info => {
-          const { timestamp, level, message, ...meta } = info;
-          return `${timestamp} [${level}]: ${message} ${JSON.stringify(meta)}`;
-        })
-      )
-    }),
-    fileRotateTransport
-  ],
-  exceptionHandlers: [
-    new transports.File({ 
-      filename: path.join(__dirname, '../logs/exceptions.log')
-    })
+    new transports.File({ filename: 'logs/app.log' }),
+    new transports.Console(),
+    esTransport // Agregar transporte de Elasticsearch
   ]
 });
 
-// 4. Función para registrar peticiones HTTP
-const logHttpRequest = (req, res, responseTime, level = 'info') => {
-  // Excluir favicon y otros recursos estáticos
-  const excluded = ['favicon.ico', '.css', '.js', '.png', '.jpg', '.svg'];
-  if (excluded.some(ext => req.originalUrl.includes(ext))) {
-    return;
-  }
-
-  const { method, originalUrl, query, body, ip, headers } = req;
-  const { statusCode } = res;
-
-  logger.log(level, 'HTTP Request', {
-    method,
-    endpoint: originalUrl,
-    queryParams: query || {},
-    userId: req.user?.id || null,
-    ip,
-    userAgent: headers['user-agent'],
-    requestBody: body || {},
-    responseStatus: statusCode,
-    responseTime: `${responseTime}ms`
-  });
-};
-
-module.exports = { logger, logHttpRequest };
+module.exports = logger;
