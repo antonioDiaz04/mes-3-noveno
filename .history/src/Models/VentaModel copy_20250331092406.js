@@ -112,7 +112,13 @@ const VentaSchema = new mongoose.Schema(
   {
     timestamps: true, // Añade createdAt y updatedAt
   }
+<<<<<<< Updated upstream
 );
+=======
+}, {
+  timestamps: true // Añade createdAt y updatedAt automáticamente
+});
+>>>>>>> Stashed changes
 
 // Método para calcular total
 VentaSchema.methods.calcularTotal = function () {
@@ -123,9 +129,17 @@ VentaSchema.methods.calcularTotal = function () {
 
   // Calcular total final
   this.resumen.subtotal = subtotalProductos;
+<<<<<<< Updated upstream
+  this.resumen.total =
+    subtotalProductos +
+    this.resumen.impuestos -
+    this.resumen.descuentos +
+    this.envio.costoEnvio;
+=======
   this.resumen.total = subtotalProductos + 
                         (this.resumen.impuestos || 0) - 
                         (this.resumen.descuentos || 0);
+>>>>>>> Stashed changes
 };
 
 // Middleware pre-save para calcular total
@@ -137,6 +151,22 @@ VentaSchema.pre("save", function (next) {
 
   // Calcular total
   this.calcularTotal();
+<<<<<<< Updated upstream
+
+  // Establecer fecha de entrega estimada
+  if (!this.fechaEntregaEstimada) {
+    const diasEntrega =
+      this.envio.metodoEnvio === "Express"
+        ? 3
+        : this.envio.metodoEnvio === "Prioritario"
+        ? 1
+        : 7;
+    this.fechaEntregaEstimada = new Date(
+      Date.now() + diasEntrega * 24 * 60 * 60 * 1000
+    );
+  }
+=======
+>>>>>>> Stashed changes
 
   next();
 });

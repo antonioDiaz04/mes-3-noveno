@@ -112,7 +112,9 @@ const VentaSchema = new mongoose.Schema(
   {
     timestamps: true, // Añade createdAt y updatedAt
   }
-);
+}, {
+  timestamps: true // Añade createdAt y updatedAt automáticamente
+});
 
 // Método para calcular total
 VentaSchema.methods.calcularTotal = function () {
@@ -137,6 +139,22 @@ VentaSchema.pre("save", function (next) {
 
   // Calcular total
   this.calcularTotal();
+<<<<<<< Updated upstream
+
+  // Establecer fecha de entrega estimada
+  if (!this.fechaEntregaEstimada) {
+    const diasEntrega =
+      this.envio.metodoEnvio === "Express"
+        ? 3
+        : this.envio.metodoEnvio === "Prioritario"
+        ? 1
+        : 7;
+    this.fechaEntregaEstimada = new Date(
+      Date.now() + diasEntrega * 24 * 60 * 60 * 1000
+    );
+  }
+=======
+>>>>>>> Stashed changes
 
   next();
 });

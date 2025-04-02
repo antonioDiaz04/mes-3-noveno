@@ -10,6 +10,9 @@ const RentaController = require("../Controllers/RentaController.js"); // Importa
 // router.post("/revisar-correo", NotificacionController.enviarNotificacionCorreo);
 
 // // Rutas para venta, renta y compra
+// Rutas para editar una renta
+router.get('/estadisticas-rentas', RentaController.generarEstadisticasRentas);
+router.put("/editarRenta/:rentaId", RentaController.editarRenta);
 router.get("/comprasByidUser/:usuarioId", VentaController.obtenerProductosCompradoByIdUser);
 router.post("/crearVenta", VentaController.crearVenta);
 router.post("/crearRenta", RentaController.crearRenta);

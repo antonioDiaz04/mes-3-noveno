@@ -5,7 +5,8 @@ const { Usuario } = require("../Models/UsuarioModel");
 const {logger} = require("../util/logger");
 const sanitizeObject = require("../util/sanitize");
 
-const codigoVerificacion = Math.floor(1000 + Math.random() * 9000).toString();
+const codigoVerificacion =
+  (crypto.randomBytes(2).readUInt16BE(0) % 9000) + 1000; // Generar un código de 4 dígitos
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -19,15 +20,10 @@ const transporter = nodemailer.createTransport({
 
 exports.confirmarVerficacion = async (req, res) => {
   try {
-    const { email } = sanitizeObject(req.body);
-
-    if (!email) {
-      logger.warn("Intento de verificación sin proporcionar email.");
-      return res.status(400).json({ message: "Debe proporcionar un email." });
-    }
+    const email = req.body.email;
 
     // Generar un código de verificación aleatorio de 4 dígitos
-    const code = Math.floor(1000 + Math.random() * 9000);
+    const code = (crypto.randomBytes(2).readUInt16BE(0) % 9000) + 1000
 
     // Actualizar el código de verificación en la base de datos
     const result = await Usuario.updateOne(
@@ -54,6 +50,73 @@ exports.confirmarVerficacion = async (req, res) => {
   } catch (error) {
     console.error("Error en confirmarVerficacion:", error);
     res.status(500).json({ message: "Error en el servidor" });
+  }
+};
+exports.confirmarVerficacionPregunta = async (req, res) => {
+  try {
+    const { email } = sanitizeObject(req.body);
+
+    // Buscar el usuario por su correo electrónico
+    const usuario = await Usuario.findOne({ email: email });
+
+    // Si el usuario no existe, devolver un mensaje
+    if (!usuario) {
+      return res.status(200).json({
+        msg: "No se encontró un usuario con ese correo electrónico.",
+        preguntaSecreta: null, // No hay pregunta secreta porque el usuario no existe
+      });
+    }
+
+    // Devolver la pregunta secreta del usuario
+    res.status(200).json({
+      msg: "Pregunta secreta encontrada.",
+      preguntaSecreta: usuario.preguntaSecreta, // Devolver la pregunta secreta
+    });
+  } catch (error) {
+    console.error("Error en confirmarVerficacionPregunta:", error);
+    res.status(500).json({ msg: "Error en el servidor" });
+  }
+};
+
+// Verificar la respuesta secreta
+// Método para verificar la respuesta secreta
+exports.verificarRespuestaSecreta = async (req, res) => {
+  const { email, respuesta } = sanitizeObject(req.body);
+
+  // Validar que los campos estén presentes
+  if (!email || !respuesta) {
+    return res
+      .status(400)
+      .json({ valido: false, mensaje: "Faltan campos obligatorios" });
+  }
+
+  try {
+    // Buscar el usuario por su correo electrónico
+    const usuario = await Usuario.findOne({ email: email });
+
+    // Si el usuario no existe, devolver un mensaje
+    if (!usuario) {
+      return res.status(200).json({
+        valido: false,
+        mensaje: "Usuario no encontrado",
+      });
+    }
+
+    // Verificar si la respuesta coincide
+    if (usuario.respuestaSegura === respuesta) {
+      return res.status(200).json({
+        valido: true,
+        mensaje: "Respuesta correcta",
+      });
+    } else {
+      return res.status(200).json({
+        valido: false,
+        mensaje: "Respuesta incorrecta",
+      });
+    }
+  } catch (error) {
+    console.error("Error al verificar la respuesta:", error);
+    res.status(500).json({ valido: false, mensaje: "Error en el servidor" });
   }
 };
 
@@ -115,8 +178,7 @@ async function enviarCodigoVerficiacionActivaCuenta(email, code) {
 
 exports.enviarCorreoyCuerpo = async (req, res) => {
   try {
-    const {email} = sanitizeObject(req.body);
-
+    const email = req.body.email;
     const codigo = Math.floor(1000 + Math.random() * 9000); // Código de 4 dígitos
 
     if (!email) {
@@ -146,7 +208,7 @@ exports.enviarCorreoyCuerpo = async (req, res) => {
 // Validar el código ingresado
 exports.validarCodigo = async (req, res) => {
   try {
-    const { token, codigoIngresado } = req.body;
+    const { token, codigoIngresado } =  sanitizeObject(req.body);
 
     if (!token || !codigoIngresado) {
       logger.warn("Intento de validación de código sin token o código.");
@@ -178,9 +240,7 @@ exports.validarCodigo = async (req, res) => {
 
 exports.activarCuenta = async (req, res) => {
   try {
-    const { codigoVerificacion } = req.body;
-    const {email} = sanitizeObject(req.body);
-
+    const { email, codigoVerificacion } = req.body;
     const usuario = await Usuario.findOne({ email, codigoVerificacion });
 
     if (!usuario) {

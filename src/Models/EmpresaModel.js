@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const DatosAtelierSchema = mongoose.Schema({
+const DatosAtelierSchema = new mongoose.Schema({
   logo: {
     type: String,
     required: true,
@@ -11,17 +11,23 @@ const DatosAtelierSchema = mongoose.Schema({
   },
   redesSociales: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "RedesSociales", // Referencia al modelo RedesSociales
+      plataforma: {
+        type: String,
+        required: true,
+      },
+      enlace: {
+        type: String,
+        required: true,
+      },
     },
   ],
   slogan: {
     type: String,
-    maxlength: 100, // Límite de caracteres
+    maxlength: 100,
   },
   tituloPagina: {
     type: String,
-    maxlength: 60, // Límite de caracteres para el título de página
+    maxlength: 60,
   },
   direccion: {
     type: String,
@@ -34,6 +40,7 @@ const DatosAtelierSchema = mongoose.Schema({
   telefono: {
     type: String,
   },
+<<<<<<< HEAD
 });
 
 const redesSocialesSchema = mongoose.Schema([
@@ -46,10 +53,21 @@ const redesSocialesSchema = mongoose.Schema([
       type: String,
       required: true,
     }
+=======
+  // ✅ Agregamos Misión, Visión y Valores dentro del mismo modelo
+  mision: {
+    titulo: { type: String, required: true },
+    contenido: { type: String, required: true },
+>>>>>>> b3af643d4314dc37444a2d084b1186988b2d9c61
   },
-]);
+  vision: {
+    titulo: { type: String, required: true },
+    contenido: { type: String, required: true },
+  },
+  valores: {
+    titulo: { type: String, required: true },
+    contenido: { type: String, required: true },
+  },
+});
 
-module.exports = {
-  DatosAtelier: mongoose.model("DatosAtelier", DatosAtelierSchema),
-  RedesSociales: mongoose.model("RedesSociales", redesSocialesSchema),
-};
+module.exports = mongoose.model("DatosAtelier", DatosAtelierSchema);

@@ -8,7 +8,7 @@ const { registerSchema } = require("../schemas/authSchema");
 // router.get("/admin", UsuarioController.adminRoute);
 
 // agrega cliente
-router.post("/", validarDatos(registerSchema), UsuarioController.crearUsuario);
+router.post("/", UsuarioController.crearUsuario);
 router.post("/check-email", UsuarioController.checkEmail);
 router.post("/check-telefono", UsuarioController.checkTelefono);
 

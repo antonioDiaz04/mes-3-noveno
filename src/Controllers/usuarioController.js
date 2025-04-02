@@ -189,14 +189,11 @@ exports.checkCode = async (req, res) => {
 
 exports.crearUsuario = async (req, res) => {
   try {
-    let { nombre, telefono, email, password } = req.body;
+    let { nombre, telefono, email, password, preguntaSecreta, respuestaSegura } = req.body;
 
     // Validar que todos los campos estén presentes
-    if (!nombre || !telefono || !email || !password) {
-      logger.warn("Todos los campos son obligatorios");
-      return res
-        .status(400)
-        .send({ message: "Todos los campos son obligatorios" });
+    if (!nombre || !telefono || !email || !password || !preguntaSecreta || !respuestaSegura) {
+      return res.status(400).send({ message: "Todos los campos son obligatorios" });
     }
 
     // Verificar si el email ya está registrado
@@ -204,34 +201,31 @@ exports.crearUsuario = async (req, res) => {
     if (record) {
       logger.warn("El email ya está registrado");
       return res.status(400).send({ message: "El email ya está registrado" });
-    } // Eliminar espacios en el teléfono
+    }
 
+    // Eliminar espacios en el teléfono
     const telefonoFormateado = cleanPhoneNumber(telefono);
     if (!telefonoFormateado) {
-      logger.warn("El número telefónico no es válido");
-      return res
-        .status(400)
-        .send({ message: "El número telefónico no es válido" });
+      return res.status(400).send({ message: "El número telefónico no es válido" });
     }
 
     // Verificar si el número de teléfono ya está registrado
-    const exist_number = await Usuario.findOne({
-      telefono: telefonoFormateado,
-    });
+    const exist_number = await Usuario.findOne({ telefono: telefonoFormateado });
     if (exist_number) {
-      logger.warn("El número telefónico ya está registrado");
-      return res
-        .status(400)
-        .send({ message: "El número telefónico ya está registrado" });
+      return res.status(400).send({ message: "El número telefónico ya está registrado" });
     }
 
+    // Obtener el primer usuario para obtener el estado de cuenta
     const primerUsuario = await Usuario.findOne().populate("estadoCuenta");
+    if (!primerUsuario || !primerUsuario.estadoCuenta) {
+      return res.status(500).send({ message: "No se pudo obtener el estado de cuenta" });
+    }
+
+    const { intentosPermitidos, tiempoDeBloqueo } = primerUsuario.estadoCuenta;
 
     // Encriptar la nueva contraseña
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-
-    const { intentosPermitidos, tiempoDeBloqueo } = primerUsuario.estadoCuenta;
 
     // Crear un nuevo estado de cuenta
     const nuevoEstadoCuenta = await EstadoCuenta.create({
@@ -249,16 +243,20 @@ exports.crearUsuario = async (req, res) => {
       token: "",
       codigoVerificacion: null,
       verificado: false,
+      preguntaSecreta,
+      respuestaSegura,
     });
 
     const resultado = await usuario.save();
 
+    // Generar token JWT
     const token = jwt.sign(
       { _id: usuario._id, rol: usuario.rol },
       process.env.JWT_SECRET,
       { expiresIn: "24h" }
     );
 
+    // Configurar la cookie con el token
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -272,12 +270,12 @@ exports.crearUsuario = async (req, res) => {
       message: "Usuario creado exitosamente",
     });
   } catch (error) {
-    logger.error(`Error en crearUsuario: ${error.message}`);
-    return res
-      .status(500)
-      .send({ message: "Error en el servidor", error: error.toString() });
+    console.log(error);
+    // Responder con error del servidor
+    return res.status(500).send({ message: "Error en el servidor", error: error.toString() });
   }
 };
+
 
 exports.eliminarUsuario = async (req, res) => {
   try {

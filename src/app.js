@@ -5,40 +5,61 @@ const conectarDB = require("./Server/Conexion");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
-const { logHttpRequest } = require("./util/logger.js");
-const { limiter } = require("./util/rateLimit.js");
+const categoriaRoutes = require('./Routes/CategoriaRoutes');
+//importa el cliente oficial de elasticseach
+
+
 
 const app = express();
 
 conectarDB();
 
-const corsOrigins = process.env.CORS_ORIGINS 
-// Evita errores con espacios 
-  ? process.env.CORS_ORIGINS.split(",").map(origin => origin.trim()) 
-  : [];
 
-  
+
 const corsOptions = {
   origin: corsOrigins.length > 0 ? corsOrigins : false, // Evita problemas si no hay orígenes definidos
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
+const esClient = require('../config/elasticsearch.js');
+
+app.use((req, res, next) => {
+  esClient.index({
+    index: 'http-logs',
+    document: {
+      timestamp: new Date(),
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip,
+    },
+  }).catch(error => console.error('Error al enviar log a Elasticsearch:', error));
+
+  next();
+});
 
 app.use(helmet());
 app.use(cookieParser());
 app.use(cors(corsOptions));
-app.use(express.json());
-app.use(limiter);
-app.use(helmet.hidePoweredBy()); // Oculta información del servidor
+app.use(bodyParser.json());
+
+// Solo habilitar logging en desarrollo
+if (process.env.NODE_ENV !== "production") {
+  app.use(morgan("dev"));
+}
+
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "trusted-scripts.com"],
+      styleSrc: ["'self'", "trusted-styles.com"],
+      imgSrc: ["'self'", "trusted-images.com"],
+    },
+  })
+);
 
 
-
-
-app.use(helmet.hsts({ maxAge: 31536000, includeSubDomains: true }));
-app.use(helmet.noSniff());
-
-// Configura X-Frame-Options para prevenir Clickjacking
 app.use((req, res, next) => {
   res.setHeader("X-Frame-Options", "DENY");
   next();
@@ -105,6 +126,9 @@ const apiVersion = process.env.API_VERSION || "v1"; // Si no se define, usa 'v1'
 
 // Rutas padres
 app.use(`/api/${apiVersion}/msj`, require("./Routes/WhatsappRoute.js"));
+app.use(`/api/${apiVersion}/categoria`, categoriaRoutes);
+
+
 app.use(`/api/${apiVersion}/producto`, require("./Routes/ProductRoute"));
 app.use(`/api/${apiVersion}/accesorio`, require("./Routes/AccesorioRoute.js"));
 app.use(

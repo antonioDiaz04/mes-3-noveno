@@ -382,3 +382,90 @@ exports.eliminarRedSocial = async (req, res) => {
     res.status(500).json({ message: "Error interno del servidor", error: error.message });
   }
 };
+
+// Crear o actualizar una sección (Misión, Visión o Valores)
+exports.crearEntrada = async (req, res) => {
+  try {
+    const { titulo, contenido, tipo } = req.body; // tipo: "mision", "vision" o "valores"
+    
+    if (!titulo || !contenido || !tipo) {
+      return res.status(400).json({ mensaje: "Todos los campos son obligatorios." });
+    }
+    
+    // Se busca el documento único; se asume que existe solo uno
+    let documento = await Empresa.findOne();
+    
+    if (!documento) {
+      // Si no existe, se crea uno nuevo con la sección indicada
+      const nuevaEntrada = new Empresa({ [tipo]: { titulo, contenido } });
+      await nuevaEntrada.save();
+      return res.status(201).json({ mensaje: "Entrada creada con éxito.", nuevaEntrada });
+    } else {
+      // Si ya existe, se actualiza la sección indicada
+      documento[tipo] = { titulo, contenido };
+      await documento.save();
+      return res.status(200).json({ mensaje: "Entrada actualizada con éxito.", entrada: documento });
+    }
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al crear o actualizar la entrada.", error });
+  }
+};
+
+// Obtener la entrada de una sección (Misión, Visión o Valores)
+exports.obtenerEntradas = async (req, res) => {
+  try {
+    const { tipo } = req.params; // tipo: "mision", "vision" o "valores"
+    const documento = await Empresa.findOne();
+    
+    // Se verifica que exista el documento y que la sección tenga datos (por ejemplo, un título)
+    if (!documento || !documento[tipo] || !documento[tipo].titulo) {
+      return res.status(404).json({ mensaje: `No se encontró datos de ${tipo}.` });
+    }
+    
+    res.status(200).json({ [tipo]: documento[tipo] });
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al obtener la entrada.", error });
+  }
+};
+
+// Editar (actualizar) una sección usando el parámetro de URL
+exports.editarEntrada = async (req, res) => {
+  try {
+    const { tipo } = req.params; // tipo: "mision", "vision" o "valores"
+    const { titulo, contenido } = req.body;
+    
+    if (!titulo || !contenido || !tipo) {
+      return res.status(400).json({ mensaje: "Todos los campos son obligatorios." });
+    }
+    
+    let documento = await Empresa.findOne();
+    if (!documento) {
+      return res.status(404).json({ mensaje: "Datos no encontrados." });
+    }
+    
+    documento[tipo] = { titulo, contenido };
+    await documento.save();
+    res.status(200).json({ mensaje: "Entrada actualizada con éxito.", entrada: documento });
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al actualizar la entrada.", error });
+  }
+};
+
+// "Eliminar" una sección: se limpia el contenido asignando valores vacíos
+exports.eliminarEntrada = async (req, res) => {
+  try {
+    const { tipo } = req.params; // tipo: "mision", "vision" o "valores"
+    let documento = await Empresa.findOne();
+    
+    if (!documento || !documento[tipo] || !documento[tipo].titulo) {
+      return res.status(404).json({ mensaje: "Entrada no encontrada." });
+    }
+    
+    // Se vacía la sección
+    documento[tipo] = { titulo: "", contenido: "" };
+    await documento.save();
+    res.status(200).json({ mensaje: "Entrada eliminada con éxito.", entrada: documento });
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al eliminar la entrada.", error });
+  }
+};
