@@ -6,7 +6,6 @@ const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const sanitizeObject = require("../util/sanitize");
-// const esClient = require("../../config/elasticsearch"); // Importar cliente de Elasticsearch
 
 const verifyTurnstile = async (captchaToken) => {
   try {
