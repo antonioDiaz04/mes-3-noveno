@@ -22,7 +22,6 @@ const productoSchema = new mongoose.Schema({
     type: String,
     required: true, // Requerido
   },
-<<<<<<< HEAD
   textura: {
     type: String,
     required: false, // Puede ser opcional
@@ -37,8 +36,6 @@ const productoSchema = new mongoose.Schema({
     altura: { type: Number, required: false }, // en cm
     cintura: { type: Number, required: false }, // en cm
   },
-=======
->>>>>>> b3af643d4314dc37444a2d084b1186988b2d9c61
   precio: {
     type: Number,
     required: true, // Requerido

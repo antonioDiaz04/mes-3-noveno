@@ -184,7 +184,7 @@ exports.eliminarProducto = async (req, res) => {
   }
 };
 
-const logger = require('../logger');
+const logger = require('../../src/util/logger');
 
 
 exports.obtenerProducto = async (req, res) => {

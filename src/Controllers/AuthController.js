@@ -24,7 +24,7 @@ const verifyTurnstile = async (captchaToken) => {
     return false;
   }
 };
-const logger = require('../logger'); // Usa el logger configurado
+const logger = require('../../src/util/logger');
 
 exports.Login = async (req, res) => {
   const logBase = {

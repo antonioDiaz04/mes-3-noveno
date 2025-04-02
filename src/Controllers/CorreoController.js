@@ -4,10 +4,9 @@ const bcrypt = require("bcryptjs");
 const { Usuario } = require("../Models/UsuarioModel");
 const {logger} = require("../util/logger");
 const sanitizeObject = require("../util/sanitize");
+const crypto = require("crypto");
 
-const codigoVerificacion =
-  (crypto.randomBytes(2).readUInt16BE(0) % 9000) + 1000; // Generar un código de 4 dígitos
-
+const codigoVerificacion =(crypto.randomBytes(2).readUInt16BE(0) % 9000) + 1000; // Generar un código de 4 dígitos
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465, //el numero de la suerte xD
