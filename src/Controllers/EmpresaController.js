@@ -9,8 +9,6 @@ exports.crearPerfilEmpresa = async (req, res) => {
 
     const sanitizedBody = sanitizeObject(req.body);
     const { redesSociales, slogan, tituloPagina, direccion, correoElectronico, telefono } = sanitizedBody;
-
-
     if (!req.files || Object.keys(req.files).length === 0) {
       return res
         .status(400)
@@ -61,7 +59,7 @@ exports.obtenerPerfilesEmpresa = async (req, res) => {
     const perfiles = await DatosAtelier.find().populate("redesSociales");
     res.status(200).json(perfiles);
   } catch (error) {
-    logger.error("Error al obtener perfiles de la empresa:", error);
+    // logger.error("Error al obtener perfiles de la empresa:", error);
     res
       .status(500)
       .json({ message: "Error interno del servidor", error: error.message });

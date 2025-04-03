@@ -1,1 +1,0 @@
-{"level":"info","message":"HTTP Request","metadata":{"endpoint":"/api/v1/producto/byId/9","ip":"::ffff:127.0.0.1","method":"GET","queryParams":{},"requestBody":{},"responseStatus":500,"responseTime":"11ms","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0","userId":null},"timestamp":"2025-04-01 12:38:10.156"}
