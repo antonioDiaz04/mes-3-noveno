@@ -5,7 +5,7 @@ const conectarDB = require("./Server/Conexion");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
-const { logHttpRequest } = require("./util/logger.js");
+// const { logHttpRequest } = require("./util/logger.js");
 const { limiter } = require("./util/rateLimit.js");
 const categoriaRoutes = require('./Routes/CategoriaRoutes');
 //importa el cliente oficial de elasticseach
@@ -106,16 +106,16 @@ app.use((req, res, next) => {
   res.removeHeader("X-Powered-By"); // Elimina el encabezado que revela la tecnología del servidor
   next();
 });
-app.use((req, res, next) => {
-  const start = Date.now(); //Se captura el tiempo actual en milisegundos
-  res.on("finish", () => {
-    const ip = req.ip;
-    console.log(ip)
-    const duration = Date.now() - start; // se calcula la duración de la solicitud restando el tiempo actual
-    logHttpRequest(req, res, duration);
-  });
-  next();
-});
+// app.use((req, res, next) => {
+//   const start = Date.now(); //Se captura el tiempo actual en milisegundos
+//   res.on("finish", () => {
+//     const ip = req.ip;
+//     console.log(ip)
+//     const duration = Date.now() - start; // se calcula la duración de la solicitud restando el tiempo actual
+//     logHttpRequest(req, res, duration);
+//   });
+//   next();
+// });
 
 // Ruta dinámica para la API
 const apiVersion = process.env.API_VERSION || "v1"; // Si no se define, usa 'v1'
