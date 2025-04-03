@@ -15,7 +15,7 @@ exports.getMision = async (req, res) => {
     const mision = await Mision.findOne();
     res.json(mision);
   } catch (error) {
-    logger.error("Error al traer la mision:", error);
+    // logger.error("Error al traer la mision:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -39,7 +39,7 @@ exports.saveMision = async (req, res) => {
 
     res.json(mision);
   } catch (error) {
-    logger.error("Error al guardar la mision:", error);
+    // logger.error("Error al guardar la mision:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -56,7 +56,7 @@ exports.deleteMision = async (req, res) => {
 
     res.json(mision);
   } catch (error) {
-    logger.error("Error al cambiar el estado de la mision:", error);
+    // logger.error("Error al cambiar el estado de la mision:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -71,7 +71,7 @@ exports.getVision = async (req, res) => {
     const vision = await Vision.findOne();
     res.json(vision);
   } catch (error) {
-    logger.error("Error al traer la vision:", error);
+    // logger.error("Error al traer la vision:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -95,7 +95,7 @@ exports.saveVision = async (req, res) => {
 
     res.json(vision);
   } catch (error) {
-    logger.error("Error al guardar la vision:", error);
+    // logger.error("Error al guardar la vision:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -114,7 +114,7 @@ exports.deleteVision = async (req, res) => {
 
     res.json(vision);
   } catch (error) {
-    logger.error("Error al cambiar el estado de la vision:", error);
+    // logger.error("Error al cambiar el estado de la vision:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -129,7 +129,7 @@ exports.getValores = async (req, res) => {
     const valores = await Valores.find({ activo: true }).sort({ orden: 1 });
     res.json(valores);
   } catch (error) {
-    logger.error("Error al traer todos los valores", error);
+    // logger.error("Error al traer todos los valores", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -139,7 +139,7 @@ exports.getAllValores = async (req, res) => {
     const valores = await Valores.find().sort({ orden: 1 });
     res.json(valores);
   } catch (error) {
-    logger.error("Error al traer todos de la vision:", error);
+    // logger.error("Error al traer todos de la vision:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -157,7 +157,7 @@ exports.createValor = async (req, res) => {
     await valor.save();
     res.status(201).json(valor);
   } catch (error) {
-    logger.error("Error al crear los valores:", error);
+    // logger.error("Error al crear los valores:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -181,7 +181,7 @@ exports.updateValor = async (req, res) => {
 
     res.json(valor);
   } catch (error) {
-    logger.error("Error al actualizar los valores:", error);
+    // logger.error("Error al actualizar los valores:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -202,7 +202,7 @@ exports.deleteValor = async (req, res) => {
 
     res.json({ message: "Valor desactivado correctamente" });
   } catch (error) {
-    logger.error("Error al eliminar los valores:", error);
+    // logger.error("Error al eliminar los valores:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -222,7 +222,7 @@ exports.getPreguntas = async (req, res) => {
     const preguntas = await PreguntaFrecuente.find(filter).sort({ orden: 1 });
     res.json(preguntas);
   } catch (error) {
-    logger.error("Error al traer la primera pregunta registrada", error);
+    // logger.error("Error al traer la primera pregunta registrada", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -233,7 +233,7 @@ exports.getAllPreguntas = async (req, res) => {
     const preguntas = await PreguntaFrecuente.find().sort({ orden: 1 });
     res.json(preguntas);
   } catch (error) {
-    logger.error("Error al traer todas las preguntas:", error);
+    // logger.error("Error al traer todas las preguntas:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -252,7 +252,7 @@ exports.createPregunta = async (req, res) => {
     await nuevaPregunta.save();
     res.status(201).json(nuevaPregunta);
   } catch (error) {
-    logger.error("Error al registrar la pregunta:", error);
+    // logger.error("Error al registrar la pregunta:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -276,7 +276,7 @@ exports.updatePregunta = async (req, res) => {
 
     res.json(preguntaActualizada);
   } catch (error) {
-    logger.error("Error al actualizar la pregunta:", error);
+    // logger.error("Error al actualizar la pregunta:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -296,7 +296,7 @@ exports.deletePregunta = async (req, res) => {
 
     res.json({ message: "Pregunta desactivada correctamente" });
   } catch (error) {
-    logger.error("Error al eliminar la pregunta:", error);
+    // logger.error("Error al eliminar la pregunta:", error);
     res.status(500).json({ error: error.message });
   }
 };

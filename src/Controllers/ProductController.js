@@ -197,25 +197,25 @@ exports.obtenerProducto = async (req, res) => {
     body: req.body
   };
 
-  logger.info('Inicio de obtención de productos', logMetadata);
+  // logger.info('Inicio de obtención de productos', logMetadata);
 
   try {
     const productos = await Producto.find();
-    logger.info(`Productos encontrados: ${productos.length}`, { 
-      ...logMetadata,
-      count: productos.length 
-    });
+    // logger.info(`Productos encontrados: ${productos.length}`, { 
+    //   ...logMetadata,
+    //   count: productos.length 
+    // });
 
     res.status(200).json(productos);
   } catch (error) {
-    logger.error('Error al obtener productos', {
-      ...logMetadata,
-      error: {
-        name: error.name,
-        message: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-      }
-    });
+    // logger.error('Error al obtener productos', {
+    //   ...logMetadata,
+    //   error: {
+    //     name: error.name,
+    //     message: error.message,
+    //     stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    //   }
+    // });º
 
     res.status(500).json({ 
       message: "Error interno del servidor",

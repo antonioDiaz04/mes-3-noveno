@@ -13,7 +13,7 @@ exports.crearRelacion = async (req, res) => {
     // Verificar que el vestido existe
     const vestido = await Producto.findById(vestidoId);
     if (!vestido) {
-      logger.warn(`Vestido no encontrado: ${vestidoId}`);
+      // logger.warn(`Vestido no encontrado: ${vestidoId}`);
       return res.status(404).json({ message: "Vestido no encontrado" });
     }
 
@@ -35,7 +35,7 @@ exports.crearRelacion = async (req, res) => {
       .status(201)
       .json({ message: "Relación creada exitosamente", relacion: resultado });
   } catch (error) {
-    logger.error(`Error al crear la relación: ${error.message}`);
+    // logger.error(`Error al crear la relación: ${error.message}`);
     res.status(500).json({ error: "Ocurrió un error al crear la relación." });
   }
 };
@@ -49,7 +49,7 @@ exports.obtenerRelaciones = async (req, res) => {
 
     res.status(200).json(relaciones);
   } catch (error) {
-    logger.error(`Error al obtener las relaciones: ${error.message}`);
+    // logger.error(`Error al obtener las relaciones: ${error.message}`);
     res.status(500).json({ message: "Error al obtener las relaciones", error });
   }
 };

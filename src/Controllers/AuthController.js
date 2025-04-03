@@ -19,7 +19,7 @@ const verifyTurnstile = async (captchaToken) => {
     });
     return response.data.success;
   } catch (error) {
-    logger.error("Error al verificar el CAPTCHA:", error.message);
+    // logger.error("Error al verificar el CAPTCHA:", error.message);
     return false;
   }
 };
@@ -45,7 +45,7 @@ exports.Login = async (req, res) => {
       telefono: telefono || null
     };
 
-    logger.info('Inicio de proceso de login', logContext);
+    // logger.info('Inicio de proceso de login', logContext);
 
     let usuario;
     if (email) {
@@ -64,7 +64,7 @@ exports.Login = async (req, res) => {
         reason: 'usuario_no_encontrado'
       };
 
-      logger.warn('Intento de login con credenciales no registradas', logData);
+      // logger.warn('Intento de login con credenciales no registradas', logData);
 
       return res.status(401).json({ message: "El correo o número de teléfono no está registrado" });
     }
@@ -89,7 +89,7 @@ exports.Login = async (req, res) => {
           intentosFallidos: estadoCuenta.intentosFallidos
         };
 
-        logger.warn('Intento de login en cuenta bloqueada', logData);
+        // logger.warn('Intento de login en cuenta bloqueada', logData);
 
         return res.status(403).json({
           message: `Cuenta bloqueada. Intenta nuevamente en ${Math.ceil(tiempoRestante / 1000)} segundos.`,
@@ -104,7 +104,7 @@ exports.Login = async (req, res) => {
       estadoCuenta.fechaDeUltimoBloqueo = null;
       await estadoCuenta.save();
       
-      logger.info('Cuenta desbloqueada automáticamente', logContext);
+      // logger.info('Cuenta desbloqueada automáticamente', logContext);
     }
 
     // Verificar contraseña
@@ -127,7 +127,7 @@ exports.Login = async (req, res) => {
           intentosFallidos: estadoCuenta.intentosFallidos
         };
 
-        logger.error('Cuenta bloqueada por máximo de intentos fallidos', logData);
+        // logger.error('Cuenta bloqueada por máximo de intentos fallidos', logData);
 
         return res.status(403).json({
           message: `Cuenta bloqueada. Intenta nuevamente en ${estadoCuenta.tiempoDeBloqueo} segundos.`,
@@ -146,7 +146,7 @@ exports.Login = async (req, res) => {
         intentosFallidos: estadoCuenta.intentosFallidos
       };
 
-      logger.warn('Intento de login con contraseña incorrecta', logData);
+      // logger.warn('Intento de login con contraseña incorrecta', logData);
 
       return res.status(401).json({
         message: `Contraseña incorrecta,\n Número de intentos fallidos: ${estadoCuenta.intentosFallidos}`,
@@ -163,7 +163,7 @@ exports.Login = async (req, res) => {
         reason: 'captcha_invalido'
       };
 
-      logger.warn('Intento de login con CAPTCHA inválido', logData);
+      // logger.warn('Intento de login con CAPTCHA inválido', logData);
 
       return res.status(400).json({ message: "Captcha inválido" });
     }
@@ -181,7 +181,7 @@ exports.Login = async (req, res) => {
         reason: 'rol_no_asignado'
       };
 
-      logger.error('Usuario sin rol asignado', logData);
+      // logger.error('Usuario sin rol asignado', logData);
 
       return res.status(401).json({ message: "El usuario no tiene un rol asignado" });
     }
@@ -201,7 +201,7 @@ exports.Login = async (req, res) => {
       rol: usuario.rol
     };
 
-    logger.info('Login exitoso', successLog);
+    // logger.info('Login exitoso', successLog);
 
     // Configurar cookie
     res.cookie("token", token, {
@@ -226,7 +226,7 @@ exports.Login = async (req, res) => {
       stack: error.stack
     };
 
-    logger.error('Error en el servidor durante el login', errorLog);
+    // logger.error('Error en el servidor durante el login', errorLog);
 
     return res.status(500).json({ 
       message: "Error en el servidor",

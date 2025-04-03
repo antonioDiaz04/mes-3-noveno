@@ -31,7 +31,7 @@ exports.confirmarVerficacion = async (req, res) => {
     );
 
     if (result.modifiedCount > 0) {
-      logger.warn(`No se encontró un usuario con el email: ${email}`);
+      // logger.warn(`No se encontró un usuario con el email: ${email}`);
       console.log("Código de verificación actualizado exitosamente.");
     } else {
       console.log("No se encontró un usuario con ese email.");
@@ -181,7 +181,7 @@ exports.enviarCorreoyCuerpo = async (req, res) => {
     const codigo = Math.floor(1000 + Math.random() * 9000); // Código de 4 dígitos
 
     if (!email) {
-      logger.warn("Intento de envío de correo sin email.");
+      // logger.warn("Intento de envío de correo sin email.");
       return res.status(400).json({ message: "El email es requerido" });
     }
 
@@ -199,7 +199,7 @@ exports.enviarCorreoyCuerpo = async (req, res) => {
     // Devolver el token al cliente
     res.status(200).json({ message: "Correo enviado", token });
   } catch (error) {
-    logger.error("Error en enviarCorreoyCuerpo:", error);
+    // logger.error("Error en enviarCorreoyCuerpo:", error);
     res.status(500).json({ message: "Error en el servidor" });
   }
 };
@@ -210,7 +210,7 @@ exports.validarCodigo = async (req, res) => {
     const { token, codigoIngresado } =  sanitizeObject(req.body);
 
     if (!token || !codigoIngresado) {
-      logger.warn("Intento de validación de código sin token o código.");
+      // logger.warn("Intento de validación de código sin token o código.");
       return res.status(400).json({ message: "Token y código son requeridos" });
     }
 
@@ -225,13 +225,13 @@ exports.validarCodigo = async (req, res) => {
     );
 
     if (isValid) {
-      logger.warn("Código de verificación incorrecto.");
+      // logger.warn("Código de verificación incorrecto.");
       res.status(200).json({ message: "Código validado correctamente" });
     } else {
       res.status(400).json({ message: "Código inválido" });
     }
   } catch (error) {
-    logger.error("Error en validarCodigo:", error);
+    // logger.error("Error en validarCodigo:", error);
     console.error("Error en validarCodigo:", error);
     res.status(500).json({ message: "Error en el servidor" });
   }
@@ -243,7 +243,7 @@ exports.activarCuenta = async (req, res) => {
     const usuario = await Usuario.findOne({ email, codigoVerificacion });
 
     if (!usuario) {
-      logger.warn(`Usuario no encontrado o código incorrecto para ${email}`);
+      // logger.warn(`Usuario no encontrado o código incorrecto para ${email}`);
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
@@ -254,7 +254,7 @@ exports.activarCuenta = async (req, res) => {
     // Devuelve un mensaje en formato JSON
     return res.status(200).json({ message: "Cuenta activada con éxito" });
   } catch (error) {
-    logger.error("Error al activar la cuenta:", error);
+    // logger.error("Error al activar la cuenta:", error);
     console.error("Error al activar la cuenta:", error);
     return res.status(500).json({ message: "Error en el servidor" });
   }

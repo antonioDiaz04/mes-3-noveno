@@ -16,7 +16,7 @@ exports.enviarNotificacion = async (req, res) => {
   try {
     // Validar si el token está presente en la solicitud
     if (!req.body.token) {
-      logger.warn("Token de suscripción no proporcionado");
+      // logger.warn("Token de suscripción no proporcionado");
       return res
         .status(400)
         .json({ message: "Token de suscripción no proporcionado" });
@@ -28,7 +28,7 @@ exports.enviarNotificacion = async (req, res) => {
     // Extraer los valores necesarios
     const { endpoint, keys } = tokenData;
     if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
-      logger.warn("Datos de suscripción inválidos");
+      // logger.warn("Datos de suscripción inválidos");
       return res.status(400).json({ message: "Datos de suscripción inválidos" });
     }
 
@@ -61,7 +61,7 @@ exports.enviarNotificacion = async (req, res) => {
     console.log("Notificación enviada con éxito");
     res.status(200).json({ message: "Notificación enviada con éxito" });
   } catch (err) {
-    logger.error(`Error al enviar la notificación: ${err.message}`);
+    // logger.error(`Error al enviar la notificación: ${err.message}`);
     res
       .status(500)
       .json({ message: "Error al enviar la notificación", error: err.message });

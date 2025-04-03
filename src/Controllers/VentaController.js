@@ -35,7 +35,7 @@ exports.crearVenta = async (req, res) => {
       productos.map(async (item) => {
         const producto = await Producto.findById(item.producto);
         if (!producto) {
-          logger.warn(`Producto no encontrado: ${item.producto}`);
+          // logger.warn(`Producto no encontrado: ${item.producto}`);
           throw new Error(`Producto ${item.producto} no encontrado`);
         }
         return {
@@ -88,7 +88,7 @@ exports.crearVenta = async (req, res) => {
       venta: ventaGuardada,
     });
   } catch (error) {
-    logger.error(`Error en creación de venta: ${error.message}`);
+    // logger.error(`Error en creación de venta: ${error.message}`);
     res.status(500).json({
       mensaje: "Error al crear venta",
       error: error.message,
@@ -105,13 +105,13 @@ exports.listarVentasUsuario = async (req, res) => {
       .populate("productos.producto", "nombre imagenPrincipal")
       .sort({ createdAt: -1 });
 
-    logger.info(`Ventas listadas para el usuario: ${usuarioId}`);
+    // logger.info(`Ventas listadas para el usuario: ${usuarioId}`);
     res.status(200).json({
       total: ventas.length,
       ventas: ventas,
     });
   } catch (error) {
-    logger.error(`Error al listar ventas: ${error.message}`);
+    // logger.error(`Error al listar ventas: ${error.message}`);
     res.status(500).json({
       mensaje: "Error al listar ventas",
       error: error.message,
@@ -129,7 +129,7 @@ exports.obtenerDetalleVenta = async (req, res) => {
       .populate("usuario", "nombre email");
 
     if (!venta) {
-      logger.warn(`Venta no encontrada: ${ventaId}`);
+      // logger.warn(`Venta no encontrada: ${ventaId}`);
       return res.status(404).json({
         mensaje: "Venta no encontrada",
       });
@@ -137,7 +137,7 @@ exports.obtenerDetalleVenta = async (req, res) => {
 
     res.status(200).json(venta);
   } catch (error) {
-    logger.error(`Error al obtener detalle de venta: ${error.message}`);
+    // logger.error(`Error al obtener detalle de venta: ${error.message}`);
     res.status(500).json({
       mensaje: "Error al obtener detalle de venta",
       error: error.message,

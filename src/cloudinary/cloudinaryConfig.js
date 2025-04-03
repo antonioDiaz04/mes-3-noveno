@@ -19,8 +19,8 @@ const uploadImage = async (
       secure_url: result.secure_url,
     };
   } catch (error) {
-    logger.error("Error al subir la imagen a Cloudinary:", error);
-    console.error("Error al subir la imagen a Cloudinary:", error);
+    // logger.error("Error al subir la imagen a Cloudinary:", error);
+    // console.error("Error al subir la imagen a Cloudinary:", error);
     throw new Error("Error al subir la imagen");
   }
 };
@@ -31,8 +31,8 @@ const deleteImage = async (publicId) => {
     const result = await cloudinary.uploader.destroy(publicId);
     return result;
   } catch (error) {
-    logger.error("Error al eliminar la imagen de Cloudinary:", error);
-    console.error("Error al eliminar la imagen de Cloudinary:", error);
+    // logger.error("Error al eliminar la imagen de Cloudinary:", error);
+    // console.error("Error al eliminar la imagen de Cloudinary:", error);
     throw new Error("Error al eliminar la imagen de Cloudinary");
   }
 };
