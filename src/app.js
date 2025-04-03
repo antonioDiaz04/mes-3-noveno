@@ -124,7 +124,6 @@ const apiVersion = process.env.API_VERSION || "v1"; // Si no se define, usa 'v1'
 app.use(`/api/${apiVersion}/msj`, require("./Routes/WhatsappRoute.js"));
 app.use(`/api/${apiVersion}/categoria`, categoriaRoutes);
 
-
 app.use(`/api/${apiVersion}/producto`, require("./Routes/ProductRoute"));
 app.use(`/api/${apiVersion}/accesorio`, require("./Routes/AccesorioRoute.js"));
 app.use(
@@ -147,6 +146,8 @@ app.use(`/api/${apiVersion}/renta`, require("./Routes/Renta&Venta"));
 //   `/api/${apiVersion}/estadisticas`,
 //   require("./Routes/EstadisticasRoute")
 // );
+app.use(`/api/${apiVersion}/proceso`, require("./Routes/Renta&Venta"));
+
 
 // Ruta para acciones control de Administrador de la página
 app.use(`/api/${apiVersion}/admin`, require("./Routes/PrivadoRoute"));
