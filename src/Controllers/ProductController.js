@@ -56,7 +56,9 @@ exports.crearProducto = async (req, res) => {
       altura: req.body.altura,
       cintura: req.body.cintura,
       color: req.body.color,
-      precio: req.body.precio,
+      precioAnterior: req.body.precioAnterior,
+      precioActual: req.body.precioActual,
+      mostrarPrecioAnterior: req.body.mostrarPrecioAnterior, // Checkbox desactivado por defecto
       opcionesTipoTransaccion: req.body.opcionesTipoTransaccion || "Venta", // Valor por defecto
       nuevo: req.body.nuevo !== undefined ? req.body.nuevo : true, // Valor por defecto
       tipoCuello: req.body.tipoCuello,
@@ -334,4 +336,3 @@ exports.buscarProductosAvanzados = async (req, res) => {
     res.status(500).json({ error: 'Error al buscar productos' });
   }
 };
-

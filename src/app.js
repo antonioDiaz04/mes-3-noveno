@@ -138,7 +138,6 @@ app.use(
 app.use(`/api/${apiVersion}/enviar-correo`, require("./Routes/CorreoRoute"));
 app.use(`/api/${apiVersion}/verificacion`, require("./Routes/CorreoRoute"));
 app.use(`/api/${apiVersion}/verificar`, require("./Routes/catpch"));
-
 app.use(`/api/${apiVersion}/Empresa`, require("./Routes/PerfilEmpresa.Routes"));
 app.use(`/api/${apiVersion}/autentificacion`, require("./Routes/AuthRoute"));
 app.use(`/api/${apiVersion}/renta`, require("./Routes/Renta&Venta"));

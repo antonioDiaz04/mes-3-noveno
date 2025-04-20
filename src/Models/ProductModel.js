@@ -36,11 +36,22 @@ const productoSchema = new mongoose.Schema({
     altura: { type: Number, required: false }, // en cm
     cintura: { type: Number, required: false }, // en cm
   },
-  precio: {
+  precioAnterior: {
+    type: Number,
+    required: false, // Requerido
+    min: 0, // Precio no puede ser negativo
+  },
+  precioActual: {
     type: Number,
     required: true, // Requerido
     min: 0, // Precio no puede ser negativo
   },
+  mostrarPrecioAnterior: {
+    type: Boolean,
+    required: false, // Requerido
+    default: false, // Valor por defecto
+  },
+
   opcionesTipoTransaccion: {
     type: String,
     required: true, // Requerido
