@@ -532,14 +532,29 @@ exports.enviarNotificacionAgradecimientoCompra = async (req, res) => {
   }
 }
 exports.enviarNotificacionLlevateCarrito = async (req, res) => {
-  console.log("llego")
+  // Validar si el token está presente en la solicitud
+  if (!req.body.token) {
+    // logger.warn("Token de suscripción no proporcionado");
+    return res
+      .status(400)
+      .json({ message: "Token de suscripción no proporcionado" });
+  }
+
+  // Convertir el token JSON a un objeto JavaScript
+  const tokenData = JSON.parse(req.body.token);
+
+  // Extraer los valores necesarios
+  const { endpoint, keys } = tokenData;
+  if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
+    // logger.warn("Datos de suscripción inválidos");
+    return res.status(400).json({ message: "Datos de suscripción inválidos" });
+  }
+
   const pushSubscription = {
-    endpoint:
-      "https://fcm.googleapis.com/fcm/send/cG9WhFIPP3A:APA91bFZ5N5SGliIWMF3wjQdoUdXEgCduuLr2-GUXEan--zTbDbDGxvyzuc0yed1yYlxIXXTpU3_Q810k_n54ATbNpu-ux87i4c2_tq98UNIRDPGhKp6e8RyWXc7EGSgpXOEsTsgfkxL",
+    endpoint,
     keys: {
-      p256dh:
-        "BFYNEZ1MT-60MYXrHCw5yV5VpwRiwssxn6XBm_uYm3voHIgChwKvdOAejTAn3ICbSxM7jzb__PXmVeaq5t1W2Uw",
-      auth: "WYqIQk0zn75glwwdWzPR4w",
+      p256dh: keys.p256dh,
+      auth: keys.auth,
     },
   };
 
