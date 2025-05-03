@@ -13,21 +13,16 @@ webpush.setVapidDetails(
 
 exports.enviarNotificacion = async (req, res) => {
   try {
-    // Validar si el token está presente en la solicitud
     if (!req.body.token) {
-      // logger.warn("Token de suscripción no proporcionado");
       return res
         .status(400)
         .json({ message: "Token de suscripción no proporcionado" });
     }
 
-    // Convertir el token JSON a un objeto JavaScript
     const tokenData = JSON.parse(req.body.token);
 
-    // Extraer los valores necesarios
     const { endpoint, keys } = tokenData;
     if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
-      // logger.warn("Datos de suscripción inválidos");
       return res.status(400).json({ message: "Datos de suscripción inválidos" });
     }
 
@@ -39,14 +34,12 @@ exports.enviarNotificacion = async (req, res) => {
       },
     };
 
-    // Mensaje de notificación
     const payload = {
       notification: {
         title: "¡Apartado Realizado!",
         body: "Has realizado un apartado. Tienes 24 horas para completar el pago.",
-        icon: "https://cdn-icons-png.flaticon.com/512/189/189665.png", // Ícono representativo
-        image:
-          "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+        icon: "https://cdn-icons-png.flaticon.com/512/189/189665.png",
+        image: "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
         actions: [
           { action: "pay_now", title: "Completar Pago" },
           { action: "cancel", title: "Cancelar Apartado" },
@@ -55,12 +48,12 @@ exports.enviarNotificacion = async (req, res) => {
       },
     };
 
-    await enviarNotificacion(pushSubscription, payload);
+    await webpush.sendNotification(pushSubscription, JSON.stringify(payload));
 
     console.log("Notificación enviada con éxito");
     res.status(200).json({ message: "Notificación enviada con éxito" });
   } catch (err) {
-    // logger.error(`Error al enviar la notificación: ${err.message}`);
+    console.error("Error al enviar la notificación:", err);
     res
       .status(500)
       .json({ message: "Error al enviar la notificación", error: err.message });
@@ -531,10 +524,14 @@ exports.enviarNotificacionAgradecimientoCompra = async (req, res) => {
   }
 }
 exports.enviarNotificacionLlevateCarrito = async (req, res) => {
+  // Verificar si el token de suscripción se ha proporcionado en el cuerpo de la solicitud
+  console.log("body=>", req.body);
   if (!req.body.token) {
     return res
       .status(400)
       .json({ message: "Token de suscripción no proporcionado" });
+  } else {
+    console.log("token=>", req.body.token);
   }
 
   try {
@@ -567,18 +564,20 @@ exports.enviarNotificacionLlevateCarrito = async (req, res) => {
       },
     };
 
-    await enviarNotificacion(pushSubscription, payload);
-    console.log("Notification sent successfully");
+    // Usar webpush.sendNotification en lugar de enviarNotificacion
+    await webpush.sendNotification(pushSubscription, JSON.stringify(payload));
+    console.log("Notificación enviada correctamente");
 
     res.status(200).json({ message: "Notificación enviada correctamente" });
   } catch (err) {
-    console.error("Error sending notification", err);
+    console.error("Error al enviar la notificación", err);
     res.status(500).json({
-      message: "Error al enviar la notificación",
+      message: "Error al enviar la notificación desde enviarNotificacionLlevateCarrito",
       error: err.message,
     });
   }
 };
+
 
 exports.enviarNotificacionRentaExtendida = async (req, res) => {
   const pushSubscription = {
