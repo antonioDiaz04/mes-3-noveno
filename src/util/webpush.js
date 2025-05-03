@@ -6,7 +6,7 @@ const vapidKeys = {
   };
   
   webpush.setVapidDetails(
-    "mailto:driftspotky@gmail.com",
+    "mailto:20221136@uthh.edu.mx",
     vapidKeys.publicKey,
     vapidKeys.privateKey
   );  
