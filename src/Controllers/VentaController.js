@@ -35,7 +35,7 @@ exports.crearVenta = async (req, res) => {
       productos.map(async (item) => {
         const producto = await Producto.findById(item.producto);
         if (!producto) {
-          // logger.warn(`Producto no encontrado: ${item.producto}`);
+          logger.warn(`Producto no encontrado: ${item.producto}`);
           throw new Error(`Producto ${item.producto} no encontrado`);
         }
         return {
@@ -88,7 +88,7 @@ exports.crearVenta = async (req, res) => {
       venta: ventaGuardada,
     });
   } catch (error) {
-    // logger.error(`Error en creación de venta: ${error.message}`);
+    logger.error(`Error en creación de venta: ${error.message}`);
     res.status(500).json({
       mensaje: "Error al crear venta",
       error: error.message,
@@ -105,13 +105,13 @@ exports.listarVentasUsuario = async (req, res) => {
       .populate("productos.producto", "nombre imagenPrincipal")
       .sort({ createdAt: -1 });
 
-    // logger.info(`Ventas listadas para el usuario: ${usuarioId}`);
+    logger.info(`Ventas listadas para el usuario: ${usuarioId}`);
     res.status(200).json({
       total: ventas.length,
       ventas: ventas,
     });
   } catch (error) {
-    // logger.error(`Error al listar ventas: ${error.message}`);
+    logger.error(`Error al listar ventas: ${error.message}`);
     res.status(500).json({
       mensaje: "Error al listar ventas",
       error: error.message,
@@ -129,7 +129,7 @@ exports.obtenerDetalleVenta = async (req, res) => {
       .populate("usuario", "nombre email");
 
     if (!venta) {
-      // logger.warn(`Venta no encontrada: ${ventaId}`);
+      logger.warn(`Venta no encontrada: ${ventaId}`);
       return res.status(404).json({
         mensaje: "Venta no encontrada",
       });
@@ -137,7 +137,7 @@ exports.obtenerDetalleVenta = async (req, res) => {
 
     res.status(200).json(venta);
   } catch (error) {
-    // logger.error(`Error al obtener detalle de venta: ${error.message}`);
+    logger.error(`Error al obtener detalle de venta: ${error.message}`);
     res.status(500).json({
       mensaje: "Error al obtener detalle de venta",
       error: error.message,
@@ -161,6 +161,203 @@ exports.obtenerVentas = async (req, res) => {
     console.error("Error al obtener ventas:", error);
     res.status(500).json({
       mensaje: "Error al obtener ventas",
+      error: error.message,
+    });
+  }
+};
+
+
+exports.elimininarById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Eliminar la venta por ID
+    const ventaEliminada = await Venta.findByIdAndDelete(id);
+
+    if (!ventaEliminada) {
+      return res.status(404).json({
+        mensaje: "Venta no encontrada",
+      });
+    }
+
+    res.status(200).json({
+      mensaje: "Venta eliminada exitosamente",
+      ventaEliminada,
+    });
+  }
+  catch (error) {
+    console.error("Error al eliminar la venta:", error);
+    res.status(500).json({
+      mensaje: "Error al eliminar la venta",
+      error: error.message,
+    });
+  }
+}
+
+exports.actualizarVentaById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { productos, detallesPago, envio, resumen } = sanitizeObject(req.body);
+
+    // Validar productos
+    const productosValidados = await Promise.all(
+      productos.map(async (item) => {
+        const producto = await Producto.findById(item.producto);
+        if (!producto) {
+          logger.warn(`Producto no encontrado: ${item.producto}`);
+          throw new Error(`Producto ${item.producto} no encontrado`);
+        }
+        return {
+          producto: producto._id,
+          cantidad: item.cantidad,
+          precioUnitario: producto.precio,
+        };
+      })
+    );
+
+    // Calcular subtotal
+    const subtotal = productosValidados.reduce(
+      (total, producto) => total + producto.cantidad * producto.precioUnitario,
+      0
+    );
+
+    // Actualizar la venta
+    const ventaActualizada = await Venta.findByIdAndUpdate(
+      id,
+      {
+        productos: productosValidados,
+        detallesPago: {
+          metodoPago: detallesPago.metodoPago,
+          ultimosDigitosTarjeta: detallesPago.ultimosDigitosTarjeta || "",
+        },
+        resumen: {
+          subtotal: subtotal,
+          impuestos: resumen?.impuestos || 0,
+          descuentos: resumen?.descuentos || 0,
+          total:
+            subtotal + (resumen?.impuestos || 0) - (resumen?.descuentos || 0),
+        },
+        envio: {
+          direccion: {
+            calle: envio.direccion.calle,
+            ciudad: envio.direccion.ciudad,
+            estado: envio.direccion.estado,
+            codigoPostal: envio.direccion.codigoPostal,
+            pais: envio.direccion.pais || "México",
+          },
+          metodoEnvio: envio.metodoEnvio || "Estándar",
+          costoEnvio: envio.costoEnvio || 0,
+        },
+      },
+      { new: true }
+    );
+
+    if (!ventaActualizada) {
+      return res.status(404).json({
+        mensaje: "Venta no encontrada",
+      });
+    }
+
+    res.status(200).json({
+      mensaje: "Venta actualizada exitosamente",
+      ventaActualizada,
+    });
+  } catch (error) {
+    logger.error(`Error al actualizar la venta: ${error.message}`
+    );
+    res.status(500).json({
+      mensaje: "Error al actualizar la venta",
+      error: error.message,
+    });
+  }
+}
+exports.obtenerVentaByIdUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Obtener la venta por ID de usuario
+    const venta = await Venta.findOne({ usuario: id })
+      .populate("productos.producto", "nombre imagenPrincipal")
+      .sort({ fechaDeRegistro: -1 });
+
+    if (!venta) {
+      return res.status(404).json({
+        mensaje: "Venta no encontrada",
+      });
+    }
+
+    res.status(200).json(venta);
+  } catch (error) {
+    console.error("Error al obtener la venta:", error);
+    res.status(500).json({
+      mensaje: "Error al obtener la venta",
+      error: error.message,
+    });
+  }
+};
+exports.obtenerVentaByIdProducto = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Obtener la venta por ID de producto
+    const venta = await Venta.findOne({ "productos.producto": id })
+      .populate("productos.producto", "nombre imagenPrincipal")
+      .sort({ fechaDeRegistro: -1 });
+
+    if (!venta) {
+      return res.status(404).json({
+        mensaje: "Venta no encontrada",
+      });
+    }
+
+    res.status(200).json(venta);
+  } catch (error) {
+    console.error("Error al obtener la venta:", error);
+    res.status(500).json({
+      mensaje: "Error al obtener la venta",
+      error: error.message,
+    });
+  }
+};
+exports.obtenerVentaByIdEstado = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Obtener la venta por ID de estado
+    const venta = await Venta.findOne({ estado: id })
+      .populate("productos.producto", "nombre imagenPrincipal")
+      .sort({ fechaDeRegistro: -1 });
+
+    if (!venta) {
+      return res.status(404).json({
+        mensaje: "Venta no encontrada",
+      });
+    }
+
+    res.status(200).json(venta);
+  } catch (error) {
+    console.error("Error al obtener la venta:", error);
+    res.status(500).json({
+      mensaje: "Error al obtener la venta",
+      error: error.message,
+    });
+  }
+};
+exports.eliminarVentasSeleccionadas = async (req, res) => {
+  try {
+    const { ids } = req.body; // Suponiendo que los IDs vienen en el cuerpo de la solicitud
+
+    // Eliminar las ventas seleccionadas
+    const result = await Venta.deleteMany({ _id: { $in: ids } });
+
+    res.status(200).json({
+      mensaje: "Ventas eliminadas exitosamente",
+      result,
+    });
+  } catch (error) {
+    console.error("Error al eliminar las ventas:", error);
+    res.status(500).json({
+      mensaje: "Error al eliminar las ventas",
       error: error.message,
     });
   }

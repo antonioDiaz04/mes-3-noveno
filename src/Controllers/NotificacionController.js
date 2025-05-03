@@ -1,5 +1,5 @@
 const webpush = require("web-push");
-const {logger} = require("../util/logger");
+const { logger } = require("../util/logger");
 
 const vapidKeys = {
   publicKey: process.env.VAPID_PUBLIC_KEY,
@@ -157,3 +157,362 @@ exports.enviarNotificacionCorreo = async (req, res) => {
     res.status(500).json({ message: "Error sending notification" });
   }
 };
+exports.enviarNotificacionNuevosProductos = async (req, res) => {
+  const pushSubscription = {
+    endpoint:
+      "https://fcm.googleapis.com/fcm/send/cG9WhFIPP3A:APA91bFZ5N5SGliIWMF3wjQdoUdXEgCduuLr2-GUXEan--zTbDbDGxvyzuc0yed1yYlxIXXTpU3_Q810k_n54ATbNpu-ux87i4c2_tq98UNIRDPGhKp6e8RyWXc7EGSgpXOEsTsgfkxL",
+    keys: {
+      p256dh:
+        "BFYNEZ1MT-60MYXrHCw5yV5VpwRiwssxn6XBm_uYm3voHIgChwKvdOAejTAn3ICbSxM7jzb__PXmVeaq5t1W2Uw",
+      auth: "WYqIQk0zn75glwwdWzPR4w",
+    },
+  };
+
+  const payload = {
+    notification: {
+      title: "¡Nuevos productos disponibles!",
+      body: "Descubre los últimos productos que hemos agregado a nuestra tienda.",
+      image:
+        "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+      actions: [
+        { action: "view_products", title: "Ver Productos" },
+        { action: "dismiss", title: "Descartar" },
+      ],
+      vibrate: [100, 50, 100],
+    },
+  };
+}
+exports.enviarNotificacionComentarios = async (req, res) => {
+  const pushSubscription = {
+    endpoint:
+      "https://fcm.googleapis.com/fcm/send/cG9WhFIPP3A:APA91bFZ5N5SGliIWMF3wjQdoUdXEgCduuLr2-GUXEan--zTbDbDGxvyzuc0yed1yYlxIXXTpU3_Q810k_n54ATbNpu-ux87i4c2_tq98UNIRDPGhKp6e8RyWXc7EGSgpXOEsTsgfkxL",
+    keys: {
+      p256dh:
+        "BFYNEZ1MT-60MYXrHCw5yV5VpwRiwssxn6XBm_uYm3voHIgChwKvdOAejTAn3ICbSxM7jzb__PXmVeaq5t1W2Uw",
+      auth: "WYqIQk0zn75glwwdWzPR4w",
+    },
+  };
+
+  const payload = {
+    notification: {
+      title: "¡Nuevo comentario!",
+      body: "Alguien ha comentado en tu publicación. Haz clic para verlo.",
+      image:
+        "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+      actions: [
+        { action: "view_comment", title: "Ver Comentario" },
+        { action: "dismiss", title: "Descartar" },
+      ],
+      vibrate: [100, 50, 100],
+    },
+  };
+}
+exports.enviarNotificacionComentariosRespuesta = async (req, res) => {
+  const pushSubscription = {
+    endpoint:
+      "https://fcm.googleapis.com/fcm/send/cG9WhFIPP3A:APA91bFZ5N5SGliIWMF3wjQdoUdXEgCduuLr2-GUXEan--zTbDbDGxvyzuc0yed1yYlxIXXTpU3_Q810k_n54ATbNpu-ux87i4c2_tq98UNIRDPGhKp6e8RyWXc7EGSgpXOEsTsgfkxL",
+    keys: {
+      p256dh:
+        "BFYNEZ1MT-60MYXrHCw5yV5VpwRiwssxn6XBm_uYm3voHIgChwKvdOAejTAn3ICbSxM7jzb__PXmVeaq5t1W2Uw",
+      auth: "WYqIQk0zn75glwwdWzPR4w",
+    },
+  };
+
+  const payload = {
+    notification: {
+      title: "¡Nueva respuesta a tu comentario!",
+      body: "Alguien ha respondido a tu comentario. Haz clic para verlo.",
+      image:
+        "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+      actions: [
+        { action: "view_response", title: "Ver Respuesta" },
+        { action: "dismiss", title: "Descartar" },
+      ],
+      vibrate: [100, 50, 100],
+    },
+  };
+}
+exports.enviarNotificacionProductosOfertas = async (req, res) => {
+  const pushSubscription = {
+    endpoint:
+      "https://fcm.googleapis.com/fcm/send/cG9WhFIPP3A:APA91bFZ5N5SGliIWMF3wjQdoUdXEgCduuLr2-GUXEan--zTbDbDGxvyzuc0yed1yYlxIXXTpU3_Q810k_n54ATbNpu-ux87i4c2_tq98UNIRDPGhKp6e8RyWXc7EGSgpXOEsTsgfkxL",
+    keys: {
+      p256dh:
+        "BFYNEZ1MT-60MYXrHCw5yV5VpwRiwssxn6XBm_uYm3voHIgChwKvdOAejTAn3ICbSxM7jzb__PXmVeaq5t1W2Uw",
+      auth: "WYqIQk0zn75glwwdWzPR4w",
+    },
+  };
+
+  const payload = {
+    notification: {
+      title: "¡Nuevas ofertas en productos!",
+      body: "Aprovecha nuestras ofertas especiales en productos seleccionados.",
+      image:
+        "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+      actions: [
+        { action: "view_offers", title: "Ver Ofertas" },
+        { action: "dismiss", title: "Descartar" },
+      ],
+      vibrate: [100, 50, 100],
+    },
+  };
+}
+exports.enviarNotificacionBienvenidaAteleier = async (req, res) => {
+  const pushSubscription = {
+    endpoint:
+      "https://fcm.googleapis.com/fcm/send/cG9WhFIPP3A:APA91bFZ5N5SGliIWMF3wjQdoUdXEgCduuLr2-GUXEan--zTbDbDGxvyzuc0yed1yYlxIXXTpU3_Q810k_n54ATbNpu-ux87i4c2_tq98UNIRDPGhKp6e8RyWXc7EGSgpXOEsTsgfkxL",
+    keys: {
+      p256dh:
+        "BFYNEZ1MT-60MYXrHCw5yV5VpwRiwssxn6XBm_uYm3voHIgChwKvdOAejTAn3ICbSxM7jzb__PXmVeaq5t1W2Uw",
+      auth: "WYqIQk0zn75glwwdWzPR4w",
+    },
+  };
+
+  const payload = {
+    notification: {
+      title: "¡Bienvenido a Ateleier!",
+      body: "Explora nuestras ofertas y productos exclusivos.",
+      image:
+        "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+      actions: [
+        { action: "explore", title: "Explorar" },
+        { action: "dismiss", title: "Descartar" },
+      ],
+      vibrate: [100, 50, 100],
+    },
+  };
+}
+exports.enviarNotificacionBienvenidaAteleierComprar = async (req, res) => {
+  const pushSubscription = {
+    endpoint:
+      "https://fcm.googleapis.com/fcm/send/cG9WhFIPP3A:APA91bFZ5N5SGliIWMF3wjQdoUdXEgCduuLr2-GUXEan--zTbDbDGxvyzuc0yed1yYlxIXXTpU3_Q810k_n54ATbNpu-ux87i4c2_tq98UNIRDPGhKp6e8RyWXc7EGSgpXOEsTsgfkxL",
+    keys: {
+      p256dh:
+        "BFYNEZ1MT-60MYXrHCw5yV5VpwRiwssxn6XBm_uYm3voHIgChwKvdOAejTAn3ICbSxM7jzb__PXmVeaq5t1W2Uw",
+      auth: "WYqIQk0zn75glwwdWzPR4w",
+    },
+  };
+
+  const payload = {
+    notification: {
+      title: "¡Bienvenido a Ateleier!",
+      body: "Explora nuestras ofertas y productos exclusivos.",
+      image:
+        "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+      actions: [
+        { action: "explore", title: "Explorar" },
+        { action: "dismiss", title: "Descartar" },
+      ],
+      vibrate: [100, 50, 100],
+    },
+  };
+}
+exports.enviarNotificacionSuscripcion = async (req, res) => {
+  const pushSubscription = {
+    endpoint:
+      "https://fcm.googleapis.com/fcm/send/cG9WhFIPP3A:APA91bFZ5N5SGliIWMF3wjQdoUdXEgCduuLr2-GUXEan--zTbDbDGxvyzuc0yed1yYlxIXXTpU3_Q810k_n54ATbNpu-ux87i4c2_tq98UNIRDPGhKp6e8RyWXc7EGSgpXOEsTsgfkxL",
+    keys: {
+      p256dh:
+        "BFYNEZ1MT-60MYXrHCw5yV5VpwRiwssxn6XBm_uYm3voHIgChwKvdOAejTAn3ICbSxM7jzb__PXmVeaq5t1W2Uw",
+      auth: "WYqIQk0zn75glwwdWzPR4w",
+    },
+  };
+
+  const payload = {
+    notification: {
+      title: "¡Gracias por suscribirte!",
+      body: "Recibirás las últimas novedades y ofertas.",
+      image:
+        "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+      actions: [
+        { action: "view_offers", title: "Ver Ofertas" },
+        { action: "dismiss", title: "Descartar" },
+      ],
+      vibrate: [100, 50, 100],
+    },
+  };
+}
+exports.enviarNotificacionSuscripcionRenovacion = async (req, res) => {
+  const pushSubscription = {
+    endpoint:
+      "https://fcm.googleapis.com/fcm/send/cG9WhFIPP3A:APA91bFZ5N5SGliIWMF3wjQdoUdXEgCduuLr2-GUXEan--zTbDbDGxvyzuc0yed1yYlxIXXTpU3_Q810k_n54ATbNpu-ux87i4c2_tq98UNIRDPGhKp6e8RyWXc7EGSgpXOEsTsgfkxL",
+    keys: {
+      p256dh:
+        "BFYNEZ1MT-60MYXrHCw5yV5VpwRiwssxn6XBm_uYm3voHIgChwKvdOAejTAn3ICbSxM7jzb__PXmVeaq5t1W2Uw",
+      auth: "WYqIQk0zn75glwwdWzPR4w",
+    },
+  };
+
+  const payload = {
+    notification: {
+      title: "¡Renovación de suscripción exitosa!",
+      body: "Tu suscripción ha sido renovada. ¡Gracias por seguir con nosotros!",
+      image:
+        "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+      actions: [
+        { action: "view_offers", title: "Ver Ofertas" },
+        { action: "dismiss", title: "Descartar" },
+      ],
+      vibrate: [100, 50, 100],
+    },
+  };
+}
+exports.enviarNotificacionNuevosProductosSuscriptores = async (req, res) => {
+  const pushSubscription = {
+    endpoint:
+      "https://fcm.googleapis.com/fcm/send/cG9WhFIPP3A:APA91bFZ5N5SGliIWMF3wjQdoUdXEgCduuLr2-GUXEan--zTbDbDGxvyzuc0yed1yYlxIXXTpU3_Q810k_n54ATbNpu-ux87i4c2_tq98UNIRDPGhKp6e8RyWXc7EGSgpXOEsTsgfkxL",
+    keys: {
+      p256dh:
+        "BFYNEZ1MT-60MYXrHCw5yV5VpwRiwssxn6XBm_uYm3voHIgChwKvdOAejTAn3ICbSxM7jzb__PXmVeaq5t1W2Uw",
+      auth: "WYqIQk0zn75glwwdWzPR4w",
+    },
+  };
+
+  const payload = {
+    notification: {
+      title: "¡Nuevos productos para suscriptores!",
+      body: "Descubre los nuevos productos que hemos agregado para nuestros suscriptores.",
+      image:
+        "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+      actions: [
+        { action: "view_products", title: "Ver Productos" },
+        { action: "dismiss", title: "Descartar" },
+      ],
+      vibrate: [100, 50, 100],
+    },
+  };
+}
+exports.enviarNotificacionRecordatorioDevolucionRenta = async (req, res) => {
+  const pushSubscription = {
+    endpoint:
+      "https://fcm.googleapis.com/fcm/send/cG9WhFIPP3A:APA91bFZ5N5SGliIWMF3wjQdoUdXEgCduuLr2-GUXEan--zTbDbDGxvyzuc0yed1yYlxIXXTpU3_Q810k_n54ATbNpu-ux87i4c2_tq98UNIRDPGhKp6e8RyWXc7EGSgpXOEsTsgfkxL",
+    keys: {
+      p256dh:
+        "BFYNEZ1MT-60MYXrHCw5yV5VpwRiwssxn6XBm_uYm3voHIgChwKvdOAejTAn3ICbSxM7jzb__PXmVeaq5t1W2Uw",
+      auth: "WYqIQk0zn75glwwdWzPR4w",
+    },
+  };
+
+  const payload = {
+    notification: {
+      title: "¡Recordatorio de devolución de renta!",
+      body: "Recuerda devolver el producto rentado antes de la fecha límite.",
+      image:
+        "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+      actions: [
+        { action: "view_rental", title: "Ver Renta" },
+        { action: "dismiss", title: "Descartar" },
+      ],
+      vibrate: [100, 50, 100],
+    },
+  };
+}
+exports.enviarNotificacionAgradecimientoCompra = async (req, res) => {
+  const pushSubscription = {
+    endpoint:
+      "https://fcm.googleapis.com/fcm/send/cG9WhFIPP3A:APA91bFZ5N5SGliIWMF3wjQdoUdXEgCduuLr2-GUXEan--zTbDbDGxvyzuc0yed1yYlxIXXTpU3_Q810k_n54ATbNpu-ux87i4c2_tq98UNIRDPGhKp6e8RyWXc7EGSgpXOEsTsgfkxL",
+    keys: {
+      p256dh:
+        "BFYNEZ1MT-60MYXrHCw5yV5VpwRiwssxn6XBm_uYm3voHIgChwKvdOAejTAn3ICbSxM7jzb__PXmVeaq5t1W2Uw",
+      auth: "WYqIQk0zn75glwwdWzPR4w",
+    },
+  };
+
+  const payload = {
+    notification: {
+      title: "¡Gracias por tu compra!",
+      body: "Esperamos que disfrutes de tu producto. ¡Vuelve pronto!",
+      image:
+        "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+      actions: [
+        { action: "view_order", title: "Ver Pedido" },
+        { action: "dismiss", title: "Descartar" },
+      ],
+      vibrate: [100, 50, 100],
+    },
+  };
+}
+exports.enviarNotificacionLlevateCarrito = async (req, res) => {
+  const pushSubscription = {
+    endpoint:
+      "https://fcm.googleapis.com/fcm/send/cG9WhFIPP3A:APA91bFZ5N5SGliIWMF3wjQdoUdXEgCduuLr2-GUXEan--zTbDbDGxvyzuc0yed1yYlxIXXTpU3_Q810k_n54ATbNpu-ux87i4c2_tq98UNIRDPGhKp6e8RyWXc7EGSgpXOEsTsgfkxL",
+    keys: {
+      p256dh:
+        "BFYNEZ1MT-60MYXrHCw5yV5VpwRiwssxn6XBm_uYm3voHIgChwKvdOAejTAn3ICbSxM7jzb__PXmVeaq5t1W2Uw",
+      auth: "WYqIQk0zn75glwwdWzPR4w",
+    },
+  };
+
+  const payload = {
+    notification: {
+      title: "¡No olvides tu carrito!",
+      body: "Tienes productos en tu carrito. ¡Completa tu compra ahora!",
+      image:
+        "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+      actions: [
+        { action: "view_cart", title: "Ver Carrito" },
+        { action: "dismiss", title: "Descartar" },
+      ],
+      vibrate: [100, 50, 100],
+    },
+  };
+}
+exports.enviarNotificacionRentaExtendida = async (req, res) => {
+  const pushSubscription = {
+    endpoint:
+      "https://fcm.googleapis.com/fcm/send/cG9WhFIPP3A:APA91bFZ5N5SGliIWMF3wjQdoUdXEgCduuLr2-GUXEan--zTbDbDGxvyzuc0yed1yYlxIXXTpU3_Q810k_n54ATbNpu-ux87i4c2_tq98UNIRDPGhKp6e8RyWXc7EGSgpXOEsTsgfkxL",
+    keys: {
+      p256dh:
+        "BFYNEZ1MT-60MYXrHCw5yV5VpwRiwssxn6XBm_uYm3voHIgChwKvdOAejTAn3ICbSxM7jzb__PXmVeaq5t1W2Uw",
+      auth: "WYqIQk0zn75glwwdWzPR4w",
+    },
+  };
+
+  const payload = {
+    notification: {
+      title: "¡Renta extendida!",
+      body: "Tu periodo de renta ha sido extendido. Disfruta más tiempo con tu producto.",
+      image:
+        "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+      actions: [
+        { action: "view_rental", title: "Ver Renta" },
+        { action: "dismiss", title: "Descartar" },
+      ],
+      vibrate: [100, 50, 100],
+    },
+  };
+}
+exports.enviarNotificacionMotivacionRenta = async (req, res) => {
+  const pushSubscription = {
+    endpoint:
+      "https://fcm.googleapis.com/fcm/send/cG9WhFIPP3A:APA91bFZ5N5SGliIWMF3wjQdoUdXEgCduuLr2-GUXEan--zTbDbDGxvyzuc0yed1yYlxIXXTpU3_Q810k_n54ATbNpu-ux87i4c2_tq98UNIRDPGhKp6e8RyWXc7EGSgpXOEsTsgfkxL",
+    keys: {
+      p256dh:
+        "BFYNEZ1MT-60MYXrHCw5yV5VpwRiwssxn6XBm_uYm3voHIgChwKvdOAejTAn3ICbSxM7jzb__PXmVeaq5t1W2Uw",
+      auth: "WYqIQk0zn75glwwdWzPR4w",
+    },
+  };
+
+  const payload = {
+    notification: {
+      title: "¡Motivación para rentar!",
+      body: "Explora nuestros productos y aprovecha nuestras ofertas de renta.",
+      image:
+        "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+      actions: [
+        { action: "explore_rentals", title: "Explorar Rentas" },
+        { action: "dismiss", title: "Descartar" },
+      ],
+      vibrate: [100, 50, 100],
+    },
+  };
+  try {
+    await enviarNotificacion(pushSubscription, payload);
+
+    console.log("Notification sent successfully");
+    res.status(200).send("Notification sent successfully");
+  } catch (err) {
+    console.error("Error sending notification", err);
+    res.status(500).send("Error sending notification");
+  }
+}
