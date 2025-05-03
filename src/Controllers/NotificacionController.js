@@ -1,5 +1,5 @@
 const webpush = require("web-push");
-const { logger } = require("../util/logger");
+// const { logger } = require("../util/logger");
 
 const vapidKeys = {
   publicKey: process.env.VAPID_PUBLIC_KEY,
@@ -181,6 +181,15 @@ exports.enviarNotificacionNuevosProductos = async (req, res) => {
       vibrate: [100, 50, 100],
     },
   };
+  try {
+    await enviarNotificacion(pushSubscription, payload);
+
+    console.log("Notification sent successfully");
+    res.status(200).send("Notification sent successfully");
+  } catch (err) {
+    console.error("Error sending notification", err);
+    res.status(500).send("Error sending notification");
+  }
 }
 exports.enviarNotificacionComentarios = async (req, res) => {
   const pushSubscription = {
@@ -206,6 +215,15 @@ exports.enviarNotificacionComentarios = async (req, res) => {
       vibrate: [100, 50, 100],
     },
   };
+  try {
+    await enviarNotificacion(pushSubscription, payload);
+
+    console.log("Notification sent successfully");
+    res.status(200).send("Notification sent successfully");
+  } catch (err) {
+    console.error("Error sending notification", err);
+    res.status(500).send("Error sending notification");
+  }
 }
 exports.enviarNotificacionComentariosRespuesta = async (req, res) => {
   const pushSubscription = {
@@ -231,6 +249,15 @@ exports.enviarNotificacionComentariosRespuesta = async (req, res) => {
       vibrate: [100, 50, 100],
     },
   };
+  try {
+    await enviarNotificacion(pushSubscription, payload);
+
+    console.log("Notification sent successfully");
+    res.status(200).send("Notification sent successfully");
+  } catch (err) {
+    console.error("Error sending notification", err);
+    res.status(500).send("Error sending notification");
+  }
 }
 exports.enviarNotificacionProductosOfertas = async (req, res) => {
   const pushSubscription = {
@@ -256,6 +283,15 @@ exports.enviarNotificacionProductosOfertas = async (req, res) => {
       vibrate: [100, 50, 100],
     },
   };
+  try {
+    await enviarNotificacion(pushSubscription, payload);
+
+    console.log("Notification sent successfully");
+    res.status(200).send("Notification sent successfully");
+  } catch (err) {
+    console.error("Error sending notification", err);
+    res.status(500).send("Error sending notification");
+  }
 }
 exports.enviarNotificacionBienvenidaAteleier = async (req, res) => {
   const pushSubscription = {
@@ -281,6 +317,15 @@ exports.enviarNotificacionBienvenidaAteleier = async (req, res) => {
       vibrate: [100, 50, 100],
     },
   };
+  try {
+    await enviarNotificacion(pushSubscription, payload);
+
+    console.log("Notification sent successfully");
+    res.status(200).send("Notification sent successfully");
+  } catch (err) {
+    console.error("Error sending notification", err);
+    res.status(500).send("Error sending notification");
+  }
 }
 exports.enviarNotificacionBienvenidaAteleierComprar = async (req, res) => {
   const pushSubscription = {
@@ -306,6 +351,15 @@ exports.enviarNotificacionBienvenidaAteleierComprar = async (req, res) => {
       vibrate: [100, 50, 100],
     },
   };
+  try {
+    await enviarNotificacion(pushSubscription, payload);
+
+    console.log("Notification sent successfully");
+    res.status(200).send("Notification sent successfully");
+  } catch (err) {
+    console.error("Error sending notification", err);
+    res.status(500).send("Error sending notification");
+  }
 }
 exports.enviarNotificacionSuscripcion = async (req, res) => {
   const pushSubscription = {
@@ -331,6 +385,15 @@ exports.enviarNotificacionSuscripcion = async (req, res) => {
       vibrate: [100, 50, 100],
     },
   };
+  try {
+    await enviarNotificacion(pushSubscription, payload);
+
+    console.log("Notification sent successfully");
+    res.status(200).send("Notification sent successfully");
+  } catch (err) {
+    console.error("Error sending notification", err);
+    res.status(500).send("Error sending notification");
+  }
 }
 exports.enviarNotificacionSuscripcionRenovacion = async (req, res) => {
   const pushSubscription = {
@@ -356,6 +419,15 @@ exports.enviarNotificacionSuscripcionRenovacion = async (req, res) => {
       vibrate: [100, 50, 100],
     },
   };
+  try {
+    await enviarNotificacion(pushSubscription, payload);
+
+    console.log("Notification sent successfully");
+    res.status(200).send("Notification sent successfully");
+  } catch (err) {
+    console.error("Error sending notification", err);
+    res.status(500).send("Error sending notification");
+  }
 }
 exports.enviarNotificacionNuevosProductosSuscriptores = async (req, res) => {
   const pushSubscription = {
@@ -381,6 +453,15 @@ exports.enviarNotificacionNuevosProductosSuscriptores = async (req, res) => {
       vibrate: [100, 50, 100],
     },
   };
+  try {
+    await enviarNotificacion(pushSubscription, payload);
+
+    console.log("Notification sent successfully");
+    res.status(200).send("Notification sent successfully");
+  } catch (err) {
+    console.error("Error sending notification", err);
+    res.status(500).send("Error sending notification");
+  }
 }
 exports.enviarNotificacionRecordatorioDevolucionRenta = async (req, res) => {
   const pushSubscription = {
@@ -406,6 +487,15 @@ exports.enviarNotificacionRecordatorioDevolucionRenta = async (req, res) => {
       vibrate: [100, 50, 100],
     },
   };
+  try {
+    await enviarNotificacion(pushSubscription, payload);
+
+    console.log("Notification sent successfully");
+    res.status(200).send("Notification sent successfully");
+  } catch (err) {
+    console.error("Error sending notification", err);
+    res.status(500).send("Error sending notification");
+  }
 }
 exports.enviarNotificacionAgradecimientoCompra = async (req, res) => {
   const pushSubscription = {
@@ -431,8 +521,18 @@ exports.enviarNotificacionAgradecimientoCompra = async (req, res) => {
       vibrate: [100, 50, 100],
     },
   };
+  try {
+    await enviarNotificacion(pushSubscription, payload);
+
+    console.log("Notification sent successfully");
+    res.status(200).send("Notification sent successfully");
+  } catch (err) {
+    console.error("Error sending notification", err);
+    res.status(500).send("Error sending notification");
+  }
 }
 exports.enviarNotificacionLlevateCarrito = async (req, res) => {
+  console.log("llego")
   const pushSubscription = {
     endpoint:
       "https://fcm.googleapis.com/fcm/send/cG9WhFIPP3A:APA91bFZ5N5SGliIWMF3wjQdoUdXEgCduuLr2-GUXEan--zTbDbDGxvyzuc0yed1yYlxIXXTpU3_Q810k_n54ATbNpu-ux87i4c2_tq98UNIRDPGhKp6e8RyWXc7EGSgpXOEsTsgfkxL",
@@ -456,6 +556,16 @@ exports.enviarNotificacionLlevateCarrito = async (req, res) => {
       vibrate: [100, 50, 100],
     },
   };
+  try {
+    await enviarNotificacion(pushSubscription, payload);
+
+    console.log("Notification sent successfully");
+    res.status(200).send("Notification sent successfully");
+  } catch (err) {
+    console.error("Error sending notification", err);
+    res.status(500).send("Error sending notification");
+  }
+  
 }
 exports.enviarNotificacionRentaExtendida = async (req, res) => {
   const pushSubscription = {
