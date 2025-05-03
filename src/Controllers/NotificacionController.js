@@ -1,5 +1,4 @@
 const webpush = require("web-push");
-// const { logger } = require("../util/logger");
 
 const vapidKeys = {
   publicKey: process.env.VAPID_PUBLIC_KEY,
@@ -7,7 +6,7 @@ const vapidKeys = {
 };
 
 webpush.setVapidDetails(
-  "mailto:20221136@uthh.edu.mx",
+  "mailto:driftspotky@gmail.com",
   vapidKeys.publicKey,
   vapidKeys.privateKey
 );
@@ -606,6 +605,15 @@ exports.enviarNotificacionRentaExtendida = async (req, res) => {
       vibrate: [100, 50, 100],
     },
   };
+  try {
+    await enviarNotificacion(pushSubscription, payload);
+
+    console.log("Notification sent successfully");
+    res.status(200).send("Notification sent successfully");
+  } catch (err) {
+    console.error("Error sending notification", err);
+    res.status(500).send("Error sending notification");
+  }
 }
 exports.enviarNotificacionMotivacionRenta = async (req, res) => {
   const pushSubscription = {
