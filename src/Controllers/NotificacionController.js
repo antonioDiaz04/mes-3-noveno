@@ -531,56 +531,55 @@ exports.enviarNotificacionAgradecimientoCompra = async (req, res) => {
   }
 }
 exports.enviarNotificacionLlevateCarrito = async (req, res) => {
-  // Validar si el token está presente en la solicitud
   if (!req.body.token) {
-    // logger.warn("Token de suscripción no proporcionado");
     return res
       .status(400)
       .json({ message: "Token de suscripción no proporcionado" });
   }
 
-  // Convertir el token JSON a un objeto JavaScript
-  const tokenData = JSON.parse(req.body.token);
-
-  // Extraer los valores necesarios
-  const { endpoint, keys } = tokenData;
-  if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
-    // logger.warn("Datos de suscripción inválidos");
-    return res.status(400).json({ message: "Datos de suscripción inválidos" });
-  }
-
-  const pushSubscription = {
-    endpoint,
-    keys: {
-      p256dh: keys.p256dh,
-      auth: keys.auth,
-    },
-  };
-
-  const payload = {
-    notification: {
-      title: "¡No olvides tu carrito!",
-      body: "Tienes productos en tu carrito. ¡Completa tu compra ahora!",
-      image:
-        "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
-      actions: [
-        { action: "view_cart", title: "Ver Carrito" },
-        { action: "dismiss", title: "Descartar" },
-      ],
-      vibrate: [100, 50, 100],
-    },
-  };
   try {
-    await enviarNotificacion(pushSubscription, payload);
+    const tokenData = JSON.parse(req.body.token);
+    const { endpoint, keys } = tokenData;
 
+    if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
+      return res.status(400).json({ message: "Datos de suscripción inválidos" });
+    }
+
+    const pushSubscription = {
+      endpoint,
+      keys: {
+        p256dh: keys.p256dh,
+        auth: keys.auth,
+      },
+    };
+
+    const payload = {
+      notification: {
+        title: "¡No olvides tu carrito!",
+        body: "Tienes productos en tu carrito. ¡Completa tu compra ahora!",
+        image:
+          "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+        actions: [
+          { action: "view_cart", title: "Ver Carrito" },
+          { action: "dismiss", title: "Descartar" },
+        ],
+        vibrate: [100, 50, 100],
+      },
+    };
+
+    await enviarNotificacion(pushSubscription, payload);
     console.log("Notification sent successfully");
-    res.status(200).send("Notification sent successfully");
+
+    res.status(200).json({ message: "Notificación enviada correctamente" });
   } catch (err) {
     console.error("Error sending notification", err);
-    res.status(500).send("Error sending notification");
+    res.status(500).json({
+      message: "Error al enviar la notificación",
+      error: err.message,
+    });
   }
-  
-}
+};
+
 exports.enviarNotificacionRentaExtendida = async (req, res) => {
   const pushSubscription = {
     endpoint:
