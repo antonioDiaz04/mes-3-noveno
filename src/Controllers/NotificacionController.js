@@ -889,7 +889,7 @@ exports.llevateTuProducto = async (req, res) => {
       .status(400)
       .json({ message: "Token de suscripción no proporcionado" });
   } else {
-    console.log("token=>", req.body.token);
+    console.log("body=>", req.body);
   }
 
   try {
