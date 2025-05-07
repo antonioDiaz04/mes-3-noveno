@@ -14,7 +14,7 @@ exports.crearPoliticas = async (req, res) => {
     const { titulo, contenido, fechaVigencia } = sanitizedBody;
 
     if (!fechaVigencia || isNaN(new Date(fechaVigencia).getTime())) {
-      logger.warn("Fecha de vigencia inválida");
+      // logger.warn("Fecha de vigencia inválida");
       return res.status(400).json({ message: "Fecha de vigencia inválida" });
     }
 
@@ -38,7 +38,7 @@ exports.crearPoliticas = async (req, res) => {
       politica: nuevaPolitica,
     });
   } catch (error) {
-    logger.error("Error al crear políticas: " + error);
+    // logger.error("Error al crear políticas: " + error);
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
@@ -50,7 +50,7 @@ exports.obtenerPoliticas = async (req, res) => {
       .exec();
 
     if (!politicas) {
-      logger.warn("No hay políticas disponibles");
+      // logger.warn("No hay políticas disponibles");
       return res.status(404).json({ message: "No hay políticas disponibles" });
     }
 
@@ -73,7 +73,7 @@ exports.obtenerPoliticas = async (req, res) => {
 
     return res.status(200).json(politicas);
   } catch (error) {
-    logger.error(`Error al obtener políticas: ${error.message}`);
+    // logger.error(`Error al obtener políticas: ${error.message}`);
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
@@ -87,11 +87,11 @@ exports.actualizarPoliticas = async (req, res) => {
     const politicaExistente = await Politicas.findById(id);
 
     if (!politicaExistente) {
-      logger.warn(`Política con ID ${id} no encontrada`);
+      // logger.warn(`Política con ID ${id} no encontrada`);
       return res.status(404).send("Política no encontrada");
     }
     if (!fechaVigencia || isNaN(new Date(fechaVigencia).getTime())) {
-      logger.warn("Fecha de vigencia inválida");
+      // logger.warn("Fecha de vigencia inválida");
       return res.status(400).json({ message: "Fecha de vigencia inválida" });
     }
 
@@ -134,7 +134,7 @@ exports.actualizarPoliticas = async (req, res) => {
       politica: politicaActualizada,
     });
   } catch (error) {
-    logger.error(`Error al actualizar políticas: ${error.message}`);
+    // logger.error(`Error al actualizar políticas: ${error.message}`);
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
@@ -146,7 +146,7 @@ exports.eliminarPolitica = async (req, res) => {
     const politica = await Politicas.findById(id).populate("historial");
 
     if (!politica) {
-      logger.warn("Política no encontrada al intentar eliminar");
+      // logger.warn("Política no encontrada al intentar eliminar");
       return res.status(404).json({ message: "Política no encontrada" });
     }
 
@@ -157,7 +157,7 @@ exports.eliminarPolitica = async (req, res) => {
       message: "Politica eliminada",
     });
   } catch (error) {
-    logger.error("Error al eliminar política: " + error);
+    // logger.error("Error al eliminar política: " + error);
     res.status(500).json({
       mensaje: "Error interno del servidor",
       error: error.message,
@@ -172,7 +172,7 @@ exports.obtenerHistorialPolitica = async (req, res) => {
     // Buscar la política por su ID
     const politica = await Politicas.findById(id);
     if (!politica) {
-      logger.warn(`Política con ID ${id} no encontrada`);
+      // logger.warn(`Política con ID ${id} no encontrada`);
       return res.status(404).send("Política no encontrada");
     }
 
@@ -192,7 +192,7 @@ exports.obtenerHistorialPolitica = async (req, res) => {
       historial: historialCompleto,
     });
   } catch (error) {
-    logger.error("Error al obtener el historial de la política: ", error);
+    // logger.error("Error al obtener el historial de la política: ", error);
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
@@ -203,11 +203,11 @@ exports.createAcercaDe = async (req, res) => {
     const { titulo, contenido } = sanitizedBody;
 
     if (!titulo) {
-      logger.warn("Título vacío en creación de AcercaDe");
+      // logger.warn("Título vacío en creación de AcercaDe");
       return res.status(400).json({ message: "Título vacío" });
     }
     if (!contenido) {
-      logger.warn("Contenido vacío en creación de AcercaDe");
+      // logger.warn("Contenido vacío en creación de AcercaDe");
       return res.status(400).json({ message: "Contenido vacío" });
     }
 
@@ -215,7 +215,7 @@ exports.createAcercaDe = async (req, res) => {
     await acercaDe.save();
     res.status(201).json(acercaDe);
   } catch (error) {
-    logger.error("Error al crear AcercaDe: ", error);
+    // logger.error("Error al crear AcercaDe: ", error);
     res.status(500).json({
       mensaje: "Error interno del servidor",
       error: error.message,
@@ -227,10 +227,10 @@ exports.deleteAcercaDe = async (req, res) => {
   try {
     const { id } = req.params;
     const acercaDe = await AcercaDe.findByIdAndDelete(id);
-    if (!acercaDe) logger.warn(`AcercaDe con ID ${id} no encontrado`);
+    // if (!acercaDe) logger.warn(`AcercaDe con ID ${id} no encontrado`);
     return res.status(404).json({ message: "AcercaDe no encontrado" });
   } catch (error) {
-    logger.error("Error al eliminar AcercaDe: ", error);
+    // logger.error("Error al eliminar AcercaDe: ", error);
     res.status(500).json({
       mensaje: "Error interno del servidor",
       error: error.message,
@@ -246,15 +246,15 @@ exports.updateAcercaDe = async (req, res) => {
     const { titulo, contenido } = sanitizedBody;
 
     if (!id) {
-      logger.warn("ID vacío en actualización de AcercaDe");
+      // logger.warn("ID vacío en actualización de AcercaDe");
       return res.status(400).json({ message: "ID vacío" });
     }
     if (!titulo) {
-      logger.warn("Título vacío en actualización de AcercaDe");
+      // logger.warn("Título vacío en actualización de AcercaDe");
       return res.status(400).json({ message: "Título vacío" });
     }
     if (!contenido) {
-      logger.warn("Contenido vacío en actualización de AcercaDe");
+      // logger.warn("Contenido vacío en actualización de AcercaDe");
       return res.status(400).json({ message: "Contenido vacío" });
     }
 
@@ -265,13 +265,13 @@ exports.updateAcercaDe = async (req, res) => {
     );
 
     if (!acercaDe) {
-      logger.warn(`AcercaDe con ID ${id} no encontrado`);
+      // logger.warn(`AcercaDe con ID ${id} no encontrado`);
       return res.status(404).json({ message: "AcercaDe no encontrado" });
     }
 
     res.status(200).json(acercaDe);
   } catch (error) {
-    logger.error("Error al actualizar AcercaDe: ", error);
+    // logger.error("Error al actualizar AcercaDe: ", error);
     res.status(500).json({
       mensaje: "Error interno del servidor",
       error: error.message,
@@ -286,7 +286,7 @@ exports.crearTerminosYCondiciones = async (req, res) => {
     const { titulo, contenido, fechaVigencia } = sanitizedBody;
 
     if (!fechaVigencia || isNaN(new Date(fechaVigencia).getTime())) {
-      logger.warn("Fecha de vigencia inválida al crear términos y condiciones");
+      // logger.warn("Fecha de vigencia inválida al crear términos y condiciones");
       return res.status(400).json({ message: "Fecha de vigencia inválida" });
     }
 
@@ -306,7 +306,7 @@ exports.crearTerminosYCondiciones = async (req, res) => {
       terminos: nuevosTerminos,
     });
   } catch (error) {
-    logger.error("Error al crear términos y condiciones: ", error);
+    // logger.error("Error al crear términos y condiciones: ", error);
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
@@ -317,7 +317,7 @@ exports.obtenerTerminosYCondiciones = async (req, res) => {
       estado: { $ne: "eliminado" },
     });
     if (!terminos || terminos.length === 0) {
-      logger.warn("No hay términos y condiciones disponibles");
+      // logger.warn("No hay términos y condiciones disponibles");
       return res
         .status(404)
         .json({ message: "No hay términos y condiciones disponibles" });
@@ -339,7 +339,7 @@ exports.obtenerTerminosYCondiciones = async (req, res) => {
     }
     return res.status(200).json(terminos);
   } catch (error) {
-    logger.error("Error al obtener términos y condiciones: ", error);
+    // logger.error("Error al obtener términos y condiciones: ", error);
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
@@ -353,7 +353,7 @@ exports.obtenerTerminosYCondicionesVigentes = async (req, res) => {
 
     // Si no hay términos vigentes, retornar 404
     if (terminos.length === 0) {
-      logger.warn("No hay términos y condiciones disponibles");
+      // logger.warn("No hay términos y condiciones disponibles");
       return res.status(404).json({
         message: "No hay términos y condiciones vigentes disponibles",
       });
@@ -376,7 +376,7 @@ exports.obtenerTerminosYCondicionesVigentes = async (req, res) => {
 
     return res.status(200).json(terminosVigentes); // Retornar términos vigentes
   } catch (error) {
-    logger.error("Error al obtener términos y condiciones: ", error);
+    // logger.error("Error al obtener términos y condiciones: ", error);
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
@@ -391,11 +391,11 @@ exports.actualizarTerminosYCondiciones = async (req, res) => {
     const terminosExistentes = await TerminosYCondiciones.findById(id);
 
     if (!terminosExistentes) {
-      logger.warn("Términos y condiciones no encontrados con ID: " + id);
+      // logger.warn("Términos y condiciones no encontrados con ID: " + id);
       return res.status(404).send("Términos y condiciones no encontrados");
     }
     if (!fechaVigencia || isNaN(new Date(fechaVigencia).getTime())) {
-      logger.warn("Fecha de vigencia inválida");
+      // logger.warn("Fecha de vigencia inválida");
       return res.status(400).json({ message: "Fecha de vigencia inválida" });
     }
     console.log(titulo, contenido, fechaVigencia);
@@ -429,10 +429,10 @@ exports.actualizarTerminosYCondiciones = async (req, res) => {
       terminos: terminosActualizados,
     });
   } catch (error) {
-    logger.error(
-      "Error al actualizar términos y condiciones con ID: " + req.params.id,
-      error
-    );
+    // logger.error(
+      // "Error al actualizar términos y condiciones con ID: " + req.params.id,
+      // error
+    // );
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
@@ -444,7 +444,7 @@ exports.eliminarTerminosYCondiciones = async (req, res) => {
     const terminos = await TerminosYCondiciones.findById(id);
 
     if (!terminos) {
-      logger.warn("Términos y condiciones no encontrados con ID: " + id);
+      // logger.warn("Términos y condiciones no encontrados con ID: " + id);
       return res
         .status(404)
         .json({ message: "Términos y condiciones no encontrados" });
@@ -457,10 +457,10 @@ exports.eliminarTerminosYCondiciones = async (req, res) => {
       message: "Términos y condiciones eliminados",
     });
   } catch (error) {
-    logger.error(
-      "Error al eliminar términos y condiciones con ID: " + req.params.id,
-      error
-    );
+    // logger.error(
+    //   "Error al eliminar términos y condiciones con ID: " + req.params.id,
+    //   error
+    // );
     return res.status(500).json({
       mensaje: "Error interno del servidor",
       error: error.message,
@@ -475,7 +475,7 @@ exports.obtenerHistorialTerminosYCondiciones = async (req, res) => {
     // Buscar los términos por su ID
     const terminos = await TerminosYCondiciones.findById(id);
     if (!terminos) {
-      logger.warn("Términos y condiciones no encontrados con ID: " + id);
+      // logger.warn("Términos y condiciones no encontrados con ID: " + id);
       return res.status(404).send("Términos y condiciones no encontrados");
     }
 
@@ -495,11 +495,11 @@ exports.obtenerHistorialTerminosYCondiciones = async (req, res) => {
       historial: historialCompleto,
     });
   } catch (error) {
-    logger.error(
-      "Error al obtener historial de términos y condiciones con ID: " +
-        req.params.id,
-      error
-    );
+    // logger.error(
+    //   "Error al obtener historial de términos y condiciones con ID: " +
+    //     req.params.id,
+    //   error
+    // );
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
@@ -510,7 +510,7 @@ exports.crearDeslindeLegal = async (req, res) => {
     const { titulo, contenido, fechaVigencia } = sanitizedBody;
 
     if (!fechaVigencia || isNaN(new Date(fechaVigencia).getTime())) {
-      logger.warn("Fecha de vigencia inválida");
+      // logger.warn("Fecha de vigencia inválida");
       return res.status(400).json({ message: "Fecha de vigencia inválida" });
     }
 
@@ -530,7 +530,7 @@ exports.crearDeslindeLegal = async (req, res) => {
       deslinde: nuevoDeslinde,
     });
   } catch (error) {
-    logger.error("Error al crear deslinde legal", error);
+    // logger.error("Error al crear deslinde legal", error);
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
@@ -543,7 +543,7 @@ exports.obtenerDeslindesLegales = async (req, res) => {
     });
 
     if (!deslindes || deslindes.length === 0) {
-      logger.warn("No hay deslindes legales disponibles");
+      // logger.warn("No hay deslindes legales disponibles");
       return res
         .status(404)
         .json({ message: "No hay deslindes legales disponibles" });
@@ -567,7 +567,7 @@ exports.obtenerDeslindesLegales = async (req, res) => {
 
     return res.status(200).json(deslindes);
   } catch (error) {
-    logger.error("Error al obtener deslindes legales", error);
+    // logger.error("Error al obtener deslindes legales", error);
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
@@ -583,11 +583,11 @@ exports.actualizarDeslindeLegal = async (req, res) => {
     const deslindeExistente = await Deslindelegal.findById(id);
 
     if (!deslindeExistente) {
-      logger.warn("Deslinde legal no encontrado con ID: " + id);
+      // logger.warn("Deslinde legal no encontrado con ID: " + id);
       return res.status(404).send("Deslinde legal no encontrado");
     }
     if (!fechaVigencia || isNaN(new Date(fechaVigencia).getTime())) {
-      logger.warn("Fecha de vigencia inválida");
+      // logger.warn("Fecha de vigencia inválida");
       return res.status(400).json({ message: "Fecha de vigencia inválida" });
     }
 
@@ -618,10 +618,10 @@ exports.actualizarDeslindeLegal = async (req, res) => {
       deslinde: deslindeActualizado,
     });
   } catch (error) {
-    logger.error(
-      "Error al actualizar deslinde legal con ID: " + req.params.id,
-      error
-    );
+    // logger.error(
+    //   "Error al actualizar deslinde legal con ID: " + req.params.id,
+    //   error
+    // );
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
@@ -634,7 +634,7 @@ exports.eliminarDeslindeLegal = async (req, res) => {
     const deslinde = await Deslindelegal.findById(id);
 
     if (!deslinde) {
-      logger.warn("Deslinde legal no encontrado con ID: " + id);
+      // logger.warn("Deslinde legal no encontrado con ID: " + id);
       return res.status(404).json({ message: "Deslinde legal no encontrado" });
     }
 
@@ -645,10 +645,10 @@ exports.eliminarDeslindeLegal = async (req, res) => {
       message: "Deslinde legal eliminado",
     });
   } catch (error) {
-    logger.error(
-      "Error al eliminar deslinde legal con ID: " + req.params.id,
-      error
-    );
+    // logger.error(
+      // "Error al eliminar deslinde legal con ID: " + req.params.id,
+      // error
+    // );
     return res.status(500).json({
       mensaje: "Error interno del servidor",
       error: error.message,
@@ -664,7 +664,7 @@ exports.obtenerHistorialDeslindeLegal = async (req, res) => {
     const deslinde = await Deslindelegal.findById(id);
     
     if (!deslinde) {
-      logger.warn("Deslinde legal no encontrado con ID: " + id);
+      // logger.warn("Deslinde legal no encontrado con ID: " + id);
       return res.status(404).send("Deslinde legal no encontrado");
     }
 
@@ -684,10 +684,10 @@ exports.obtenerHistorialDeslindeLegal = async (req, res) => {
       historial: historialCompleto,
     });
   } catch (error) {
-    logger.error(
-      "Error al obtener historial de deslinde legal con ID: " + req.params.id,
-      error
-    );
+    // logger.error(
+    //   "Error al obtener historial de deslinde legal con ID: " + req.params.id,
+    //   error
+    // );
     return res.status(500).send("Error en el servidor: " + error);
   }
 };

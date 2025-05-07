@@ -1,16 +1,16 @@
 const Renta = require("../Models/RentaModel");
 const Producto = require("../Models/ProductModel");
 const { enviarNotificacion } = require("../util/webpush");
-const {logger} = require("../util/logger");
+const { logger } = require("../util/logger");
 
 // Crear Nueva Renta desde Frontend
 const crearRenta = async (req, res) => {
   try {
-    const { 
+    const {
       usuarioId,
-      productoId, 
-      fechaInicio, 
-      fechaFin, 
+      productoId,
+      fechaInicio,
+      fechaFin,
       metodoPago,
       precioRenta
     } = req.body;
@@ -64,72 +64,10 @@ const crearRenta = async (req, res) => {
   }
 };
 
-// // Crear Nueva Renta desde Frontend
-// const crearRenta = async (req, res) => {
-//   try {
-//     const { 
-//       usuarioId,
-//       productoId, 
-//       fechaInicio, 
-//       fechaFin, 
-//       metodoPago,
-//       precioRenta,
-//       token // Token de notificación
-//     } = req.body;
-
-//     // Validar si los campos requeridos están presentes
-//     if (!usuarioId || !productoId || !fechaInicio || !fechaFin || !metodoPago || !precioRenta) {
-//       return res.status(400).json({ mensaje: 'Todos los campos son obligatorios' });
-//     }
-
-//     // Verificar si el producto existe
-//     const producto = await Producto.findById(productoId);
-//     if (!producto) {
-//       return res.status(404).json({ mensaje: 'Producto no encontrado' });
-//     }
-
-//     // Validar que la fecha de fin sea posterior a la fecha de inicio
-//     if (new Date(fechaFin) <= new Date(fechaInicio)) {
-//       return res.status(400).json({ mensaje: 'La fecha de fin debe ser posterior a la fecha de inicio' });
-//     }
-
-//     // Crear nueva renta
-//     const nuevaRenta = new Renta({
-//       usuario: usuarioId,
-//       producto: productoId,
-//       detallesRenta: {
-//         fechaInicio: new Date(fechaInicio),
-//         fechaFin: new Date(fechaFin),
-//         duracionDias: calcularDiasDiferencia(fechaInicio, fechaFin)
-//       },
-//       detallesPago: {
-//         precioRenta: precioRenta,
-//         metodoPago: metodoPago
-//       },
-//       estado: 'Activo'
-//     });
-
-//     // Guardar la renta y actualizar el producto
-//     const rentaGuardada = await nuevaRenta.save();
-//     await Producto.findByIdAndUpdate(productoId, { $set: { disponibleParaRenta: false } });
-
-//     // Enviar notificación si existe token
-//     if (token) {
-//       // await enviarNotificacion(token, 'Renta creada', 'Tu renta ha sido procesada con éxito.');
-//     }
-
-//     res.status(201).json({ mensaje: 'Renta creada exitosamente', renta: rentaGuardada });
-//   } catch (error) {
-//     console.error('Error en creación de renta:', error);
-//     res.status(500).json({ mensaje: 'Error al crear renta', error: error.message });
-//   }
-// };
-
-// Listar Rentas de un Usuario Específico
 const listarRentasUsuario = async (req, res) => {
   try {
     const { usuarioId } = req.params;
-    
+
     // Validar que el usuarioId esté presente
     if (!usuarioId) {
       return res.status(400).json({ mensaje: 'El usuarioId es obligatorio' });
@@ -210,6 +148,135 @@ const obtenerProductosRentadosByIdUser = async (req, res) => {
   }
 };
 
+const elimininarById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const rentaEliminada = await Renta.findByIdAndDelete(id);
+
+    if (!rentaEliminada) {
+      return res.status(404).json({ mensaje: 'Renta no encontrada' });
+    }
+
+    // Actualizar el estado del producto a disponible
+    await Producto.findByIdAndUpdate(rentaEliminada.producto, { $set: { disponibleParaRenta: true } });
+
+    res.status(200).json({ mensaje: 'Renta eliminada exitosamente', rentaEliminada });
+  } catch (error) {
+    console.error('Error al eliminar la renta:', error);
+    res.status(500).json({ mensaje: 'Error al eliminar la renta', error: error.message });
+  }
+}
+const obtenerRentaById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const renta = await Renta.findById(id)
+      .populate('producto', 'nombre precio imagenPrincipal'); // Poblar la información del producto
+
+    if (!renta) {
+      return res.status(404).json({ mensaje: 'Renta no encontrada' });
+    }
+
+    res.status(200).json(renta);
+  } catch (error) {
+    console.error('Error al obtener la renta:', error);
+    res.status(500).json({ mensaje: 'Error al obtener la renta', error: error.message });
+  }
+}
+const eliminarRentasSeleccionadas = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ mensaje: 'IDs inválidos' });
+    }
+    const rentasEliminadas = await Renta.deleteMany({ _id: { $in: ids } });
+    if (rentasEliminadas.deletedCount === 0) {
+      return res.status(404).json({ mensaje: 'No se encontraron rentas para eliminar' });
+    }
+    res.status(200).json({ mensaje: 'Rentas eliminadas exitosamente', rentasEliminadas });
+  } catch (error) {
+    console.error('Error al eliminar las rentas:', error);
+    res.status(500).json({ mensaje: 'Error al eliminar las rentas', error: error.message });
+  }
+}
+
+
+
+
+
+
+// const obtenerRentaByIdUser = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const renta = await Renta.find({ usuario: id })
+//       .populate('producto', 'nombre precio imagenPrincipal'); // Poblar la información del producto
+
+//     if (!renta) {
+//       return res.status(404).json({ mensaje: 'Renta no encontrada' });
+//     }
+
+//     res.status(200).json(renta);
+//   } catch (error) {
+//     console.error('Error al obtener la renta:', error);
+//     res.status(500).json({ mensaje: 'Error al obtener la renta', error: error.message });
+//   }
+// }
+const obtenerRentaByIdProducto = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const renta = await Renta.find({ producto: id })
+      .populate('usuario', 'nombre imagenPrincipal'); // Poblar la información del usuario
+
+    if (!renta) {
+      return res.status(404).json({ mensaje: 'Renta no encontrada' });
+    }
+
+    res.status(200).json(renta);
+  } catch (error) {
+    console.error('Error al obtener la renta:', error);
+    res.status(500).json({ mensaje: 'Error al obtener la renta', error: error.message });
+  }
+}
+const obtenerRentaByIdEstado = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const renta = await Renta.find({ estado: id })
+      .populate('usuario', 'nombre imagenPrincipal'); // Poblar la información del usuario
+
+    if (!renta) {
+      return res.status(404).json({ mensaje: 'Renta no encontrada' });
+    }
+
+    res.status(200).json(renta);
+  } catch (error) {
+    console.error('Error al obtener la renta:', error);
+    res.status(500).json({ mensaje: 'Error al obtener la renta', error: error.message });
+  }
+}
+const actualizarRentaById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { estado } = req.body; // Obtener el nuevo estado de la renta desde el cuerpo de la solicitud
+
+    // Validar que el estado sea uno de los permitidos
+    const estadosPermitidos = ['Activo', 'Cancelado', 'Finalizado'];
+    if (!estadosPermitidos.includes(estado)) {
+      return res.status(400).json({ mensaje: 'Estado no válido' });
+    }
+
+    // Actualizar la renta
+    const rentaActualizada = await Renta.findByIdAndUpdate(id, { estado }, { new: true })
+      .populate('producto', 'nombre precio imagenPrincipal'); // Poblar la información del producto
+
+    if (!rentaActualizada) {
+      return res.status(404).json({ mensaje: 'Renta no encontrada' });
+    }
+
+    res.status(200).json(rentaActualizada);
+  } catch (error) {
+    console.error('Error al actualizar la renta:', error);
+    res.status(500).json({ mensaje: 'Error al actualizar la renta', error: error.message });
+  }
+}
 
 
 // Función para obtener todas las rentas
@@ -232,4 +299,4 @@ const obtenerRentas = async (req, res) => {
     });
   }
 };
-module.exports = { obtenerRentas,obtenerProductosRentadosByIdUser,crearRenta, listarRentasUsuario, cancelarRenta };
+module.exports = { eliminarRentasSeleccionadas,obtenerRentaById,obtenerRentaByIdEstado, actualizarRentaById, obtenerRentaByIdProducto, elimininarById, obtenerRentas, obtenerProductosRentadosByIdUser, crearRenta, listarRentasUsuario, cancelarRenta };

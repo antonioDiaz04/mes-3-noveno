@@ -6,7 +6,7 @@ const { registerSchema } = require("../schemas/authSchema");
 const upload = require("../Midlewares/multer");
 
 // agrega cliente
-router.post("/", validarDatos(registerSchema), UsuarioController.crearUsuario);
+router.post("/", UsuarioController.crearUsuario);
 router.post("/check-email", UsuarioController.checkEmail);
 router.post("/check-telefono", UsuarioController.checkTelefono);
 

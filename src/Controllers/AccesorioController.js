@@ -40,7 +40,7 @@ exports.crearAccesorio = async (req, res) => {
       accesorio: resultadoAccesorio,
     });
   } catch (error) {
-    logger.error("Error al crear el Accesorio:", error);
+    // logger.error("Error al crear el Accesorio:", error);
     res.status(500).json({
       message: "Ocurrió un error al crear el Accesorio.",
       error: error.message,
@@ -84,7 +84,7 @@ exports.editarAccesorio = async (req, res) => {
       accesorio: accesorioActualizado,
     });
   } catch (error) {
-    logger.error("Error al editar el Accesorio:", error);
+    // logger.error("Error al editar el Accesorio:", error);
     res
       .status(500)
       .json({ message: "Error al editar el Accesorio.", error: error.message });
@@ -96,7 +96,7 @@ exports.eliminarAccesorio = async (req, res) => {
   try {
     const accesorio = await Accesorio.findById(req.params.id);
     if (!accesorio) {
-      logger.warn(`Accesorio con ID ${req.params.id} no encontrado.`);
+      // logger.warn(`Accesorio con ID ${req.params.id} no encontrado.`);
       return res.status(404).json({ message: "Accesorio no encontrado" });
     }
 
@@ -108,7 +108,7 @@ exports.eliminarAccesorio = async (req, res) => {
 
     res.status(200).json({ message: "Accesorio eliminado con éxito." });
   } catch (error) {
-    logger.error("Error al eliminar el Accesorio:", error);
+    // logger.error("Error al eliminar el Accesorio:", error);
     res.status(500).json({
       message: "Error en el servidor al eliminar el accesorio.",
       error: error.message,
@@ -123,7 +123,7 @@ exports.obtenerAccesorios = async (req, res) => {
 
     res.status(200).json(accesorios);
   } catch (error) {
-    logger.error("Error al obtener los accesorios:", error);
+    // logger.error("Error al obtener los accesorios:", error);
     res.status(500).json({
       message: "Error al obtener los accesorios.",
       error: error.message,
@@ -136,13 +136,13 @@ exports.obtenerAccesorioById = async (req, res) => {
   try {
     const accesorio = await Accesorio.findById(req.params.id);
     if (!accesorio) {
-      logger.warn(`Accesorio con ID ${req.params.id} no encontrado.`);
+      // logger.warn(`Accesorio con ID ${req.params.id} no encontrado.`);
       return res.status(404).json({ message: "Accesorio no encontrado" });
     }
 
     res.status(200).json(accesorio);
   } catch (error) {
-    logger.error("Error al obtener el accesorio por ID:", error);
+    // logger.error("Error al obtener el accesorio por ID:", error);
     res.status(500).json({
       message: "Error al obtener los detalles del accesorio.",
       error: error.message,

@@ -16,14 +16,14 @@ exports.perfilUsuario = async (req, res) => {
       .populate("coloniaId.colonia");
     // Verificar si el usuario existe
     if (!usuario) {
-      logger.warn(`Usuario no encontrado: ${correo}`); // Advertencia
+      // logger.warn(`Usuario no encontrado: ${correo}`); // Advertencia
       return res.status(404).json({ mensaje: "Usuario no encontrado" });
     }
 
     // Devolver los datos del perfil del usuario
     return res.status(200).json({ datos: usuario });
   } catch (error) {
-    logger.error(`Error en perfilUsuario: ${error.message}`);
+    // logger.error(`Error en perfilUsuario: ${error.message}`);
     return res.status(500).json({ mensaje: "Error en el servidor" });
   }
 };
@@ -70,7 +70,7 @@ exports.verifyTokenAndRole = (role) => (req, res, next) => {
 
   // Verificar si el usuario tiene el rol adecuado
   if (req.user.role !== role) {
-    logger.warn("Acceso denegado. Debes iniciar sesión.");
+    // logger.warn("Acceso denegado. Debes iniciar sesión.");
     return res
       .status(403)
       .json({ message: `Acceso denegado. Debes ser ${role}.` });
@@ -116,13 +116,13 @@ exports.EstadoUsuario = async (req, res) => {
   try {
     const cookie = req.cookies["jwt"];
     if (!cookie) {
-      logger.warn("No autentificado: Cookie no proporcionada");
+      // logger.warn("No autentificado: Cookie no proporcionada");
       return res.status(401).send({
         message: "no autentificado",
       });
     }
     const claims = jwt.verify(cookie, "secret");
-    logger.warn("No autentificado: Token inválido");
+    // logger.warn("No autentificado: Token inválido");
 
     if (!claims) {
       return res.status(401).send({
@@ -131,7 +131,7 @@ exports.EstadoUsuario = async (req, res) => {
     }
     const usuario = await Usuario.findOne({ _id: claims._id });
     if (!usuario) {
-      logger.warn("Usuario no encontrado");
+      // logger.warn("Usuario no encontrado");
       return res.status(401).send({
         message: "Usuario no encontrado",
       });
@@ -140,7 +140,7 @@ exports.EstadoUsuario = async (req, res) => {
     const { password, ...data } = await usuario.toJSON();
     res.send(data);
   } catch (error) {
-    logger.error(`Error en EstadoUsuario: ${error.message}`);
+    // logger.error(`Error en EstadoUsuario: ${error.message}`);
     return res.status(401).send({
       message: "no autentificado",
     });
@@ -164,7 +164,7 @@ exports.checkTelefono = async (req, res) => {
     });
 
     if (telefonoDuplicado) {
-      logger.warn("El número de teléfono ya está registrado");
+      // logger.warn("El número de teléfono ya está registrado");
       return res
         .status(400)
         .json({ message: "El numero de telefono ya está registrado" });
@@ -173,7 +173,7 @@ exports.checkTelefono = async (req, res) => {
     // Respuesta de éxito si el email está disponible
     return res.status(200).json({ message: "El telefono está disponible" });
   } catch (error) {
-    logger.error(`Error en checkTelefono: ${error.message}`);
+    // logger.error(`Error en checkTelefono: ${error.message}`);
     res
       .status(500)
       .json({ message: "Error en el servidor", error: error.toString() });
@@ -187,13 +187,13 @@ exports.checkEmail = async (req, res) => {
     const record = await Usuario.findOne({ email: email });
 
     if (record) {
-      logger.warn("El email ya está registrado");
+      // logger.warn("El email ya está registrado");
       return res.status(400).json({ message: "El email ya está registrado" });
     }
 
     return res.status(200).json({ message: "El email está disponible" });
   } catch (error) {
-    logger.error(`Error en checkEmail: ${error.message}`);
+    // logger.error(`Error en checkEmail: ${error.message}`);
     res
       .status(500)
       .json({ message: "Error en el servidor", error: error.toString() });
@@ -206,14 +206,14 @@ exports.checkCode = async (req, res) => {
     const record = await Usuario.findOne({ codigoVerificacion: code });
 
     if (!record) {
-      logger.warn("El código es incorrecto");
+      // logger.warn("El código es incorrecto");
       return res.status(400).json({ message: "El codigo es incorrecto" });
     }
 
     // Respuesta de éxito si el email está disponible
     return res.status(200).json({ message: "El codigo es correcto" });
   } catch (error) {
-    logger.error(`Error en checkCode: ${error.message}`);
+    // logger.error(`Error en checkCode: ${error.message}`);
     res
       .status(500)
       .json({ message: "Error en el servidor", error: error.toString() });
@@ -222,51 +222,43 @@ exports.checkCode = async (req, res) => {
 
 exports.crearUsuario = async (req, res) => {
   try {
-    let { nombre, apellidos, edad, direccion, telefono, email, password } = sanitizeObject(req.body);
-
-    const fotoDePerfil = "https://res.cloudinary.com/dxmhlxdxo/image/upload/v1743916178/Imagenes%20para%20usar%20xD/gxvcu5gik59c0uu7zz4p.png"
+    let { nombre, telefono, email, password, preguntaSecreta, respuestaSegura } = req.body;
 
     // Validar que todos los campos estén presentes
-    if (!nombre || !telefono || !email || !password) {
-      logger.warn("Todos los campos son obligatorios");
-      return res
-        .status(400)
-        .send({ message: "Todos los campos son obligatorios" });
+    if (!nombre || !telefono || !email || !password || !preguntaSecreta || !respuestaSegura) {
+      return res.status(400).send({ message: "Todos los campos son obligatorios" });
     }
 
     // Verificar si el email ya está registrado
     const record = await Usuario.findOne({ email: email });
     if (record) {
-      logger.warn("El email ya está registrado");
+      // logger.warn("El email ya está registrado");
       return res.status(400).send({ message: "El email ya está registrado" });
-    } // Eliminar espacios en el teléfono
+    }
 
+    // Eliminar espacios en el teléfono
     const telefonoFormateado = cleanPhoneNumber(telefono);
     if (!telefonoFormateado) {
-      logger.warn("El número telefónico no es válido");
-      return res
-        .status(400)
-        .send({ message: "El número telefónico no es válido" });
+      return res.status(400).send({ message: "El número telefónico no es válido" });
     }
 
     // Verificar si el número de teléfono ya está registrado
-    const exist_number = await Usuario.findOne({
-      telefono: telefonoFormateado,
-    });
+    const exist_number = await Usuario.findOne({ telefono: telefonoFormateado });
     if (exist_number) {
-      logger.warn("El número telefónico ya está registrado");
-      return res
-        .status(400)
-        .send({ message: "El número telefónico ya está registrado" });
+      return res.status(400).send({ message: "El número telefónico ya está registrado" });
     }
 
+    // Obtener el primer usuario para obtener el estado de cuenta
     const primerUsuario = await Usuario.findOne().populate("estadoCuenta");
+    if (!primerUsuario || !primerUsuario.estadoCuenta) {
+      return res.status(500).send({ message: "No se pudo obtener el estado de cuenta" });
+    }
+
+    const { intentosPermitidos, tiempoDeBloqueo } = primerUsuario.estadoCuenta;
 
     // Encriptar la nueva contraseña
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-
-    const { intentosPermitidos, tiempoDeBloqueo } = primerUsuario.estadoCuenta;
 
     // Crear un nuevo estado de cuenta
     const nuevoEstadoCuenta = await EstadoCuenta.create({
@@ -288,16 +280,20 @@ exports.crearUsuario = async (req, res) => {
       token: "",
       codigoVerificacion: null,
       verificado: false,
+      preguntaSecreta,
+      respuestaSegura,
     });
 
     const resultado = await usuario.save();
 
+    // Generar token JWT
     const token = jwt.sign(
       { _id: usuario._id, rol: usuario.rol },
       process.env.JWT_SECRET,
       { expiresIn: "24h" }
     );
 
+    // Configurar la cookie con el token
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -311,23 +307,23 @@ exports.crearUsuario = async (req, res) => {
       message: "Usuario creado exitosamente",
     });
   } catch (error) {
-    logger.error(`Error en crearUsuario: ${error.message}`);
-    return res
-      .status(500)
-      .send({ message: "Error en el servidor", error: error.toString() });
+    console.log(error);
+    // Responder con error del servidor
+    return res.status(500).send({ message: "Error en el servidor", error: error.toString() });
   }
 };
+
 
 exports.eliminarUsuario = async (req, res) => {
   try {
     const { id } = req.params;
     const result = await Usuario.deleteOne({ _id: id });
     if (result) {
-      logger.info("Usuario eliminado con éxito");
+      // logger.info("Usuario eliminado con éxito");
       res.status(200).json({ message: "Usuario eliminado con éxito." });
     }
   } catch (error) {
-    logger.error(`Error en eliminarUsuario: ${error.message}`);
+    // logger.error(`Error en eliminarUsuario: ${error.message}`);
     res.status(500).send("Error en el servidor: " + error);
   }
 };
@@ -341,7 +337,7 @@ exports.editarUsuario = async (req, res) => {
     const usuario = await Usuario.findById(id);
 
     if (!usuario) {
-      logger.warn("Usuario no encontrado");
+      // logger.warn("Usuario no encontrado");
       return res.status(404).send("Usuario no encontrado.");
     }
 
@@ -364,10 +360,10 @@ exports.editarUsuario = async (req, res) => {
 
     await usuario.save();
 
+    // logger.info("Usuario actualizado correctamente");
     res.status(200).send("Usuario actualizado correctamente.");
   } catch (error) {
-    console.log(error)
-    logger.error(`Error en editarUsuario: ${error.message}`);
+    // logger.error(`Error en editarUsuario: ${error.message}`);
     res.status(500).send("Error en el servidor: " + error);
   }
 };
@@ -416,12 +412,12 @@ exports.obtenerUsuarioById = async (req, res) => {
   try {
     const usuario = await Usuario.findById(req.params.id).populate('estadoCuenta')
     if (!usuario) {
-      logger.warn("Usuario no encontrado");
+      // logger.warn("Usuario no encontrado");
       return res.status(404).json({ msg: "usuario Not Found" });
     }
     res.json(usuario);
   } catch (error) {
-    logger.error(`Error en obtenerUsuarioById: ${error.message}`);
+    // logger.error(`Error en obtenerUsuarioById: ${error.message}`);
     res.status(404).send("ucurrio un error");
   }
 };
@@ -435,11 +431,11 @@ exports.buscaUsuarioByCorreo = async (req, res) => {
     if (usuario) {
       res.json({ usuarioId: usuario._id });
     } else {
-      logger.warn("Usuario no encontrado");
+      // logger.warn("Usuario no encontrado");
       res.json({ msg: "Usuario no encontrado" });
     }
   } catch (error) {
-    logger.error(`Error en buscaUsuarioByCorreo: ${error.message}`);
+    // logger.error(`Error en buscaUsuarioByCorreo: ${error.message}`);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 };
@@ -450,14 +446,14 @@ exports.BuscaUsuarioByCorreo = async (req, res) => {
 
     const usuario = await Usuario.findOne({ correo });
     if (!usuario) {
-      logger.warn("Usuario no encontrado");
+      // logger.warn("Usuario no encontrado");
       return res
         .status(404)
         .json({ message: "usuario con este correo no encontrado" });
     }
     res.json(usuario);
   } catch (error) {
-    logger.error(`Error en buscaUsuarioByCorreo: ${error.message}`);
+    // logger.error(`Error en buscaUsuarioByCorreo: ${error.message}`);
     res.status(404).send("ocurrio un error");
   }
 };
@@ -469,12 +465,12 @@ exports.BuscaUsuarioByToken = async (req, res) => {
     const usuario = await Usuario.findOne({ correo: correo, token: token });
 
     if (!usuario) {
-      logger.warn("Usuario no encontrado");
+      // logger.warn("Usuario no encontrado");
       return res.status(404).json({ message: "usuario no encontrado" });
     }
     res.json(usuario);
   } catch (error) {
-    logger.error(`Error en BuscaUsuarioByToken: ${error.message}`);
+    // logger.error(`Error en BuscaUsuarioByToken: ${error.message}`);
     res.status(404).send("ocurrio un error");
   }
 };
@@ -489,12 +485,12 @@ exports.BuscaUsuarioByPreguntayRespuesta = async (req, res) => {
     });
 
     if (!usuario) {
-      logger.warn("Usuario no encontrado");
+      // logger.warn("Usuario no encontrado");
       return res.status(404).json({ message: "usuario no encontrado" });
     }
     res.json(usuario);
   } catch (error) {
-    logger.error(`Error en BuscaUsuarioByPreguntayRespuesta: ${error.message}`);
+    // logger.error(`Error en BuscaUsuarioByPreguntayRespuesta: ${error.message}`);
     res.status(404).send("ocurrio un error");
   }
 };
@@ -505,7 +501,7 @@ exports.obtenerUsuarios = async (req, res) => {
     const usuarios = await Usuario.find({ rol: { $ne: "ADMIN" } });
     res.json(usuarios);
   } catch (error) {
-    logger.error(`Error en obtenerUsuarios: ${error.message}`);
+    // logger.error(`Error en obtenerUsuarios: ${error.message}`);
   }
 };
 exports.actualizarPasswordxCorreo = async (req, res) => {
@@ -515,7 +511,7 @@ exports.actualizarPasswordxCorreo = async (req, res) => {
 
     // Verificar si nuevaPassword está definido y no es una cadena vacía
     if (!nuevaPassword || typeof nuevaPassword !== "string") {
-      logger.warn("La nueva contraseña es inválida");
+      // logger.warn("La nueva contraseña es inválida");
       return res
         .status(400)
         .json({ message: "La nueva contraseña es inválida" });
@@ -527,7 +523,7 @@ exports.actualizarPasswordxCorreo = async (req, res) => {
     const usuario = await Usuario.findOne({ email: email });
 
     if (!usuario) {
-      logger.warn("Usuario no encontrado");
+      // logger.warn("Usuario no encontrado");
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
@@ -538,7 +534,7 @@ exports.actualizarPasswordxCorreo = async (req, res) => {
     // Devuelve una respuesta exitosa
     res.status(200).json({ message: "Contraseña actualizada correctamente" });
   } catch (error) {
-    logger.error(`Error en actualizarPasswordxCorreo: ${error.message}`);
+    // logger.error(`Error en actualizarPasswordxCorreo: ${error.message}`);
     res
       .status(500)
       .json({ message: "Ocurrió un error al actualizar la contraseña" });
@@ -553,7 +549,7 @@ exports.actualizarPasswordxPregunta = async (req, res) => {
 
     // Verificar si nuevaPassword está definido y no es una cadena vacía
     if (!nuevaPassword || typeof nuevaPassword !== "string") {
-      logger.warn("La nueva contraseña es inválida");
+      // logger.warn("La nueva contraseña es inválida");
       return res
         .status(400)
         .json({ message: "La nueva contraseña es inválida" });
@@ -571,7 +567,7 @@ exports.actualizarPasswordxPregunta = async (req, res) => {
 
     // Si no se encuentra el usuario, devuelve un mensaje de error
     if (!usuario) {
-      logger.warn("Usuario no encontrado");
+      // logger.warn("Usuario no encontrado");
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
@@ -583,7 +579,7 @@ exports.actualizarPasswordxPregunta = async (req, res) => {
     res.status(200).json({ message: "Contraseña actualizada correctamente" });
   } catch (error) {
     // Maneja los errores y devuelve una respuesta de error
-    logger.error(`Error en actualizarPasswordxPregunta: ${error.message}`);
+    // logger.error(`Error en actualizarPasswordxPregunta: ${error.message}`);
     res
       .status(500)
       .json({ message: "Ocurrió un error al actualizar la contraseña" });
@@ -596,7 +592,7 @@ exports.listarSecretas = async (req, res) => {
 
     res.json(preguntas);
   } catch (error) {
-    logger.error(`Error al obtener las preguntas secretas: ${error.message}`);
+    // logger.error(`Error al obtener las preguntas secretas: ${error.message}`);
     res.status(500).json({ error: "Error al obtener las preguntas secretas" });
   }
 };
@@ -615,7 +611,7 @@ exports.actualizaRolUsuario = async (req, res) => {
     );
 
     if (!usuarioActualizado) {
-      logger.warn(`Usuario no encontrado: ${id}`);
+      // logger.warn(`Usuario no encontrado: ${id}`); 
       return res.status(404).json({ mensaje: "Usuario no encontrado" });
     }
 
@@ -624,7 +620,7 @@ exports.actualizaRolUsuario = async (req, res) => {
       usuario: usuarioActualizado,
     });
   } catch (error) {
-    logger.error(`Error al actualizar el rol del usuario: ${error.message}`);
+    // logger.error(`Error al actualizar el rol del usuario: ${error.message}`);
     res.status(500).json({ mensaje: "Error interno del servidor" });
   }
 };
@@ -639,7 +635,7 @@ exports.actualizaDatos = async (req, res) => {
 
     let cliente = await Usuario.findById(req.params.id);
     if (!cliente) {
-      logger.warn(`Usuario no encontrado: ${id}`);
+      // logger.warn(`Usuario no encontrado: ${id}`);
       return res.status(404).json({ mensaje: "Usuario no encontrado" });
     }
 
@@ -655,7 +651,7 @@ exports.actualizaDatos = async (req, res) => {
       usuario: usuarioActualizado,
     });
   } catch (error) {
-    logger.error(`Error al actualizar los datos del usuario: ${error.message}`);
+    // logger.error(`Error al actualizar los datos del usuario: ${error.message}`); 
     res.status(500).json({ mensaje: "Error interno del servidor" });
   }
 };

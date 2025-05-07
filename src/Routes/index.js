@@ -20,11 +20,11 @@ router.post('/subscription', async (req, res) => {
                 console.log('Notificación enviada con éxito:', response);
             })
             .catch(error => {
-                logger.error('Error al enviar la notificación:', error);
+                // logger.error('Error al enviar la notificación:', error);
                 console.error('Error al enviar la notificación:', error);
             });
     } catch (error) {
-        logger.error('Error en la ruta de suscripción:', error);
+        // logger.error('Error en la ruta de suscripción:', error);
         console.error('Error en la ruta de suscripción:', error);
     }
 });

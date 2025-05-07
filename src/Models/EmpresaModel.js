@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const DatosAtelierSchema = mongoose.Schema({
+const DatosAtelierSchema = new mongoose.Schema({
   logo: {
     type: String,
     required: true,
@@ -11,17 +11,23 @@ const DatosAtelierSchema = mongoose.Schema({
   },
   redesSociales: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "RedesSociales", // Referencia al modelo RedesSociales
+      plataforma: {
+        type: String,
+        required: true,
+      },
+      enlace: {
+        type: String,
+        required: true,
+      },
     },
   ],
   slogan: {
     type: String,
-    maxlength: 100, // Límite de caracteres
+    maxlength: 100,
   },
   tituloPagina: {
     type: String,
-    maxlength: 60, // Límite de caracteres para el título de página
+    maxlength: 60,
   },
   direccion: {
     type: String,
@@ -34,25 +40,19 @@ const DatosAtelierSchema = mongoose.Schema({
   telefono: {
     type: String,
   },
-  comentarios: {
-    type: String,
-  }
+  // ✅ Agregamos Misión, Visión y Valores dentro del mismo modelo
+  mision: {
+    titulo: { type: String, required: true },
+    contenido: { type: String, required: true },
+  },
+  vision: {
+    titulo: { type: String, required: true },
+    contenido: { type: String, required: true },
+  },
+  valores: {
+    titulo: { type: String, required: true },
+    contenido: { type: String, required: true },
+  },
 });
 
-const redesSocialesSchema = mongoose.Schema([
-  {
-    plataforma: {
-      type: String,
-      required: true,
-    },
-    enlace: {
-      type: String,
-      required: true,
-    }
-  },
-]);
-
-module.exports = {
-  DatosAtelier: mongoose.model("DatosAtelier", DatosAtelierSchema),
-  RedesSociales: mongoose.model("RedesSociales", redesSocialesSchema),
-};
+module.exports = mongoose.model("DatosAtelier", DatosAtelierSchema);

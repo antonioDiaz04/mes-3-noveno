@@ -6,8 +6,12 @@ const conectarDB = require("./Server/Conexion");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
-const { logHttpRequest } = require("./util/logger.js");
+// const { logHttpRequest } = require("./util/logger.js");
 const { limiter } = require("./util/rateLimit.js");
+const categoriaRoutes = require('./Routes/CategoriaRoutes');
+//importa el cliente oficial de elasticseach
+
+
 
 const app = express();
 
@@ -26,8 +30,6 @@ const corsOptions = {
   credentials: true,
 };
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json())
 app.use(helmet());
 app.use(cookieParser());
 app.use(cors(corsOptions));
@@ -42,6 +44,18 @@ app.use(helmet.hsts({ maxAge: 31536000, includeSubDomains: true }));
 app.use(helmet.noSniff());
 
 // Configura X-Frame-Options para prevenir Clickjacking
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "trusted-scripts.com"],
+      styleSrc: ["'self'", "trusted-styles.com"],
+      imgSrc: ["'self'", "trusted-images.com"],
+    },
+  })
+);
+
+
 app.use((req, res, next) => {
   res.setHeader("X-Frame-Options", "DENY");
   next();
@@ -92,22 +106,24 @@ app.use((req, res, next) => {
   res.removeHeader("X-Powered-By"); // Elimina el encabezado que revela la tecnología del servidor
   next();
 });
-app.use((req, res, next) => {
-  const start = Date.now(); //Se captura el tiempo actual en milisegundos
-  res.on("finish", () => {
-    const ip = req.ip;
-    console.log(ip)
-    const duration = Date.now() - start; // se calcula la duración de la solicitud restando el tiempo actual
-    logHttpRequest(req, res, duration);
-  });
-  next();
-});
+// app.use((req, res, next) => {
+//   const start = Date.now(); //Se captura el tiempo actual en milisegundos
+//   res.on("finish", () => {
+//     const ip = req.ip;
+//     console.log(ip)
+//     const duration = Date.now() - start; // se calcula la duración de la solicitud restando el tiempo actual
+//     logHttpRequest(req, res, duration);
+//   });
+//   next();
+// });
 
 // Ruta dinámica para la API
 const apiVersion = process.env.API_VERSION || "v1"; // Si no se define, usa 'v1'
 
 // Rutas padres
 app.use(`/api/${apiVersion}/msj`, require("./Routes/WhatsappRoute.js"));
+app.use(`/api/${apiVersion}/categoria`, categoriaRoutes);
+
 app.use(`/api/${apiVersion}/producto`, require("./Routes/ProductRoute"));
 app.use(`/api/${apiVersion}/accesorio`, require("./Routes/AccesorioRoute.js"));
 app.use(
@@ -122,15 +138,15 @@ app.use(
 app.use(`/api/${apiVersion}/enviar-correo`, require("./Routes/CorreoRoute"));
 app.use(`/api/${apiVersion}/verificacion`, require("./Routes/CorreoRoute"));
 app.use(`/api/${apiVersion}/verificar`, require("./Routes/catpch"));
-
 app.use(`/api/${apiVersion}/Empresa`, require("./Routes/PerfilEmpresa.Routes"));
 app.use(`/api/${apiVersion}/autentificacion`, require("./Routes/AuthRoute"));
 app.use(`/api/${apiVersion}/renta`, require("./Routes/Renta&Venta"));
-app.use(`/api/${apiVersion}/paypal`, require("./Routes/paypal.routes.js"));
-app.use(
-  `/api/${apiVersion}/estadisticas`,
-  require("./Routes/EstadisticasRoute")
-);
+// app.use(
+//   `/api/${apiVersion}/estadisticas`,
+//   require("./Routes/EstadisticasRoute")
+// );
+app.use(`/api/${apiVersion}/proceso`, require("./Routes/Renta&Venta"));
+
 
 // Ruta para acciones control de Administrador de la página
 app.use(`/api/${apiVersion}/admin`, require("./Routes/PrivadoRoute"));

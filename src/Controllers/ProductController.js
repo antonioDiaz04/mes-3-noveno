@@ -1,135 +1,179 @@
 const fs = require("fs-extra");
-const Producto = require("../Models/ProductModel"); 
+
+const Producto = require("../Models/ProductModel"); // Asegúrate de importar tu modelo de producto
 const upload = require('../Midlewares/multer');
 const cloudinary = require("cloudinary").v2;
-const {logger} = require("../util/logger");
-// const { uploadImage, deleteImage } = require("../cloudinary/cloudinaryConfig");
+// const Producto = require("../models/Producto"); // Importa el modelo de Producto
+// const fs = require("fs/promises");
 
+// Configuración de Cloudinary
+cloudinary.config({
+  cloud_name: "dvvhnrvav",
+  api_key: "982632489651298",
+  api_secret: "TTIZcgIMiC8F4t8cE-t6XkQnPyQ",
+});
 exports.crearProducto = async (req, res) => {
   try {
     console.log("Contenido de req.body:", req.body);
-    console.log("Contenido de req.files:", req.files);
+    console.log("Archivos subidos:", req.files); // Accede a todos los archivos subidos
 
-    // Verificar si se está enviando una imagen principal
-    if (!req.files || !req.files.imagenPrincipal || req.files.imagenPrincipal.length === 0) {
-      return res.status(400).json({ message: 'No se ha proporcionado una imagen principal.' });
-    }
+    const imagenesSubidas = [];
 
-    console.log("paso aqui 0");
+    if (req.files?.imagenes) {
+      for (const imagenFile of req.files.imagenes) {
+        try {
+          // Subir la imagen a Cloudinary
+          const resultadoOtraImagen = await cloudinary.uploader.upload(imagenFile.path, {
+            folder: "ProductosAtelier",
+          });
+          imagenesSubidas.push(resultadoOtraImagen.url);
 
-    // Subir la imagen principal a Cloudinary
-    const imagenPrincipalFile = req.files.imagenPrincipal[0];
-    const resultadoCloudinary = await cloudinary.uploader.upload(imagenPrincipalFile.path, {
-      folder: "Productos",
-    });
-    console.log("paso aqui 1");
-
-    // Array para almacenar las URLs de otras imágenes subidas
-    const otrasImagenesSubidas = [];
-
-    // Verificar y subir otras imágenes si están presentes
-    if (req.files.otrasImagenes) {
-      for (const imagenFile of req.files.otrasImagenes) {
-        const resultadoOtraImagen = await cloudinary.uploader.upload(imagenFile.path, {
-          folder: "ProductosAtelier",
-        });
-        otrasImagenesSubidas.push(resultadoOtraImagen.url);
+          // Verificar si el archivo temporal existe antes de eliminarlo
+          try {
+            await fs.access(imagenFile.path); // Verifica si el archivo existe
+            await fs.unlink(imagenFile.path); // Eliminar el archivo temporal
+            console.log(`Archivo temporal eliminado: ${imagenFile.path}`);
+          } catch (error) {
+            if (error.code === "ENOENT") {
+              console.warn(`El archivo temporal no existe: ${imagenFile.path}`);
+            } else {
+              console.error(`Error al eliminar el archivo temporal: ${imagenFile.path}`, error);
+            }
+          }
+        } catch (error) {
+          console.error("Error al subir la imagen a Cloudinary:", error);
+        }
       }
     }
-    console.log("paso aqui 2");
+    console.log("Imágenes subidas exitosamente");
+
+    console.log("paso aqui 1");
 
     // Crea un nuevo objeto de Producto con los datos del formulario y las URLs de las imágenes
     const producto = new Producto({
       nombre: req.body.nombre,
-      categoria: req.body.categoria,
-      color: req.body.color,
-      textura: req.body.textura,
       talla: req.body.talla,
       altura: req.body.altura,
       cintura: req.body.cintura,
-      precio: req.body.precio,
-      disponible: req.body.disponible === 'true', // Convertir string a booleano
-      tipoVenta: req.body.tipoVenta,
-      nuevo: req.body.nuevo === 'true', // Convertir string a booleano
+      color: req.body.color,
+      precioAnterior: req.body.precioAnterior,
+      precioActual: req.body.precioActual,
+      mostrarPrecioAnterior: req.body.mostrarPrecioAnterior, // Checkbox desactivado por defecto
+      opcionesTipoTransaccion: req.body.opcionesTipoTransaccion || "Venta", // Valor por defecto
+      nuevo: req.body.nuevo !== undefined ? req.body.nuevo : true, // Valor por defecto
+      tipoCuello: req.body.tipoCuello,
+      tipoCola: req.body.tipoCola,
+      tipoCapas: req.body.tipoCapas,
+      tipoHombro: req.body.tipoHombro,
       descripcion: req.body.descripcion,
-      imagenPrincipal: resultadoCloudinary.url, // URL de la imagen principal
-      otrasImagenes: otrasImagenesSubidas // Array de URLs de otras imágenes
+      imagenes: imagenesSubidas, // Array de strings (URLs)
+      idCategoria: req.body.idCategoria, // Relación con la categoría
     });
-    console.log("paso aqui 3");
+
+    console.log("Producto a guardar:", producto); // Imprimir el objeto del producto
+
+    console.log("paso aqui 2");
 
     // Guardar el producto en la base de datos
     const resultadoProducto = await producto.save();
-    console.log("paso aqui 4");
-
-    // Eliminar el archivo temporal de la imagen principal
-    await fs.unlink(imagenPrincipalFile.path);
-
-    // Eliminar los archivos temporales de otras imágenes si es necesario
-    if (req.files.otrasImagenes) {
-      for (const imagenFile of req.files.otrasImagenes) {
-        await fs.unlink(imagenFile.path);
-      }
-    }
-    console.log("paso aqui 5");
+    console.log("paso aqui 3");
 
     // Enviar la respuesta con el producto creado
     res.status(201).json({ message: "Producto creado exitosamente", producto: resultadoProducto });
 
   } catch (error) {
     console.error("Error al crear el producto:", error);
-    return res.status(500).json({ mensaje: "Error interno del servidor", error: error.message });
-  }
-};
 
-
-exports.editarProducto = async (req, res) => {
-
-  try {
-    const { imagenPrincipal, otrasImagenes, ...productoData } = req.body;
-
-    // Subir y actualizar imagen principal si se proporciona una nueva
-    if (imagenPrincipal) {
-      const result = await uploadImage(
-        imagenPrincipal.tempFilePath || imagenPrincipal.path
-      );
-      productoData.imagenPrincipal = {
-        public_id: result.public_id,
-        secure_url: result.secure_url,
-      };
-      await fs.unlink(imagenPrincipal.tempFilePath || imagenPrincipal.path);
-    }
-
-    // Subir y actualizar las otras imágenes si se proporcionan nuevas
-    if (otrasImagenes && Array.isArray(otrasImagenes)) {
-      productoData.otrasImagenes = [];
-      for (const imagen of otrasImagenes) {
-        const result = await uploadImage(imagen.tempFilePath || imagen.path);
-        productoData.otrasImagenes.push({
-          public_id: result.public_id,
-          secure_url: result.secure_url,
-        });
-        await fs.unlink(imagen.tempFilePath || imagen.path);
+    // Eliminar archivos temporales en caso de error
+    if (req.files && req.files.imagenes) {
+      for (const imagenFile of req.files.imagenes) {
+        try {
+          if (imagenFile.path) {
+            await fs.unlink(imagenFile.path);
+          }
+        } catch (err) {
+          console.error("Error al eliminar el archivo temporal:", err);
+        }
       }
     }
 
-    // Actualizar el producto en la base de datos
-    const productoActualizado = await Producto.findByIdAndUpdate(
-      req.params.id,
-      productoData,
-      { new: true, runValidators: true }
-    );
-
-    if (!productoActualizado) {
-      return res.status(404).json({ message: "Producto no encontrado" });
-    }
-
-    res.status(200).json(productoActualizado);
-  } catch (error) {
-    console.error("Error al editar el producto:", error);
-    res.status(500).json({ message: "Error al editar el producto", error });
+    res.status(500).json({ error: "Ocurrió un error al crear el producto." });
   }
 };
+exports.editarProducto = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { imagenes: imagenesString, idCategoria, ...productoData } = req.body;
 
+    console.log("Datos recibidos:", { ...productoData, imagenes: imagenesString, idCategoria });
+    console.log("Archivos nuevos:", req.files);
+
+    // 1. Buscar el producto existente
+    const productoExistente = await Producto.findById(id);
+    if (!productoExistente) {
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
+
+    // 2. Procesar imágenes existentes
+    let imagenesFinales = [];
+
+    // Si hay imágenes existentes en el request, las procesamos
+    if (imagenesString) {
+      imagenesFinales = imagenesString.split(',').map(img => img.trim());
+    } else {
+      // Si no vienen imágenes en el request, mantenemos las existentes
+      imagenesFinales = [...productoExistente.imagenes];
+    }
+
+    // 3. Subir nuevas imágenes si existen
+    if (req.files?.imagenes) {
+      const archivosImagenes = Array.isArray(req.files.imagenes)
+        ? req.files.imagenes
+        : [req.files.imagenes];
+
+      for (const imagenFile of archivosImagenes) {
+        try {
+          // Verificar si es una URL (no un archivo)
+          if (typeof imagenFile === 'string' && (imagenFile.startsWith('http://') || imagenFile.startsWith('https://'))) {
+            imagenesFinales.push(imagenFile); // Agregar directamente la URL
+            continue; // Saltar al siguiente elemento
+          }
+
+          // Procesar como archivo solo si no es una URL
+          const resultado = await cloudinary.uploader.upload(imagenFile.path, {
+            folder: "ProductosAtelier",
+          });
+          imagenesFinales.push(resultado.secure_url);
+          await fs.unlink(imagenFile.path);
+        } catch (error) {
+          console.error("Error al procesar imagen:", error);
+        }
+      }
+    }
+
+    // 4. Actualizar el producto (incluyendo idCategoria y sin eliminar imágenes existentes)
+    const productoActualizado = await Producto.findByIdAndUpdate(
+      id,
+      { ...productoData, imagenes: imagenesFinales, idCategoria },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      message: "Producto actualizado correctamente",
+      producto: productoActualizado,
+      imagenesActualizadas: imagenesFinales
+    });
+
+  } catch (error) {
+    console.error("Error al editar el producto:", error);
+    res.status(500).json({
+      success: false,
+      error: "Error al actualizar el producto",
+      details: error.message
+    });
+  }
+};
 // Eliminar un producto
 exports.eliminarProducto = async (req, res) => {
   try {
@@ -142,13 +186,43 @@ exports.eliminarProducto = async (req, res) => {
   }
 };
 
-// Obtener todos los productos
+const logger = require('../../src/util/logger');
+
+
 exports.obtenerProducto = async (req, res) => {
+  const logMetadata = {
+    ip: req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress,
+    userAgent: req.headers['user-agent'],
+    method: req.method,
+    url: req.originalUrl,
+    queryParams: req.query,
+    body: req.body
+  };
+
+  // logger.info('Inicio de obtención de productos', logMetadata);
+
   try {
     const productos = await Producto.find();
+    // logger.info(`Productos encontrados: ${productos.length}`, { 
+    //   ...logMetadata,
+    //   count: productos.length 
+    // });
+
     res.status(200).json(productos);
   } catch (error) {
-    res.status(500).json({ message: "Error al obtener los productos", error });
+    // logger.error('Error al obtener productos', {
+    //   ...logMetadata,
+    //   error: {
+    //     name: error.name,
+    //     message: error.message,
+    //     stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    //   }
+    // });º
+
+    res.status(500).json({ 
+      message: "Error interno del servidor",
+      errorId: new Date().getTime() // ID único para referencia en logs
+    });
   }
 };
 // Obtener todos los productos
@@ -172,53 +246,53 @@ exports.obtenerProductoById = async (req, res) => {
 
 exports.buscarVestidos = async (req, res) => {
   try {
-      const query = req.params.query;
-      
-      // Validación de query
-      if (!query || query.trim().length < 2) {
-          return res.status(400).json({ 
-              mensaje: 'Término de búsqueda muy corto' 
-          });
-      }
+    const query = req.params.query;
 
-      // Dividir el término de búsqueda en palabras
-      const palabras = query.trim().split(' ').filter(palabra => palabra.length > 0);
+    // Validación de query
+    if (!query || query.trim().length < 2) {
+      return res.status(400).json({
+        mensaje: 'Término de búsqueda muy corto'
+      });
+    }
 
-      // Construir la consulta con una búsqueda 'OR' para cada palabra en los campos
-      const resultados = await Producto.find({
-          $or: palabras.map(palabra => ({
-              $or: [
-                  { nombre: { $regex: palabra, $options: 'i' } },
-                  { descripcion: { $regex: palabra, $options: 'i' } },
-                  { categoria: { $regex: palabra, $options: 'i' } },
-                  { color: { $regex: palabra, $options: 'i' } },
-                  { 'tallasDisponibles.talla': { $regex: palabra, $options: 'i' } }
-              ]
-          }))
-      })
+    // Dividir el término de búsqueda en palabras
+    const palabras = query.trim().split(' ').filter(palabra => palabra.length > 0);
+
+    // Construir la consulta con una búsqueda 'OR' para cada palabra en los campos
+    const resultados = await Producto.find({
+      $or: palabras.map(palabra => ({
+        $or: [
+          { nombre: { $regex: palabra, $options: 'i' } },
+          { descripcion: { $regex: palabra, $options: 'i' } },
+          { categoria: { $regex: palabra, $options: 'i' } },
+          { color: { $regex: palabra, $options: 'i' } },
+          { 'tallasDisponibles.talla': { $regex: palabra, $options: 'i' } }
+        ]
+      }))
+    })
       .select('nombre imagenPrincipal precio categoria tallasDisponibles')
       .limit(50);
 
-      // Manejo de resultados
-      if (resultados.length === 0) {
-          return res.status(404).json({ 
-              mensaje: 'No se encontraron productos',
-              resultados: [] 
-          });
-      }
-
-      // Respuesta exitosa
-      res.status(200).json({
-          total: resultados.length,
-          resultados: resultados
+    // Manejo de resultados
+    if (resultados.length === 0) {
+      return res.status(404).json({
+        mensaje: 'No se encontraron productos',
+        resultados: []
       });
+    }
+
+    // Respuesta exitosa
+    res.status(200).json({
+      total: resultados.length,
+      resultados: resultados
+    });
 
   } catch (error) {
-      console.error('Error en búsqueda:', error);
-      res.status(500).json({ 
-          mensaje: 'Error interno del servidor',
-          error: error.message 
-      });
+    console.error('Error en búsqueda:', error);
+    res.status(500).json({
+      mensaje: 'Error interno del servidor',
+      error: error.message
+    });
   }
 };
 exports.buscarProductosAvanzados = async (req, res) => {
@@ -262,4 +336,3 @@ exports.buscarProductosAvanzados = async (req, res) => {
     res.status(500).json({ error: 'Error al buscar productos' });
   }
 };
-

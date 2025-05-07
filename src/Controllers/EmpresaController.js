@@ -9,8 +9,6 @@ exports.crearPerfilEmpresa = async (req, res) => {
 
     const sanitizedBody = sanitizeObject(req.body);
     const { redesSociales, slogan, tituloPagina, direccion, correoElectronico, telefono } = sanitizedBody;
-
-
     if (!req.files || Object.keys(req.files).length === 0) {
       return res
         .status(400)
@@ -38,7 +36,7 @@ exports.crearPerfilEmpresa = async (req, res) => {
         redesSocialesGuardadas.push(redGuardada._id); // Agrega ID al arreglo
       }
     } else {
-      logger.warn("redesSociales debe ser un arreglo");
+      // logger.warn("redesSociales debe ser un arreglo");
       return res
         .status(400)
         .json({ message: "redesSociales debe ser un arreglo" });
@@ -61,7 +59,7 @@ exports.obtenerPerfilesEmpresa = async (req, res) => {
     const perfiles = await DatosAtelier.find().populate("redesSociales");
     res.status(200).json(perfiles);
   } catch (error) {
-    logger.error("Error al obtener perfiles de la empresa:", error);
+    // logger.error("Error al obtener perfiles de la empresa:", error);
     res
       .status(500)
       .json({ message: "Error interno del servidor", error: error.message });
@@ -92,7 +90,7 @@ exports.editarPerfilEmpresa = async (req, res) => {
     // Buscamos el perfil de la empresa existente
     const perfilExistente = await DatosAtelier.findOne({});
     if (!perfilExistente) {
-      logger.error("Perfil no encontrado");
+      // logger.error("Perfil no encontrado");
       return res.status(404).json({ message: "Perfil no encontrado" });
     }
 
@@ -111,7 +109,7 @@ exports.editarPerfilEmpresa = async (req, res) => {
     await perfilExistente.save();
     res.status(200).json(perfilExistente);
   } catch (error) {
-    logger.error("Error al editar el perfil de la empresa:", error);
+    // logger.error("Error al editar el perfil de la empresa:", error);
     res
       .status(500)
       .json({ message: "Error interno del servidor", error: error.message });
@@ -129,7 +127,7 @@ exports.eliminarImagenesPerfil = async (req, res) => {
       !Array.isArray(imagenesParaEliminar) ||
       imagenesParaEliminar.length === 0
     ) {
-      logger.error("No se proporcionaron imágenes para eliminar");
+      // logger.error("No se proporcionaron imágenes para eliminar");
       return res
         .status(400)
         .json({ message: "No se proporcionaron imágenes para eliminar" });
@@ -138,7 +136,7 @@ exports.eliminarImagenesPerfil = async (req, res) => {
     // Busca el perfil de la empresa por ID
     const perfil = await DatosAtelier.findById(id);
     if (!perfil) {
-      logger.error("Perfil de empresa no encontrado");
+      // logger.error("Perfil de empresa no encontrado");
       return res
         .status(404)
         .json({ message: "Perfil de empresa no encontrado" });
@@ -170,7 +168,7 @@ exports.eliminarImagenesPerfil = async (req, res) => {
       .status(200)
       .json({ message: "Imágenes eliminadas correctamente", perfil });
   } catch (error) {
-    logger.error("Error al eliminar imágenes del perfil de la empresa:", error);
+    // logger.error("Error al eliminar imágenes del perfil de la empresa:", error);
     res
       .status(500)
       .json({ message: "Error interno del servidor", error: error.message });
@@ -182,7 +180,7 @@ exports.consultarConfigurarEmpresa = async (req, res) => {
     const usuarios = await Usuario.find().populate("estadoCuenta");
 
     if (usuarios.length === 0) {
-      logger.error("No se encontró la empresa");
+      // logger.error("No se encontró la empresa");
       return res.status(404).json({ message: "No se encontró la empresa" });
     }
 
@@ -196,7 +194,7 @@ exports.consultarConfigurarEmpresa = async (req, res) => {
     });
 
     if (!usuarioConfigurado) {
-      logger.error("No se encontraron configuraciones válidas");
+      // logger.error("No se encontraron configuraciones válidas");
       return res
         .status(404)
         .json({ message: "No se encontraron configuraciones válidas" });
@@ -211,7 +209,7 @@ exports.consultarConfigurarEmpresa = async (req, res) => {
       },
     });
   } catch (error) {
-    logger.error("Error al consultar la configuración:", error);
+    // logger.error("Error al consultar la configuración:", error);
     res.status(500).json({ message: "Error interno del servidor", error: error.message });
   }
 };
@@ -223,7 +221,7 @@ exports.editarConfigurarEmpresa = async (req, res) => {
     const usuarios = await Usuario.find().populate("estadoCuenta");
 
     if (!usuarios || usuarios.length === 0) {
-      logger.error("No se encontraron usuarios");
+      // logger.error("No se encontraron usuarios");
       return res.status(404).json({ message: "No se encontraron usuarios" });
     }
 
@@ -276,7 +274,7 @@ exports.editarConfigurarEmpresa = async (req, res) => {
         })
       : res.status(500).json({ message: "Error al actualizar los usuarios" });
   } catch (error) {
-    logger.error("Error en editarConfigurarEmpresa:", error);
+    // logger.error("Error en editarConfigurarEmpresa:", error);
     res.status(500).json({ message: "Error interno del servidor", error: error.message });
   }
 };
@@ -294,7 +292,7 @@ exports.guardarRedSocial = async (req, res) => {
     const perfilEmpresa = await DatosAtelier.find().populate("redesSociales");
 
     if (!perfilEmpresa) {
-      logger.error("Perfil de empresa no encontrado");
+      // logger.error("Perfil de empresa no encontrado");
       return res
         .status(404)
         .json({ error: "Perfil de empresa no encontrado." });
@@ -307,7 +305,7 @@ exports.guardarRedSocial = async (req, res) => {
       .status(200)
       .json({ message: "Red social guardada correctamente." });
   } catch (error) {
-     logger.error("Error al guardar la red social:", error); 
+    //  logger.error("Error al guardar la red social:", error); 
      res.status(500).json({ message: "Error interno del servidor", error: error.message });
   }
 };
@@ -316,7 +314,7 @@ exports.obtenerRedesSociales = async (req, res) => {
     const perfilEmpresa = await DatosAtelier.find().populate("redesSociales");
 
     if (!perfilEmpresa) {
-      logger.error("Perfil de empresa no encontrado");
+      // logger.error("Perfil de empresa no encontrado");
       return res
         .status(404)
         .json({ error: "Perfil de empresa no encontrado." });
@@ -328,7 +326,7 @@ exports.obtenerRedesSociales = async (req, res) => {
       .status(200)
       .json({ message: "Red social guardada correctamente." });
   } catch (error) {
-    logger.error("Error al obtener las redes sociales:", error);
+    // logger.error("Error al obtener las redes sociales:", error);
     res.status(500).json({ message: "Error interno del servidor", error: error.message });
   }
 };
@@ -349,7 +347,7 @@ exports.eliminarRedSocial = async (req, res) => {
       !perfilEmpresa.redesSociales ||
       perfilEmpresa.redesSociales.length === 0
     ) {
-      logger.error("Perfil de empresa o redes sociales no encontradas"); 
+      // logger.error("Perfil de empresa o redes sociales no encontradas"); 
       return res
         .status(404)
         .json({ error: "Perfil de empresa o redes sociales no encontradas." });
@@ -361,7 +359,7 @@ exports.eliminarRedSocial = async (req, res) => {
     );
 
     if (redSocialIndex === -1) {
-      logger.error("Red social no encontrada"); 
+      // logger.error("Red social no encontrada"); 
       return res.status(404).json({ error: "Red social no encontrada." });
     }
 
@@ -378,7 +376,94 @@ exports.eliminarRedSocial = async (req, res) => {
       .status(200)
       .json({ message: "Red social eliminada correctamente." });
   } catch (error) {
-    logger.error("Error al eliminar la red social:", error);
+    // logger.error("Error al eliminar la red social:", error);
     res.status(500).json({ message: "Error interno del servidor", error: error.message });
+  }
+};
+
+// Crear o actualizar una sección (Misión, Visión o Valores)
+exports.crearEntrada = async (req, res) => {
+  try {
+    const { titulo, contenido, tipo } = req.body; // tipo: "mision", "vision" o "valores"
+    
+    if (!titulo || !contenido || !tipo) {
+      return res.status(400).json({ mensaje: "Todos los campos son obligatorios." });
+    }
+    
+    // Se busca el documento único; se asume que existe solo uno
+    let documento = await Empresa.findOne();
+    
+    if (!documento) {
+      // Si no existe, se crea uno nuevo con la sección indicada
+      const nuevaEntrada = new Empresa({ [tipo]: { titulo, contenido } });
+      await nuevaEntrada.save();
+      return res.status(201).json({ mensaje: "Entrada creada con éxito.", nuevaEntrada });
+    } else {
+      // Si ya existe, se actualiza la sección indicada
+      documento[tipo] = { titulo, contenido };
+      await documento.save();
+      return res.status(200).json({ mensaje: "Entrada actualizada con éxito.", entrada: documento });
+    }
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al crear o actualizar la entrada.", error });
+  }
+};
+
+// Obtener la entrada de una sección (Misión, Visión o Valores)
+exports.obtenerEntradas = async (req, res) => {
+  try {
+    const { tipo } = req.params; // tipo: "mision", "vision" o "valores"
+    const documento = await Empresa.findOne();
+    
+    // Se verifica que exista el documento y que la sección tenga datos (por ejemplo, un título)
+    if (!documento || !documento[tipo] || !documento[tipo].titulo) {
+      return res.status(404).json({ mensaje: `No se encontró datos de ${tipo}.` });
+    }
+    
+    res.status(200).json({ [tipo]: documento[tipo] });
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al obtener la entrada.", error });
+  }
+};
+
+// Editar (actualizar) una sección usando el parámetro de URL
+exports.editarEntrada = async (req, res) => {
+  try {
+    const { tipo } = req.params; // tipo: "mision", "vision" o "valores"
+    const { titulo, contenido } = req.body;
+    
+    if (!titulo || !contenido || !tipo) {
+      return res.status(400).json({ mensaje: "Todos los campos son obligatorios." });
+    }
+    
+    let documento = await Empresa.findOne();
+    if (!documento) {
+      return res.status(404).json({ mensaje: "Datos no encontrados." });
+    }
+    
+    documento[tipo] = { titulo, contenido };
+    await documento.save();
+    res.status(200).json({ mensaje: "Entrada actualizada con éxito.", entrada: documento });
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al actualizar la entrada.", error });
+  }
+};
+
+// "Eliminar" una sección: se limpia el contenido asignando valores vacíos
+exports.eliminarEntrada = async (req, res) => {
+  try {
+    const { tipo } = req.params; // tipo: "mision", "vision" o "valores"
+    let documento = await Empresa.findOne();
+    
+    if (!documento || !documento[tipo] || !documento[tipo].titulo) {
+      return res.status(404).json({ mensaje: "Entrada no encontrada." });
+    }
+    
+    // Se vacía la sección
+    documento[tipo] = { titulo: "", contenido: "" };
+    await documento.save();
+    res.status(200).json({ mensaje: "Entrada eliminada con éxito.", entrada: documento });
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al eliminar la entrada.", error });
   }
 };

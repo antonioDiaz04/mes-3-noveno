@@ -8,15 +8,18 @@ exports.crearRelacion = async (req, res) => {
   try {
     const { vestidoId, accesorios } = req.body;
 
+
+     console.log(req.body)
+    // Verificar que el vestido existe
     const vestido = await Producto.findById(vestidoId);
     if (!vestido) {
-      logger.warn(`Vestido no encontrado: ${vestidoId}`);
+      // logger.warn(`Vestido no encontrado: ${vestidoId}`);
       return res.status(404).json({ message: "Vestido no encontrado" });
     }
 
+    // Verificar que todos los accesorios existen
     const accesoriosEncontrados = await Accesorio.find({ _id: { $in: accesorios } });
     if (accesoriosEncontrados.length !== accesorios.length) {
-      logger.warn("Uno o más accesorios no encontrados")
       return res.status(404).json({ message: "Uno o más accesorios no encontrados" });
     }
 
@@ -27,10 +30,12 @@ exports.crearRelacion = async (req, res) => {
     });
 
     const resultado = await nuevaRelacion.save();
-    
-    res.status(201).json({ message: "Relación creada exitosamente", relacion: resultado });
+
+    res
+      .status(201)
+      .json({ message: "Relación creada exitosamente", relacion: resultado });
   } catch (error) {
-    logger.error(`Error al crear la relación: ${error.message}`);
+    // logger.error(`Error al crear la relación: ${error.message}`);
     res.status(500).json({ error: "Ocurrió un error al crear la relación." });
   }
 };
@@ -44,7 +49,7 @@ exports.obtenerRelaciones = async (req, res) => {
 
     res.status(200).json(relaciones);
   } catch (error) {
-    logger.error(`Error al obtener las relaciones: ${error.message}`);
+    // logger.error(`Error al obtener las relaciones: ${error.message}`);
     res.status(500).json({ message: "Error al obtener las relaciones", error });
   }
 };
@@ -53,13 +58,13 @@ exports.obtenerRelaciones = async (req, res) => {
 exports.eliminarRelacion = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const result = await VestidosAccesorioIncluidos.findByIdAndDelete(id);
-    
+
     if (!result) {
       return res.status(404).json({ message: "Relación no encontrada" });
     }
-    
+
     res.status(200).json({ message: "Relación eliminada con éxito." });
   } catch (error) {
     console.error(error);
@@ -71,11 +76,11 @@ exports.eliminarRelacion = async (req, res) => {
 exports.obtenerRelacionPorId = async (req, res) => {
   try {
     const { id } = req.params;
-  xl
+
     const relacion = await VestidosAccesorioIncluidos.findById(id)
       .populate("vestido")
       .populate("accesorios");
-    
+
     if (!relacion) {
       return res.status(404).json({ message: "Relación no encontrada" });
     }
