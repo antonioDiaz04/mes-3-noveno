@@ -151,6 +151,7 @@ app.use(`/api/${apiVersion}/proceso`, require("./Routes/Renta&Venta"));
 // Ruta para acciones control de Administrador de la página
 app.use(`/api/${apiVersion}/admin`, require("./Routes/PrivadoRoute"));
 app.use(`/api/${apiVersion}/politicas`, require("./Routes/PoliticasRoute.js"));
+app.use(`/api/${apiVersion}/resenia`, require("./Routes/ReseniaRoute.js"));
 
 // Ruta para acciones con rol de Administrador
 app.use(`/api/${apiVersion}/usuarios`, require("./Routes/UsuarioRoute"));

@@ -260,74 +260,25 @@ exports.activarCuenta = async (req, res) => {
   }
 };
 
-// exports.verificarCodigo = async (req, res) => {
-//   try {
-//     const { email, codigo } = req.body;
-//     // let usuario;
-//     const usuario = await Usuario.findOne({ email, codigoVerificacion });
+exports.enviaCorreoDinamico=async(req,res)=>{
+  try {
+    const { email, asunto, mensaje } = req.body;
 
-//     console.table([
-//       "correo recibido:",
-//       email,
-//       "codigoVerificacion recibido:",
-//       codigoVerificacion,
-//     ]);
-//     // Verificar si el código es válido
-//     const isCodigoValido = await bcrypt.compare(
-//       codigo,
-//       usuario.codigoVerificacion
-//     );
-//     if (!isCodigoValido) {
-//       return res
-//         .status(401)
-//         .json({ message: "Código de verificación incorrecto." });
-//     }
+    if (!email || !asunto || !mensaje) {
+      return res.status(400).json({ message: "Faltan campos obligatorios" });
+    }
 
-//     // Generar el token JWT
-//     const token = jwt.sign(
-//       { _id: usuario._id, rol: usuario.rol },
-//       process.env.JWT_SECRET || "secret",
-//       {
-//         expiresIn: "1h", // El token expirará en 1 hora
-//       }
-//     );
+    const mailOptions = {
+      from: '"Atelier" <atelier>',
+      to: email,
+      subject: asunto,
+      html: mensaje,
+    };
 
-//     console.log("aqui llego tambien :");
-//     enviarTokenActivaCuenta(email, token);
-
-//     // Si el usuario tiene un rol, firmar el token JWT con el rol incluido
-//     // const token = jwt.sign({ _id: usuario._id, rol: usuario.rol }, "secret");
-//     return res.status(200).json({ token, rol: usuario.rol });
-//   } catch (error) {
-//     console.log("ohh no :", error);
-//     return res.status(500).send("Error en el servidor: " + error);
-//   }
-// };
-
-// exports.enviarCorreoyCuerpo = async (req, res) => {
-//   try {
-//     const email = req.body.email;
-//     const codigo = Math.floor(1000 + Math.random() * 9000); // Generar un código de verificación de 4 dígitos
-
-//     console.log(`Email: ${email}, Código: ${codigo}`);
-
-//     if (!email) {
-//       return res.status(400).json({ msg: "El email es requerido" });
-//     }
-
-//     // Generar token con el código y una expiración de 15 minutos
-//     const token = jwt.sign({ codigo }, 'clave_secreta', { expiresIn: '15m' });
-
-//     // Enviar el código de verificación por correo
-//     await enviarCodigoVerficiacionActivaCuenta(email, codigo);
-
-//     res.status(200).json({ msg: "Correo electrónico enviado correctamente" });
-//   } catch (error) {
-//     console.error("Error en enviarCorreoyCuerpo:", error);
-//     res.status(500).json({ msg: "Error en el servidor" });
-//   }
-// };
-
-// Función para enviar el código de verificación por correo
-
-// const Joi = require('joi'); // Para validación de datos de entrada
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ message: "Correo enviado exitosamente" });
+  } catch (error) {
+    console.error("Error al enviar el correo:", error);
+    res.status(500).json({ message: "Error en el servidor" });
+  }
+}
