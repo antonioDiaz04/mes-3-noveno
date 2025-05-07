@@ -34,6 +34,9 @@ const DatosAtelierSchema = mongoose.Schema({
   telefono: {
     type: String,
   },
+  comentarios: {
+    type: String,
+  }
 });
 
 const redesSocialesSchema = mongoose.Schema([

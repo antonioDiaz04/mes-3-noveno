@@ -10,20 +10,24 @@ const EstadoCuentaSchema = mongoose.Schema({
   tiempoDeBloqueo: { type: Number, default: 30 },
 });
 
-const UsuarioSchema = mongoose.Schema({
-  nombre: { type: String, required: true },
-  email: { type: String, unique: true, required: false },
-  telefono: { type: String, required: true },
-  token: { type: String, required: false },
-  codigoVerificacion: { type: String, required: false },
-  verificado: { type: Boolean, required: false },
-  rol: { 
-    type: String, required: false, default: "CLIENTE" 
-  },
-  password: { type: String, required: false, default: "" },
-  fechaDeRegistro: { type: Date, default: Date.now() },
-  estadoCuenta: { type: mongoose.Schema.Types.ObjectId, ref: "EstadoCuenta" },
-});
+  const UsuarioSchema = mongoose.Schema({
+    fotoDePerfil: { type: String },
+    nombre: { type: String, required: true },
+    apellidos: { type: String, required: true },
+    edad: { type: Number },
+    direccion: { type: String },
+    email: { type: String, unique: true, required: false },
+    telefono: { type: String, required: true },
+    token: { type: String, required: false },
+    codigoVerificacion: { type: String, required: false },
+    verificado: { type: Boolean, required: false },
+    rol: {
+      type: String, required: false, default: "CLIENTE"
+    },
+    password: { type: String, required: false, default: "" },
+    fechaDeRegistro: { type: Date, default: Date.now() },
+    estadoCuenta: { type: mongoose.Schema.Types.ObjectId, ref: "EstadoCuenta" },
+  });
 
 const EstadoCuenta = mongoose.model("EstadoCuenta", EstadoCuentaSchema);
 const Usuario = mongoose.model("Usuarios", UsuarioSchema);

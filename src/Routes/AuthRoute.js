@@ -9,7 +9,11 @@ const {loginSchema} = require("../schemas/authSchema");
 router.post("/signIn", 
     // validarDatos(loginSchema),
      AutController.Login);
+router.post("/signIn-Google-Facebook", 
+    // validarDatos(loginSchema),
+     AutController.signInGoogleFacebook);
 // router.post("/enviar-confirmar", AutController.enviarConfirmar);
+//autentificacion/signIn-Google-Facebook
 // router.post("/verficar-codigo", AutController.verificarCodigo);
 
 module.exports = router;

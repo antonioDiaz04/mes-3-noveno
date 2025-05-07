@@ -143,3 +143,110 @@ exports.Login = async (req, res) => {
       .json({ message: "Error en el servidor: " + error.message });
   }
 };
+exports.signInGoogleFacebook = async (req, res) => {
+  try {
+    const sanitizedData = sanitizeObject(req.body);
+    const { displayName, email, photoURL, uid } = sanitizedData;
+
+    if (!email) {
+      return res.status(400).json({ message: "El email es requerido" });
+    }
+
+    // Buscar usuario existente
+    let usuario = await Usuario.findOne({ email }).populate("estadoCuenta");
+
+    if (usuario) {
+      // Manejar cuenta existente
+      const estadoCuenta = usuario.estadoCuenta;
+      
+      if (estadoCuenta.estado === "bloqueada") {
+        const ahora = Date.now();
+        const tiempoRestante =
+          estadoCuenta.fechaDeUltimoBloqueo.getTime() +
+          estadoCuenta.tiempoDeBloqueo * 1000 -
+          ahora;
+
+        if (tiempoRestante > 0) {
+          return res.status(403).json({
+            message: `Cuenta bloqueada. Intenta nuevamente en ${Math.ceil(
+              tiempoRestante / 1000
+            )} segundos.`,
+            tiempo: estadoCuenta.tiempoDeBloqueo,
+            numeroDeIntentos: estadoCuenta.intentosFallidos,
+          });
+        }
+
+        // Restablecer cuenta bloqueada
+        estadoCuenta.estado = "activa";
+        estadoCuenta.intentosFallidos = 0;
+        estadoCuenta.fechaDeUltimoBloqueo = null;
+        await estadoCuenta.save();
+      }
+    } else {
+      // Crear nuevo usuario para Google/Facebook
+      const primerUsuario = await Usuario.findOne().populate("estadoCuenta");
+      if (!primerUsuario || !primerUsuario.estadoCuenta) {
+        return res.status(500).json({ 
+          message: "No se pudo obtener la configuración de estado de cuenta" 
+        });
+      }
+
+      const { intentosPermitidos, tiempoDeBloqueo } = primerUsuario.estadoCuenta;
+      const nuevoEstadoCuenta = await EstadoCuenta.create({
+        intentosPermitidos,
+        tiempoDeBloqueo,
+        estado: "activa"
+      });
+
+      usuario = await Usuario.create({
+        fotoDePerfil: photoURL,
+        nombre: displayName,
+        email,
+        estadoCuenta: nuevoEstadoCuenta._id,
+        token: "",
+        codigoVerificacion: null,
+        verificado: true, // Usuarios de redes sociales verificados
+        rol: "usuario", // Rol por defecto
+        uid // ID único del proveedor OAuth
+      });
+      
+      usuario = await Usuario.findById(usuario._id).populate("estadoCuenta");
+    }
+
+    // Resetear intentos fallidos
+    usuario.estadoCuenta.intentosFallidos = 0;
+    await usuario.estadoCuenta.save();
+
+    // Generar token JWT
+    const token = jwt.sign(
+      { _id: usuario._id, rol: usuario.rol },
+      process.env.JWT_SECRET || "secret",
+      { expiresIn: "24h" }
+    );
+
+    // Configurar cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 86400000, // 24 horas en ms
+    });
+
+    return res.status(200).json({ 
+      token, 
+      rol: usuario.rol,
+      usuario: {
+        nombre: usuario.nombre,
+        email: usuario.email,
+        fotoDePerfil: usuario.fotoDePerfil
+      }
+    });
+
+  } catch (error) {
+    console.error("Error en el servidor:", error);
+    return res.status(500).json({ 
+      message: "Error en el servidor",
+      error: error.message 
+    });
+  }
+};

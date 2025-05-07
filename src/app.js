@@ -1,6 +1,7 @@
 const express = require("express");
 const morgan = require("morgan");
 require("dotenv").config();
+const bodyParser = require('body-parser');
 const conectarDB = require("./Server/Conexion");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -17,6 +18,7 @@ const corsOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(",").map(origin => origin.trim()) 
   : [];
 
+  
 const corsOptions = {
   origin: corsOrigins.length > 0 ? corsOrigins : false, // Evita problemas si no hay orígenes definidos
   methods: ["GET", "POST", "PUT", "DELETE"],
@@ -24,6 +26,8 @@ const corsOptions = {
   credentials: true,
 };
 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json())
 app.use(helmet());
 app.use(cookieParser());
 app.use(cors(corsOptions));
@@ -122,6 +126,7 @@ app.use(`/api/${apiVersion}/verificar`, require("./Routes/catpch"));
 app.use(`/api/${apiVersion}/Empresa`, require("./Routes/PerfilEmpresa.Routes"));
 app.use(`/api/${apiVersion}/autentificacion`, require("./Routes/AuthRoute"));
 app.use(`/api/${apiVersion}/renta`, require("./Routes/Renta&Venta"));
+app.use(`/api/${apiVersion}/paypal`, require("./Routes/paypal.routes.js"));
 app.use(
   `/api/${apiVersion}/estadisticas`,
   require("./Routes/EstadisticasRoute")

@@ -2,7 +2,10 @@ const { Usuario, EstadoCuenta } = require("../Models/UsuarioModel");
 require("../Routes/UsuarioRoute");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const {logger} = require("../util/logger");
+const fs = require("fs-extra");
+const sanitizeObject = require("../util/sanitize");
+const { logger } = require("../util/logger");
+const { uploadImage, deleteImage } = require("../cloudinary/cloudinaryConfig");
 
 exports.perfilUsuario = async (req, res) => {
   try {
@@ -24,8 +27,38 @@ exports.perfilUsuario = async (req, res) => {
     return res.status(500).json({ mensaje: "Error en el servidor" });
   }
 };
+exports.consulrarPerfilUsuarioId = async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    const usuario = await Usuario.findById(id)
+      .select('fotoDePerfil nombre email')
+      .lean();
 
+    // Verificar si el usuario existe
+    if (!usuario) {
+      logger.warn(`Usuario no encontrado con ID: ${id}`);
+      return res.status(404).json({ mensaje: "Usuario no encontrado" });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        fotoPerfil: usuario.fotoDePerfil,
+        nombre: usuario.nombre,
+        email: usuario.email
+      }
+    });
+  } catch (error) {
+    logger.error(`Error en perfilUsuario: ${error.stack}`);
+    res.status(500).json({
+      success: false,
+      error: process.env.NODE_ENV === 'development'
+        ? error.message
+        : 'Error al obtener el perfil'
+    });
+  }
+};
 
 // Middleware para verificar el token y el rol del usuario
 exports.verifyTokenAndRole = (role) => (req, res, next) => {
@@ -189,7 +222,9 @@ exports.checkCode = async (req, res) => {
 
 exports.crearUsuario = async (req, res) => {
   try {
-    let { nombre, telefono, email, password } = req.body;
+    let { nombre, apellidos, edad, direccion, telefono, email, password } = sanitizeObject(req.body);
+
+    const fotoDePerfil = "https://res.cloudinary.com/dxmhlxdxo/image/upload/v1743916178/Imagenes%20para%20usar%20xD/gxvcu5gik59c0uu7zz4p.png"
 
     // Validar que todos los campos estén presentes
     if (!nombre || !telefono || !email || !password) {
@@ -241,7 +276,11 @@ exports.crearUsuario = async (req, res) => {
 
     // Crear el nuevo usuario
     const usuario = new Usuario({
+      fotoDePerfil: fotoDePerfil,
       nombre,
+      apellidos,
+      edad,
+      direccion,
       email,
       telefono: telefonoFormateado,
       password: hashedPassword,
@@ -295,33 +334,87 @@ exports.eliminarUsuario = async (req, res) => {
 
 exports.editarUsuario = async (req, res) => {
   try {
-    const { nombre, telefono, email, password } = req.body;
-    const usuario = await Usuario.findOne({ email: email });
+    const { id } = req.params;
+
+    const { nombre, apellidos, telefono, direccion, edad, correo, contrasena } = sanitizeObject(req.body);
+
+    const usuario = await Usuario.findById(id);
 
     if (!usuario) {
       logger.warn("Usuario no encontrado");
       return res.status(404).send("Usuario no encontrado.");
     }
-    // Encripta la nueva contraseña
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+
     usuario.nombre = nombre;
-    usuario.email = email;
-    usuario.telefono = telefono;
-    usuario.password = hashedPassword;
+    usuario.apellidos = apellidos;
+    usuario.direccion = direccion || usuario.direccion;
+    usuario.edad = edad || usuario.edad;
+    usuario.email = correo;
+    usuario.telefono = telefono || usuario.telefono;
+
+    if (contrasena) {
+      if (contrasena.length < 8) {
+        logger.warn("Contraseña demasiado corta");
+        return res.status(400).send("La contraseña debe tener al menos 8 caracteres.");
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      usuario.password = await bcrypt.hash(contrasena, salt);
+    }
+
     await usuario.save();
 
-    logger.info("Usuario actualizado correctamente");
     res.status(200).send("Usuario actualizado correctamente.");
   } catch (error) {
+    console.log(error)
     logger.error(`Error en editarUsuario: ${error.message}`);
     res.status(500).send("Error en el servidor: " + error);
   }
 };
+exports.subirFotoDelUsuario = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ error: "Debe proporcionar una imagen." });
+    }
+
+    const resultadoCloudinary = await uploadImage(req.file.path);
+
+
+    const usuario = await Usuario.findByIdAndUpdate(
+      id,
+      { fotoDePerfil: resultadoCloudinary.secure_url },
+      { new: true, runValidators: true }
+    );
+
+
+    res.status(200).json({
+      success: true,
+      message: 'Foto de perfil actualizada correctamente',
+      profileImgUrl: usuario.fotoDePerfil,
+      user: {
+        id: usuario._id,
+        nombre: usuario.nombre,
+        email: usuario.email
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error en el servidor',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+
+  }
+}
+
 
 exports.obtenerUsuarioById = async (req, res) => {
   try {
-    const usuario = await Usuario.findById(req.params.id);
+    const usuario = await Usuario.findById(req.params.id).populate('estadoCuenta')
     if (!usuario) {
       logger.warn("Usuario no encontrado");
       return res.status(404).json({ msg: "usuario Not Found" });
@@ -496,7 +589,6 @@ exports.actualizarPasswordxPregunta = async (req, res) => {
       .json({ message: "Ocurrió un error al actualizar la contraseña" });
   }
 };
-
 exports.listarSecretas = async (req, res) => {
   try {
     // Obtener todas las preguntas secretas
@@ -523,7 +615,7 @@ exports.actualizaRolUsuario = async (req, res) => {
     );
 
     if (!usuarioActualizado) {
-      logger.warn(`Usuario no encontrado: ${id}`); 
+      logger.warn(`Usuario no encontrado: ${id}`);
       return res.status(404).json({ mensaje: "Usuario no encontrado" });
     }
 
@@ -543,7 +635,7 @@ exports.actualizaDatos = async (req, res) => {
     const { id } = req.params;
     const { nombre, email, longitud, latitud, telefono, numCasa, estatus } =
       req.body;
-   
+
 
     let cliente = await Usuario.findById(req.params.id);
     if (!cliente) {
@@ -563,7 +655,7 @@ exports.actualizaDatos = async (req, res) => {
       usuario: usuarioActualizado,
     });
   } catch (error) {
-    logger.error(`Error al actualizar los datos del usuario: ${error.message}`); 
+    logger.error(`Error al actualizar los datos del usuario: ${error.message}`);
     res.status(500).json({ mensaje: "Error interno del servidor" });
   }
 };

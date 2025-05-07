@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
-
-// const NotificacionController = require("../Controllers/NotificacionController.js");
+const upload = require("../Midlewares/multer");
 const VentaController = require("../Controllers/VentaController.js"); // Importar el controlador para venta, renta y compra
 const RentaController = require("../Controllers/RentaController.js"); // Importar el controlador para venta, renta y compra
 
@@ -16,6 +15,8 @@ router.post("/crearRenta", RentaController.crearRenta);
 router.get("/rentasByidUser/:usuarioId", RentaController.obtenerProductosRentadosByIdUser);
 router.get("/obtenerVentas/", VentaController.obtenerVentas);
 router.get("/obtenerRentas/", RentaController.obtenerRentas);
+
+
 // router.post("/realizarRenta", VentaRentaController.crearCompra); // Ruta para compra
 // router.post("/realizarCompra", VentaRentaController.crearCompra); // Ruta para compra
 // router.get("/estado/:id", VentaRentaController.revisarEstado);
