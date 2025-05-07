@@ -30,6 +30,8 @@ const UsuarioSchema = mongoose.Schema({
   respuestaSegura: { type: String, required: false, default: "" },
   fechaDeRegistro: { type: Date, default: Date.now() },
   estadoCuenta: { type: mongoose.Schema.Types.ObjectId, ref: "EstadoCuenta" },
+  isClienteFrecuente: { type: Boolean, required: false, default: false },
+  isNuevo: { type: Boolean, required: false, default: true },
 });
 
 const EstadoCuenta = mongoose.model("EstadoCuenta", EstadoCuentaSchema);

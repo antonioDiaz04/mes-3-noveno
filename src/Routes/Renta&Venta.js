@@ -27,8 +27,8 @@ router.get("/rentaByIdProducto/:id", RentaController.obtenerRentaByIdProducto);
 router.get("/ventaByIdProducto/:id", VentaController.obtenerVentaByIdProducto);
 router.get("/rentaByIdEstado/:id", RentaController.obtenerRentaByIdEstado);
 router.get("/ventaByIdEstado/:id", VentaController.obtenerVentaByIdEstado);
-router.delete("renntasSeleccionadas", RentaController.eliminarRentasSeleccionadas);
-router.delete("ventasSeleccionadas", VentaController.eliminarVentasSeleccionadas);
+router.delete("/rentasSeleccionadas", RentaController.eliminarRentasSeleccionadas);
+router.delete("/ventasSeleccionadas", VentaController.eliminarVentasSeleccionadas);
 
 
 // router.post("/realizarRenta", VentaRentaController.crearCompra); // Ruta para compra

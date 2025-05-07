@@ -2,144 +2,67 @@ const Renta = require("../Models/RentaModel");
 const Producto = require("../Models/ProductModel");
 const { enviarNotificacion } = require("../util/webpush");
 // const { logger } = require("../util/logger");
-const { Usuario } = require("../Models/UsuarioModel");
-const bcrypt = require('bcrypt');
 
-function generarPasswordSegura() {
-  const letras = 'abcdefghijklmnopqrstuvwxyz';
-  const mayusculas = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const numeros = '0123456789';
-  const especiales = '!@#$%^&*()_+[]{}|;:,.<>?';
-
-  // Asegurar que tenga al menos uno de cada tipo
-  let password = '';
-  password += mayusculas.charAt(Math.floor(Math.random() * mayusculas.length));
-  password += letras.charAt(Math.floor(Math.random() * letras.length));
-  password += numeros.charAt(Math.floor(Math.random() * numeros.length));
-  password += especiales.charAt(Math.floor(Math.random() * especiales.length));
-
-  // Rellenar hasta completar al menos 8 caracteres
-  const todos = letras + mayusculas + numeros + especiales;
-  while (password.length < 8) {
-    password += todos.charAt(Math.floor(Math.random() * todos.length));
-  }
-
-  // Mezclar la contraseña para que no siga un patrón predecible
-  return password.split('').sort(() => 0.5 - Math.random()).join('');
-}
-
-
+// Crear Nueva Renta desde Frontend
 const crearRenta = async (req, res) => {
   try {
     const {
-      usuario,
+      usuarioId,
       productoId,
-      fechaOcupacion,
-      fechaRecoge,
-      fechaRegreso,
+      fechaInicio,
+      fechaFin,
       metodoPago,
-      precioRenta,
-      notas
+      precioRenta
     } = req.body;
 
-    // Validación general
-    const camposFaltantes = [];
-    if (!usuario) camposFaltantes.push('usuario');
-    if (!productoId) camposFaltantes.push('productoId');
-    if (!fechaOcupacion) camposFaltantes.push('fechaOcupacion');
-    if (!fechaRecoge) camposFaltantes.push('fechaRecoge');
-    if (!fechaRegreso) camposFaltantes.push('fechaRegreso');
-    if (!metodoPago) camposFaltantes.push('metodoPago');
-    if (precioRenta === undefined) camposFaltantes.push('precioRenta');
-
-    // Validación para usuario nuevo
-    if (usuario?.isNuevo) {
-      if (!usuario.nombre) camposFaltantes.push('usuario.nombre');
-      if (!usuario.email) camposFaltantes.push('usuario.email');
-      if (!usuario.telefono) camposFaltantes.push('usuario.telefono');
+    // Validar si los campos requeridos están presentes
+    if (!usuarioId || !productoId || !fechaInicio || !fechaFin || !metodoPago || !precioRenta) {
+      return res.status(400).json({ mensaje: 'Todos los campos son obligatorios' });
     }
 
-    if (camposFaltantes.length > 0) {
-      return res.status(400).json({
-        mensaje: 'Faltan campos obligatorios',
-        camposFaltantes
-      });
-    }
-
-    let usuarioId = usuario._id;
-
-    // Crear usuario si es nuevo
-    if (usuario.isNuevo) {
-      const telefonoFormateado = cleanPhoneNumber(usuario.telefono);
-      const yaExiste = await Usuario.findOne({ telefono: telefonoFormateado });
-      if (yaExiste) {
-        return res.status(400).json({ mensaje: 'El número telefónico ya está registrado' });
-      }
-
-      const passwordPlano = generarPasswordSegura();
-      const hashedPassword = await bcrypt.hash(passwordPlano, 10);
-
-      const nuevoUsuario = new Usuario({
-        nombre: usuario.nombre,
-        email: usuario.email,
-        telefono: telefonoFormateado,
-        password: hashedPassword,
-        tipoCliente: 'nuevo',
-        verificado: false,
-        preguntaSecreta: '',
-        respuestaSegura: ''
-      });
-
-      const usuarioGuardado = await nuevoUsuario.save();
-      usuarioId = usuarioGuardado._id;
-      console.log(`Contraseña generada para ${usuario.email}: ${passwordPlano}`);
-    }
-
-    // Verificar existencia del producto
+    // Verificar si el producto existe
     const producto = await Producto.findById(productoId);
     if (!producto) {
+      // logger.warn(`Producto con ID ${productoId} no encontrado`);
       return res.status(404).json({ mensaje: 'Producto no encontrado' });
     }
 
-    if (new Date(fechaRegreso) <= new Date(fechaOcupacion)) {
-      return res.status(400).json({ mensaje: 'La fecha de regreso debe ser posterior a la fecha de ocupación' });
+    // Validar que la fecha de fin sea posterior a la fecha de inicio
+    if (new Date(fechaFin) <= new Date(fechaInicio)) {
+      return res.status(400).json({ mensaje: 'La fecha de fin debe ser posterior a la fecha de inicio' });
     }
 
-    // Crear la nueva renta
+    // Crear nueva renta
     const nuevaRenta = new Renta({
       usuario: usuarioId,
       producto: productoId,
       detallesRenta: {
-        fechaOcupacion: new Date(fechaOcupacion),
-        fechaRecoge: new Date(fechaRecoge),
-        fechaRegreso: new Date(fechaRegreso),
-        duracionDias: calcularDiasDiferencia(fechaOcupacion, fechaRegreso)
+        fechaInicio: new Date(fechaInicio),
+        fechaFin: new Date(fechaFin),
+        duracionDias: calcularDiasDiferencia(fechaInicio, fechaFin)
       },
       detallesPago: {
         precioRenta: precioRenta,
         metodoPago: metodoPago
       },
-      estado: 'Activo',
-      notas: notas || ''
+      estado: 'Activo'
     });
 
-    // Guardar y actualizar disponibilidad del producto
+    // Guardar la renta y actualizar el producto
     const rentaGuardada = await nuevaRenta.save();
     await Producto.findByIdAndUpdate(productoId, { $set: { disponibleParaRenta: false } });
 
-    res.status(201).json({
-      mensaje: 'Renta creada exitosamente',
-      renta: rentaGuardada
-    });
+    if (token) {
+      await enviarNotificacion(token, 'Renta creada', 'Tu renta ha sido procesada con éxito.');
+    }
 
+    // logger.info(`Renta creada con éxito para el producto ${productoId}`);
+    res.status(201).json({ mensaje: 'Renta creada exitosamente', renta: rentaGuardada });
   } catch (error) {
+    // logger.error('Error en creación de renta:', error);
     res.status(500).json({ mensaje: 'Error al crear renta', error: error.message });
   }
 };
-
-
-
-
 
 const listarRentasUsuario = async (req, res) => {
   try {
