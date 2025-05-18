@@ -105,6 +105,15 @@ const crearRenta = async (req, res) => {
       return res.status(400).json({ mensaje: 'La fecha de regreso debe ser posterior a la fecha de ocupación' });
     }
 
+    // Determinar estado de entrega
+    let entrega = 'Pendiente';
+    const ahora = new Date();
+    if (new Date(fechaRegreso) < ahora) {
+      entrega = 'Vencida';
+    } else if (new Date(fechaRegreso) >= ahora) {
+      entrega = 'A tiempo';
+    }
+
     // Crear la nueva renta
     const nuevaRenta = new Renta({
       usuario: usuarioId,
@@ -113,7 +122,8 @@ const crearRenta = async (req, res) => {
         fechaOcupacion: new Date(fechaOcupacion),
         fechaRecoge: new Date(fechaRecoge),
         fechaRegreso: new Date(fechaRegreso),
-        duracionDias: calcularDiasDiferencia(fechaOcupacion, fechaRegreso)
+        duracionDias: calcularDiasDiferencia(fechaOcupacion, fechaRegreso),
+        entrega: entrega
       },
       detallesPago: {
         precioRenta: precioRenta,
@@ -136,8 +146,6 @@ const crearRenta = async (req, res) => {
     res.status(500).json({ mensaje: 'Error al crear renta', error: error.message });
   }
 };
-
-
 
 
 

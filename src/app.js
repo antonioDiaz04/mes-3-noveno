@@ -10,8 +10,6 @@ const { limiter } = require("./util/rateLimit.js");
 const categoriaRoutes = require('./Routes/CategoriaRoutes');
 //importa el cliente oficial de elasticseach
 
-
-
 const app = express();
 
 conectarDB();
@@ -34,7 +32,7 @@ app.use(helmet());
 app.use(cookieParser());
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use(limiter);
+// app.use(limiter);esto limita las solicitudes constantes
 app.use(helmet.hidePoweredBy()); // Oculta información del servidor
 
 

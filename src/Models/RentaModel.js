@@ -1,35 +1,36 @@
 const mongoose = require("mongoose");
 
 const RentaSchema = new mongoose.Schema({
-  // Referencia a Usuario
   usuario: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Usuarios",
     required: true,
   },
-  // Referencia a Producto
+
   producto: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: "Producto", 
     required: true
   },
 
-  // Detalles de Renta
   detallesRenta: {
     fechaOcupacion: { type: Date, required: true, default: Date.now },
     fechaRecoge: { type: Date, required: true, default: Date.now },
     fechaRegreso: { type: Date, required: true },
-    duracionDias: { type: Number, required: true, min: 1 }
+    duracionDias: { type: Number, required: true, min: 1 },
+    entrega: {
+      type: String,
+      enum: ['A tiempo', 'Vencida', 'Pendiente'],
+      default: 'Pendiente'
+    }
   },
 
-  // Estado de la Renta
   estado: { 
     type: String, 
     enum: ['Pendiente', 'Activo', 'Completado', 'Cancelado'],
     default: 'Pendiente' 
   },
 
-  // Detalles de Pago
   detallesPago: {
     precioRenta: { type: Number, required: true, min: 0 },
     metodoPago: { 
@@ -40,7 +41,6 @@ const RentaSchema = new mongoose.Schema({
     fechaPago: { type: Date, default: Date.now }
   },
 
-  // Nuevos campos relacionados al pago y multa
   multa: {
     type: Number,
     default: 0,
@@ -65,35 +65,35 @@ const RentaSchema = new mongoose.Schema({
     min: 0
   },
 
-  // Información adicional
   notas: {
     type: String,
     maxlength: 500
   },
 
-  // Fechas de registro
   fechaDeRegistro: {
     type: Date,
     default: Date.now
   }
 });
 
-// Middleware para validar fechas
+// Middleware de validación de fechas
 RentaSchema.pre("save", function(next) {
-  if (this.detallesRenta.fechaFin <= this.detallesRenta.fechaInicio) {
-    return next(new Error('La fecha de fin debe ser posterior a la fecha de inicio'));
+  const recogida = this.detallesRenta.fechaRecoge;
+  const regreso = this.detallesRenta.fechaRegreso;
+  if (regreso <= recogida) {
+    return next(new Error('La fecha de regreso debe ser posterior a la fecha de recogida'));
   }
   next();
 });
 
 // Método para calcular duración
 RentaSchema.methods.calcularDuracion = function() {
-  const inicio = this.detallesRenta.fechaInicio;
-  const fin = this.detallesRenta.fechaFin;
+  const inicio = this.detallesRenta.fechaRecoge;
+  const fin = this.detallesRenta.fechaRegreso;
   return Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24));
 };
 
-// Método para calcular si está liquidado y cuánto sobra
+// Método para actualizar estado de pago
 RentaSchema.methods.actualizarEstadoDePago = function() {
   const totalAPagar = this.detallesPago.precioRenta + (this.multa || 0);
   const diferencia = this.montoPagado - totalAPagar;
