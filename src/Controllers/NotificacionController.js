@@ -685,7 +685,7 @@ exports.enviarNotificacionNuevosProductosSuscriptores = async (req, res) => {
   }
 }
 exports.enviarNotificacionRecordatorioDevolucionRenta = async (req, res) => {
-  //   // Verificar si el token de suscripción se ha proporcionado en el cuerpo de la solicitud
+  // Verificar si el token de suscripción se ha proporcionado en el cuerpo de la solicitud
   if (!req.body.token) {
     return res
       .status(400)
@@ -695,7 +695,10 @@ exports.enviarNotificacionRecordatorioDevolucionRenta = async (req, res) => {
   }
 
   try {
-    const tokenData = JSON.parse(req.body.token);
+    // Si el token ya es un objeto, no lo parses
+    const tokenData = typeof req.body.token === "string"
+      ? JSON.parse(req.body.token)
+      : req.body.token;
     const { endpoint, keys } = tokenData;
 
     if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
