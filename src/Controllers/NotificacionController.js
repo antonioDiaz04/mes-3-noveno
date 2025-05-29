@@ -686,13 +686,13 @@ exports.enviarNotificacionNuevosProductosSuscriptores = async (req, res) => {
 }
 exports.enviarNotificacionRecordatorioDevolucionRenta = async (req, res) => {
   // Verificar si el token de suscripción se ha proporcionado en el cuerpo de la solicitud
-  if (!req.body.token) {
-    return res
-      .status(400)
-      .json({ message: "Token de suscripción no proporcionado" });
-  } else {
-    console.log("token recibido =>", req.body.token);
-  }
+  // if (!req.body.token) {
+  //   return res
+  //     .status(400)
+  //     .json({ message: "Token de suscripción no proporcionado" });
+  // } else {
+  //   console.log("token recibido =>", req.body.token);
+  // }
 
   try {
     // Solo parsear si el token es un string, de lo contrario usarlo directamente
