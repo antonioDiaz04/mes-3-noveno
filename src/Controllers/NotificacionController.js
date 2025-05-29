@@ -691,18 +691,21 @@ exports.enviarNotificacionRecordatorioDevolucionRenta = async (req, res) => {
       .status(400)
       .json({ message: "Token de suscripción no proporcionado" });
   } else {
-    console.log("token=>", req.body.token);
+    console.log("token recibido =>", req.body.token);
   }
 
   try {
-    // Si el token ya es un objeto, no lo parses
+    // Solo parsear si el token es un string, de lo contrario usarlo directamente
     const tokenData = typeof req.body.token === "string"
       ? JSON.parse(req.body.token)
       : req.body.token;
+
     const { endpoint, keys } = tokenData;
 
     if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
-      return res.status(400).json({ message: "Datos de suscripción inválidos" });
+      return res
+        .status(400)
+        .json({ message: "Datos de suscripción inválidos" });
     }
 
     const pushSubscription = {
@@ -712,6 +715,7 @@ exports.enviarNotificacionRecordatorioDevolucionRenta = async (req, res) => {
         auth: keys.auth,
       },
     };
+
     const payload = {
       notification: {
         title: "¡Recordatorio de devolución de renta!",
