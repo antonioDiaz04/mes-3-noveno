@@ -135,4 +135,4 @@ const mensajesNotificacion = {
     ],
   },
 };
-export { tiposNotificacion, prioridadesNotificacion, mensajesNotificacion };
+module.exports = { tiposNotificacion, prioridadesNotificacion, mensajesNotificacion };

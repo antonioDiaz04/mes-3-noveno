@@ -1,7 +1,11 @@
 const webpush = require('web-push');
 const Notificacion = require('../Models/NotificacionModel.js');
 const Suscripcion = require('../Models/Suscripcion.js');
-const tiposNotificacion = require('../config/notificaciones.config.js');
+const {
+  tiposNotificacion,
+  prioridadesNotificacion,
+  mensajesNotificacion
+} = require('../config/notificaciones.config');
 
 const imagenDefault = "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg"; // Imagen por defecto para notificaciones
 const vapidKeys = {
