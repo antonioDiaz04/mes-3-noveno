@@ -112,7 +112,7 @@ app.use((req, res, next) => {
 //     const duration = Date.now() - start; // se calcula la duración de la solicitud restando el tiempo actual
 //     logHttpRequest(req, res, duration);
 //   });
-//   next();
+//   next();+++
 // });
 
 // Ruta dinámica para la API
