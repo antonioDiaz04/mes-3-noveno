@@ -130,7 +130,7 @@ app.use(
 );
 
 app.use(
-  `/api/${apiVersion}/enviar-notificacion`,
+  `/api/${apiVersion}/notificacion`,
   require("./Routes/NotificacionRoute")
 );
 app.use(`/api/${apiVersion}/enviar-correo`, require("./Routes/CorreoRoute"));
