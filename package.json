@@ -15,6 +15,7 @@
     "nodemon": "^3.0.2"
   },
   "dependencies": {
+    "@elastic/elasticsearch": "^8.17.1",
     "@imgly/background-removal": "^1.5.7",
     "@imgly/background-removal-node": "^1.4.3",
     "axios": "^1.8.2",
@@ -28,6 +29,7 @@
     "cookies.js": "^2.1.15",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
+    "elasticsearch": "^16.7.3",
     "express": "^4.21.2",
     "express-fileupload": "^1.5.1",
     "express-rate-limit": "^7.5.0",
@@ -51,6 +53,8 @@
     "web-push": "^3.6.7",
     "whatsapp-web.js": "^1.26.0",
     "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0",
+    "winston-elasticsearch": "^0.19.0",
     "zxcvbn": "^4.4.2"
   }
 }
