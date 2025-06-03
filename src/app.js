@@ -11,8 +11,6 @@ const { limiter } = require("./util/rateLimit.js");
 const categoriaRoutes = require('./Routes/CategoriaRoutes');
 //importa el cliente oficial de elasticseach
 
-
-
 const app = express();
 
 conectarDB();
@@ -34,7 +32,7 @@ app.use(helmet());
 app.use(cookieParser());
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use(limiter);
+// app.use(limiter);esto limita las solicitudes constantes
 app.use(helmet.hidePoweredBy()); // Oculta información del servidor
 
 
@@ -114,7 +112,7 @@ app.use((req, res, next) => {
 //     const duration = Date.now() - start; // se calcula la duración de la solicitud restando el tiempo actual
 //     logHttpRequest(req, res, duration);
 //   });
-//   next();
+//   next();+++
 // });
 
 // Ruta dinámica para la API
@@ -132,7 +130,7 @@ app.use(
 );
 
 app.use(
-  `/api/${apiVersion}/enviar-notificacion`,
+  `/api/${apiVersion}/notificacion`,
   require("./Routes/NotificacionRoute")
 );
 app.use(`/api/${apiVersion}/enviar-correo`, require("./Routes/CorreoRoute"));
