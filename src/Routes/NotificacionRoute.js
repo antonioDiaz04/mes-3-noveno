@@ -3,6 +3,7 @@ const router = express.Router();
 
 const NotificacionController = require("../Controllers/NotificacionController.js");
 
+router.post("/lleva-producto", NotificacionController.llevateTuProducto);
 router.post("/ejemplo", NotificacionController.enviarNotificacion);
 router.post("/", NotificacionController.enviarNotificacionyCuerpo);
 router.post("/enviar-notificacion", NotificacionController.enviarNotificacion);

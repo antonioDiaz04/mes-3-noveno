@@ -11,7 +11,6 @@ const EstadoCuentaSchema = mongoose.Schema({
 });
 
 const UsuarioSchema = mongoose.Schema({
-
   fotoDePerfil: { type: String },
   nombre: { type: String, required: true },
   apellidos: { type: String, required: true },

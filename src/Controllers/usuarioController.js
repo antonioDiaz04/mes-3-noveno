@@ -334,6 +334,7 @@ exports.editarUsuario = async (req, res) => {
 
     const { nombre, apellidos, telefono, direccion, edad, correo, contrasena } = sanitizeObject(req.body);
 
+    console.log("Datos recibidos:", req.body);
     const usuario = await Usuario.findById(id);
 
     if (!usuario) {
@@ -341,14 +342,14 @@ exports.editarUsuario = async (req, res) => {
       return res.status(404).send("Usuario no encontrado.");
     }
 
-    usuario.nombre = nombre;
-    usuario.apellidos = apellidos;
-    usuario.direccion = direccion || usuario.direccion;
+    usuario.nombre = nombre?.trim() || usuario.nombre;
+    usuario.apellidos = apellidos?.trim() || usuario.apellidos;
+    usuario.direccion = direccion?.trim() || usuario.direccion;
     usuario.edad = edad || usuario.edad;
-    usuario.email = correo;
-    usuario.telefono = telefono || usuario.telefono;
+    usuario.telefono = telefono?.trim() || usuario.telefono;
+    usuario.email = correo?.trim() || usuario.email;
 
-    if (contrasena) {
+    if (contrasena?.trim()) {
       if (contrasena.length < 8) {
         logger.warn("Contraseña demasiado corta");
         return res.status(400).send("La contraseña debe tener al menos 8 caracteres.");
@@ -360,10 +361,13 @@ exports.editarUsuario = async (req, res) => {
 
     await usuario.save();
 
-    // logger.info("Usuario actualizado correctamente");
-    res.status(200).send("Usuario actualizado correctamente.");
+    res.json({
+      success: true,
+      message: "Usuario actualizado correctamente"
+    });
   } catch (error) {
     // logger.error(`Error en editarUsuario: ${error.message}`);
+    console.log(error);
     res.status(500).send("Error en el servidor: " + error);
   }
 };
@@ -406,7 +410,6 @@ exports.subirFotoDelUsuario = async (req, res) => {
 
   }
 }
-
 
 exports.obtenerUsuarioById = async (req, res) => {
   try {

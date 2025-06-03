@@ -117,15 +117,21 @@ exports.enviarNotificacionLlevateCarrito = async (req, res) => {
       .status(400)
       .json({ message: "Token de suscripción no proporcionado" });
   } else {
-    console.log("token=>", req.body.token);
+    console.log("token recibido =>", req.body.token);
   }
 
   try {
-    const tokenData = JSON.parse(req.body.token);
+    // Solo parsear si el token es un string, de lo contrario usarlo directamente
+    const tokenData = typeof req.body.token === "string"
+      ? JSON.parse(req.body.token)
+      : req.body.token;
+
     const { endpoint, keys } = tokenData;
 
     if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
-      return res.status(400).json({ message: "Datos de suscripción inválidos" });
+      return res
+        .status(400)
+        .json({ message: "Datos de suscripción inválidos" });
     }
 
     const pushSubscription = {
@@ -150,7 +156,7 @@ exports.enviarNotificacionLlevateCarrito = async (req, res) => {
       },
     };
 
-    // Usar webpush.sendNotification en lugar de enviarNotificacion
+    // Enviar la notificación push
     await webpush.sendNotification(pushSubscription, JSON.stringify(payload));
     console.log("Notificación enviada correctamente");
 
@@ -158,11 +164,12 @@ exports.enviarNotificacionLlevateCarrito = async (req, res) => {
   } catch (err) {
     console.error("Error al enviar la notificación", err);
     res.status(500).json({
-      message: "Error al enviar la notificación desde",
+      message: "Error al enviar la notificación desde el backend",
       error: err.message,
     });
   }
 };
+
 
 // funcional
 exports.enviarNotificacionCorreo = async (req, res) => {
@@ -872,5 +879,63 @@ exports.enviarNotificacionMotivacionRenta = async (req, res) => {
     res
       .status(500)
       .json({ message: "Error al enviar la notificación", error: err.message });
+  }
+}
+
+exports.llevateTuProducto = async (req, res) => {
+  // Verificar si el token de suscripción se ha proporcionado en el cuerpo de la solicitud
+  if (!req.body.token) {
+    return res
+      .status(400)
+      .json({ message: "Token de suscripción no proporcionado" });
+  } else {
+    console.log("body=>", req.body);
+  }
+
+  try {
+    // Solo parsear si el token es un string, de lo contrario usarlo directamente
+    const tokenData = typeof req.body.token === "string"
+      ? JSON.parse(req.body.token)
+      : req.body.token;
+
+    const { endpoint, keys } = tokenData;
+
+    if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
+      return res
+        .status(400)
+        .json({ message: "Datos de suscripción inválidos" });
+    }
+
+    const pushSubscription = {
+      endpoint,
+      keys: {
+        p256dh: keys.p256dh,
+        auth: keys.auth,
+      },
+    };
+
+    const payload = {
+      notification: {
+        title: "¡Llévate tu producto!",
+        body: "Tu producto está listo para ser recogido. ¡Ven a recogerlo!",
+        image:
+          "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg",
+        actions: [
+          { action: "pick_up", title: "Recoger Producto" },
+          { action: "dismiss", title: "Descartar" },
+        ],
+        vibrate: [100, 50, 100],
+      },
+    };
+    await webpush.sendNotification(pushSubscription, JSON.stringify(payload));
+    console.log("Notificación enviada correctamente");
+    
+    res.status(200).json({ message: "Notificación enviada correctamente" });
+  } catch (err) {
+    console.error("Error al enviar la notificación", err);
+    res.status(500).json({
+      message: "Error al enviar la notificación",
+      error: err.message,
+    });
   }
 }

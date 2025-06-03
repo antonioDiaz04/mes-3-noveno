@@ -2,6 +2,8 @@ const Venta = require("../Models/VentaModel");
 const Producto = require("../Models/ProductModel");
 const { logger } = require("../util/logger");
 const sanitizeObject = require("../util/sanitize");
+const bcrypt = require('bcrypt');
+const Usuario = require('../Models/UsuarioModel');
 
 exports.obtenerProductosCompradoByIdUser = async (req, res) => {
   try {
@@ -25,10 +27,93 @@ exports.obtenerProductosCompradoByIdUser = async (req, res) => {
   }
 };
 
+
+// Función para generar una contraseña segura
+function generarPasswordSegura() {
+  const letras = 'abcdefghijklmnopqrstuvwxyz';
+  const mayusculas = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const numeros = '0123456789';
+  const especiales = '!@#$%^&*()_+[]{}|;:,.<>?';
+
+  // Asegurar que tenga al menos uno de cada tipo
+  let password = '';
+  password += mayusculas.charAt(Math.floor(Math.random() * mayusculas.length));
+  password += letras.charAt(Math.floor(Math.random() * letras.length));
+  password += numeros.charAt(Math.floor(Math.random() * numeros.length));
+  password += especiales.charAt(Math.floor(Math.random() * especiales.length));
+
+  // Rellenar hasta completar al menos 8 caracteres
+  const todos = letras + mayusculas + numeros + especiales;
+  while (password.length < 8) {
+    password += todos.charAt(Math.floor(Math.random() * todos.length));
+  }
+
+  // Mezclar la contraseña para que no siga un patrón predecible
+  return password.split('').sort(() => 0.5 - Math.random()).join('');
+}
+
 exports.crearVenta = async (req, res) => {
   try {
-    // Destructurar datos del body
-    const { usuarioId, productos, detallesPago, envio, resumen } = sanitizeObject(req.body);
+    const {
+      usuario,
+      productos,
+      detallesPago,
+      resumen,
+      esApartado,
+      anticipo,
+      fechaLimitePago
+    } = req.body;
+
+    // Validación de campos obligatorios
+    const camposFaltantes = [];
+    if (!usuario) camposFaltantes.push('usuario');
+    if (!productos || productos.length === 0) camposFaltantes.push('productos');
+    if (!detallesPago?.metodoPago) camposFaltantes.push('detallesPago.metodoPago');
+    if (resumen?.subtotal === undefined) camposFaltantes.push('resumen.subtotal');
+    if (resumen?.total === undefined) camposFaltantes.push('resumen.total');
+
+    // Validación para usuario nuevo
+    if (usuario?.isNuevo) {
+      if (!usuario.nombre) camposFaltantes.push('usuario.nombre');
+      if (!usuario.email) camposFaltantes.push('usuario.email');
+      if (!usuario.telefono) camposFaltantes.push('usuario.telefono');
+    }
+
+    if (camposFaltantes.length > 0) {
+      return res.status(400).json({
+        mensaje: 'Faltan campos obligatorios',
+        camposFaltantes
+      });
+    }
+
+    let usuarioId = usuario._id;
+
+    // Crear usuario si es nuevo
+    if (usuario.isNuevo) {
+      const telefonoFormateado = cleanPhoneNumber(usuario.telefono);
+      const yaExiste = await Usuario.findOne({ telefono: telefonoFormateado });
+      if (yaExiste) {
+        return res.status(400).json({ mensaje: 'El número telefónico ya está registrado' });
+      }
+
+      const passwordPlano = generarPasswordSegura();
+      const hashedPassword = await bcrypt.hash(passwordPlano, 10);
+
+      const nuevoUsuario = new Usuario({
+        nombre: usuario.nombre,
+        email: usuario.email,
+        telefono: telefonoFormateado,
+        password: hashedPassword,
+        tipoCliente: 'nuevo',
+        verificado: false,
+        preguntaSecreta: '',
+        respuestaSegura: ''
+      });
+
+      const usuarioGuardado = await nuevoUsuario.save();
+      usuarioId = usuarioGuardado._id;
+      console.log(`Contraseña generada para ${usuario.email}: ${passwordPlano}`);
+    }
 
     // Validar productos
     const productosValidados = await Promise.all(
@@ -42,13 +127,14 @@ exports.crearVenta = async (req, res) => {
           producto: producto._id, // Asegurando que sea el ID del producto
           cantidad: item.cantidad,
           precioUnitario: producto.precio,
+          descuento: item.descuento || 0, // Si se pasa un descuento
         };
       })
     );
 
     // Calcular subtotal
     const subtotal = productosValidados.reduce(
-      (total, producto) => total + producto.cantidad * producto.precioUnitario,
+      (total, producto) => total + producto.cantidad * producto.precioUnitario * (1 - producto.descuento / 100),
       0
     );
 
@@ -62,22 +148,14 @@ exports.crearVenta = async (req, res) => {
       },
       resumen: {
         subtotal: subtotal,
+        total: subtotal + (resumen?.impuestos || 0) - (resumen?.descuentos || 0),
         impuestos: resumen?.impuestos || 0,
         descuentos: resumen?.descuentos || 0,
-        total:
-          subtotal + (resumen?.impuestos || 0) - (resumen?.descuentos || 0),
+        anticipo: anticipo || 0,
+        restante: anticipo ? subtotal + (resumen?.impuestos || 0) - (resumen?.descuentos || 0) - anticipo : 0,
       },
-      envio: {
-        direccion: {
-          calle: envio.direccion.calle,
-          ciudad: envio.direccion.ciudad,
-          estado: envio.direccion.estado,
-          codigoPostal: envio.direccion.codigoPostal,
-          pais: envio.direccion.pais || "México",
-        },
-        metodoEnvio: envio.metodoEnvio || "Estándar",
-        costoEnvio: envio.costoEnvio || 0,
-      },
+      esApartado: esApartado || false,
+      fechaLimitePago: esApartado ? fechaLimitePago : null, // Solo aplica si es apartado
     });
 
     // Guardar venta
@@ -88,13 +166,11 @@ exports.crearVenta = async (req, res) => {
       venta: ventaGuardada,
     });
   } catch (error) {
-    logger.error(`Error en creación de venta: ${error.message}`);
-    res.status(500).json({
-      mensaje: "Error al crear venta",
-      error: error.message,
-    });
+    res.status(500).json({ mensaje: "Error al crear venta", error: error.message });
   }
 };
+
+
 
 // Listar Ventas de Usuario
 exports.listarVentasUsuario = async (req, res) => {
