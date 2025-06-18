@@ -16,6 +16,13 @@ const DispositivoWearSchema = mongoose.Schema({
   usuario: { type: mongoose.Schema.Types.ObjectId, ref: "Usuarios", required: true },
   fechaVinculacion: { type: Date, default: Date.now },
   estado: { type: String, default: "vinculado" },
+  preferencias: {
+    notificaciones: { type: Boolean, default: true },
+    vibracion: { type: Boolean, default: true },
+    tema: { type: String, enum: ["claro", "oscuro", "sistema"], default: "sistema" },
+    idioma: { type: String, default: "es" },
+  },
+
 });
 
 
@@ -40,7 +47,7 @@ const UsuarioSchema = mongoose.Schema({
   isClienteFrecuente: { type: Boolean, required: false, default: false },
   isNuevo: { type: Boolean, required: false, default: true },
   estadoCuenta: { type: mongoose.Schema.Types.ObjectId, ref: "EstadoCuenta" },
- dispositivoWear: { type: mongoose.Schema.Types.ObjectId, ref: "DispositivoWear" },
+  dispositivoWear: { type: mongoose.Schema.Types.ObjectId, ref: "DispositivoWear" },
 });
 
 const EstadoCuenta = mongoose.model("EstadoCuenta", EstadoCuentaSchema);
