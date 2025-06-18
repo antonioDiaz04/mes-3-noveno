@@ -1,9 +1,11 @@
+const { Usuario } = require("../Models/UsuarioModel");
 const axios = require("axios");
+
+
+
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");const crypto = require('crypto');
-const { Usuario, DispositivoWear } = require("../Models/UsuarioModel");
+const bcrypt = require("bcryptjs");
 const sanitizeObject = require("../util/sanitize");
-const logger = require('../../src/util/logger');
 
 const verifyTurnstile = async (captchaToken) => {
   try {
@@ -21,6 +23,7 @@ const verifyTurnstile = async (captchaToken) => {
     return false;
   }
 };
+const logger = require('../../src/util/logger');
 
 exports.Login = async (req, res) => {
   const logBase = {
@@ -36,7 +39,7 @@ exports.Login = async (req, res) => {
 
     // Contexto adicional para logs
 
-    const logContext = {
+    const logContext = { 
       ...logBase,
       email: email || null,
       telefono: telefono || null
@@ -74,8 +77,8 @@ exports.Login = async (req, res) => {
 
     if (estadoCuenta.estado === "bloqueada") {
       const ahora = Date.now();
-      const tiempoRestante = estadoCuenta.fechaDeUltimoBloqueo.getTime() +
-        estadoCuenta.tiempoDeBloqueo * 1000 - ahora;
+      const tiempoRestante = estadoCuenta.fechaDeUltimoBloqueo.getTime() + 
+                           estadoCuenta.tiempoDeBloqueo * 1000 - ahora;
 
       if (tiempoRestante > 0) {
         const logData = {
@@ -100,7 +103,7 @@ exports.Login = async (req, res) => {
       estadoCuenta.intentosFallidos = 0;
       estadoCuenta.fechaDeUltimoBloqueo = null;
       await estadoCuenta.save();
-
+      
       // logger.info('Cuenta desbloqueada automáticamente', logContext);
     }
 
@@ -208,10 +211,10 @@ exports.Login = async (req, res) => {
       maxAge: 3600000,
     });
 
-    return res.status(200).json({
-      token,
-      rol: usuario.rol,
-      captchaValid: isCaptchaValid
+    return res.status(200).json({ 
+      token, 
+      rol: usuario.rol, 
+      captchaValid: isCaptchaValid 
     });
 
   } catch (error) {
@@ -225,7 +228,7 @@ exports.Login = async (req, res) => {
 
     // logger.error('Error en el servidor durante el login', errorLog);
 
-    return res.status(500).json({
+    return res.status(500).json({ 
       message: "Error en el servidor",
       errorId: logBase.timestamp // Para correlacionar con logs
     });
@@ -246,7 +249,7 @@ exports.signInGoogleFacebook = async (req, res) => {
     if (usuario) {
       // Manejar cuenta existente
       const estadoCuenta = usuario.estadoCuenta;
-
+      
       if (estadoCuenta.estado === "bloqueada") {
         const ahora = Date.now();
         const tiempoRestante =
@@ -274,8 +277,8 @@ exports.signInGoogleFacebook = async (req, res) => {
       // Crear nuevo usuario para Google/Facebook
       const primerUsuario = await Usuario.findOne().populate("estadoCuenta");
       if (!primerUsuario || !primerUsuario.estadoCuenta) {
-        return res.status(500).json({
-          message: "No se pudo obtener la configuración de estado de cuenta"
+        return res.status(500).json({ 
+          message: "No se pudo obtener la configuración de estado de cuenta" 
         });
       }
 
@@ -297,7 +300,7 @@ exports.signInGoogleFacebook = async (req, res) => {
         rol: "usuario", // Rol por defecto
         uid // ID único del proveedor OAuth
       });
-
+      
       usuario = await Usuario.findById(usuario._id).populate("estadoCuenta");
     }
 
@@ -320,8 +323,8 @@ exports.signInGoogleFacebook = async (req, res) => {
       maxAge: 86400000, // 24 horas en ms
     });
 
-    return res.status(200).json({
-      token,
+    return res.status(200).json({ 
+      token, 
       rol: usuario.rol,
       usuario: {
         nombre: usuario.nombre,
@@ -332,110 +335,116 @@ exports.signInGoogleFacebook = async (req, res) => {
 
   } catch (error) {
     console.error("Error en el servidor:", error);
-    return res.status(500).json({
+    return res.status(500).json({ 
       message: "Error en el servidor",
-      error: error.message
+      error: error.message 
     });
   }
 };
-
-exports.vincularDispositivoWear = async (req, res) => {
-  const { usuarioId, deviceId, token } = req.body;
-
-  if (!usuarioId || !deviceId || !token) {
-    return res.status(400).json({ message: "Faltan datos requeridos" });
-  }
-
+exports.signInGoogleFacebook = async (req, res) => {
   try {
-    // Verificar si ya existe el dispositivo con ese ID
-    const yaExiste = await DispositivoWear.findOne({ deviceId });
+    const sanitizedData = sanitizeObject(req.body);
+    const { displayName, email, photoURL, uid } = sanitizedData;
 
-    if (yaExiste) {
-      return res.status(200).json({ message: "Dispositivo ya está vinculado" });
+    if (!email) {
+      return res.status(400).json({ message: "El email es requerido" });
     }
 
-    // Crear nuevo documento de DispositivoWear
-    const nuevoDispositivo = new DispositivoWear({
-      deviceId,
-      token,
-      usuario: usuarioId,
-    });
+    // Buscar usuario existente
+    let usuario = await Usuario.findOne({ email }).populate("estadoCuenta");
 
-    await nuevoDispositivo.save();
-
-    // Asociar el dispositivo al usuario
-    await Usuario.findByIdAndUpdate(usuarioId, {
-      dispositivoWear: nuevoDispositivo._id,
-    });
-
-    return res.status(200).json({ message: "Dispositivo vinculado con éxito" });
-
-  } catch (error) {
-    console.error("Error vinculando dispositivo:", error);
-    return res.status(500).json({ message: "Error interno del servidor" });
-  }
-};
-
-exports.confirmarVinculacion = async (req, res) => {
-  const { deviceId } = req.params;
-
-  try {
-    const dispositivo = await DispositivoWear.findOne({ deviceId }).populate('usuario');
-
-    if (!dispositivo || dispositivo.estado !== 'vinculado') {
-      return res.status(404).json({
-        success: false,
-        message: "Dispositivo no vinculado"
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      vinculado: true,
-      usuario: {
-        _id: dispositivo.usuario._id,
-        nombre: dispositivo.usuario.nombre,
-        apellidos: dispositivo.usuario.apellidos,
-        telefono: dispositivo.usuario.telefono,
-        email: dispositivo.usuario.email,
-        rol: dispositivo.usuario.rol,
-      },
-      fechaVinculacion: dispositivo.fechaVinculacion
-    });
-
-  } catch (error) {
-    console.error("Error verificando vinculación:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Error interno del servidor"
-    });
-  }
-};
-
-exports.obtenerTokenPorDeviceId = async (req, res) => {
-  const { deviceId } = req.params;
-
-  if (!deviceId) return res.status(400).json({ message: "deviceId requerido" });
-
-  try {
-    let dispositivo = await DispositivoWear.findOne({ deviceId });
-
-    if (!dispositivo) {
-
-      const buffer = crypto.randomBytes(2);
-      const numero = buffer.readUInt16BE(0);
-      const nuevoToken = (numero % 9000) + 1000;
-
-      console.log(nuevoToken)
+    if (usuario) {
+      // Manejar cuenta existente
+      const estadoCuenta = usuario.estadoCuenta;
       
-      dispositivo = new DispositivoWear({ deviceId, token: nuevoToken, estado: 'pendiente' });
-      await dispositivo.save();
+      if (estadoCuenta.estado === "bloqueada") {
+        const ahora = Date.now();
+        const tiempoRestante =
+          estadoCuenta.fechaDeUltimoBloqueo.getTime() +
+          estadoCuenta.tiempoDeBloqueo * 1000 -
+          ahora;
+
+        if (tiempoRestante > 0) {
+          return res.status(403).json({
+            message: `Cuenta bloqueada. Intenta nuevamente en ${Math.ceil(
+              tiempoRestante / 1000
+            )} segundos.`,
+            tiempo: estadoCuenta.tiempoDeBloqueo,
+            numeroDeIntentos: estadoCuenta.intentosFallidos,
+          });
+        }
+
+        // Restablecer cuenta bloqueada
+        estadoCuenta.estado = "activa";
+        estadoCuenta.intentosFallidos = 0;
+        estadoCuenta.fechaDeUltimoBloqueo = null;
+        await estadoCuenta.save();
+      }
+    } else {
+      // Crear nuevo usuario para Google/Facebook
+      const primerUsuario = await Usuario.findOne().populate("estadoCuenta");
+      if (!primerUsuario || !primerUsuario.estadoCuenta) {
+        return res.status(500).json({ 
+          message: "No se pudo obtener la configuración de estado de cuenta" 
+        });
+      }
+
+      const { intentosPermitidos, tiempoDeBloqueo } = primerUsuario.estadoCuenta;
+      const nuevoEstadoCuenta = await EstadoCuenta.create({
+        intentosPermitidos,
+        tiempoDeBloqueo,
+        estado: "activa"
+      });
+
+      usuario = await Usuario.create({
+        fotoDePerfil: photoURL,
+        nombre: displayName,
+        email,
+        estadoCuenta: nuevoEstadoCuenta._id,
+        token: "",
+        codigoVerificacion: null,
+        verificado: true, // Usuarios de redes sociales verificados
+        rol: "usuario", // Rol por defecto
+        uid // ID único del proveedor OAuth
+      });
+      
+      usuario = await Usuario.findById(usuario._id).populate("estadoCuenta");
     }
 
-    return res.status(200).json({ token: dispositivo.token, estado: dispositivo.estado });
+    // Resetear intentos fallidos
+    usuario.estadoCuenta.intentosFallidos = 0;
+    await usuario.estadoCuenta.save();
+
+    // Generar token JWT
+    const token = jwt.sign(
+      { _id: usuario._id, rol: usuario.rol },
+      process.env.JWT_SECRET || "secret",
+      { expiresIn: "24h" }
+    );
+
+    // Configurar cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 86400000, // 24 horas en ms
+    });
+
+    return res.status(200).json({ 
+      token, 
+      rol: usuario.rol,
+      usuario: {
+        nombre: usuario.nombre,
+        email: usuario.email,
+        fotoDePerfil: usuario.fotoDePerfil
+      }
+    });
 
   } catch (error) {
-    console.error('Error al obtener token:', error);
-    return res.status(500).json({ message: "Error interno del servidor" });
+    console.error("Error en el servidor:", error);
+    return res.status(500).json({ 
+      message: "Error en el servidor",
+      error: error.message 
+    });
   }
 };

@@ -10,15 +10,6 @@ const EstadoCuentaSchema = mongoose.Schema({
   tiempoDeBloqueo: { type: Number, default: 30 },
 });
 
-const DispositivoWearSchema = mongoose.Schema({
-  deviceId: { type: String, required: true, unique: true },
-  token: { type: String, required: true },
-  usuario: { type: mongoose.Schema.Types.ObjectId, ref: "Usuarios", required: true },
-  fechaVinculacion: { type: Date, default: Date.now },
-  estado: { type: String, default: "vinculado" },
-});
-
-
 const UsuarioSchema = mongoose.Schema({
   fotoDePerfil: { type: String },
   nombre: { type: String, required: true },
@@ -37,16 +28,15 @@ const UsuarioSchema = mongoose.Schema({
   preguntaSecreta: { type: String, required: false, default: "" },
   respuestaSegura: { type: String, required: false, default: "" },
   fechaDeRegistro: { type: Date, default: Date.now() },
+  estadoCuenta: { type: mongoose.Schema.Types.ObjectId, ref: "EstadoCuenta" },
   isClienteFrecuente: { type: Boolean, required: false, default: false },
   isNuevo: { type: Boolean, required: false, default: true },
-  estadoCuenta: { type: mongoose.Schema.Types.ObjectId, ref: "EstadoCuenta" },
- dispositivoWear: { type: mongoose.Schema.Types.ObjectId, ref: "DispositivoWear" },
 });
 
 const EstadoCuenta = mongoose.model("EstadoCuenta", EstadoCuentaSchema);
-const DispositivoWear = mongoose.model("DispositivoWear", DispositivoWearSchema);
 const Usuario = mongoose.model("Usuarios", UsuarioSchema);
 
+//  Middleware pre-save para limpiar el número de teléfono
 UsuarioSchema.pre("save", function (next) {
   if (this.telefono) {
     // Remover espacios del número de teléfono
@@ -57,6 +47,5 @@ UsuarioSchema.pre("save", function (next) {
 
 module.exports = {
   Usuario,
-  DispositivoWear,
   EstadoCuenta,
 };
