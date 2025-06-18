@@ -1,6 +1,6 @@
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs"); const crypto = require('crypto');
+const bcrypt = require("bcryptjs");const crypto = require('crypto');
 const { Usuario, DispositivoWear } = require("../Models/UsuarioModel");
 const sanitizeObject = require("../util/sanitize");
 const logger = require('../../src/util/logger');
@@ -359,14 +359,7 @@ exports.vincularDispositivoWear = async (req, res) => {
       deviceId,
       token,
       usuario: usuarioId,
-      preferencias: {
-        notificaciones: preferencias?.notificaciones ?? true,
-        vibracion: preferencias?.vibracion ?? true,
-        tema: preferencias?.tema ?? "sistema",
-        idioma: preferencias?.idioma ?? "es",
-      },
     });
-
 
     await nuevoDispositivo.save();
 
@@ -407,8 +400,7 @@ exports.confirmarVinculacion = async (req, res) => {
         email: dispositivo.usuario.email,
         rol: dispositivo.usuario.rol,
       },
-      fechaVinculacion: dispositivo.fechaVinculacion,
-      preferencias: dispositivo.preferencias
+      fechaVinculacion: dispositivo.fechaVinculacion
     });
 
   } catch (error) {
@@ -435,7 +427,7 @@ exports.obtenerTokenPorDeviceId = async (req, res) => {
       const nuevoToken = (numero % 9000) + 1000;
 
       console.log(nuevoToken)
-
+      
       dispositivo = new DispositivoWear({ deviceId, token: nuevoToken, estado: 'pendiente' });
       await dispositivo.save();
     }
