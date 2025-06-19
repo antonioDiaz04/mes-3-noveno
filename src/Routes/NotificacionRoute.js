@@ -24,6 +24,8 @@ router.post("/recordatorio-devolucion-renta", NotificacionController.enviarNotif
 // router.post("/motivacion-renta", NotificacionController.enviarNotificacionMotivacionRenta); // Nueva ruta para enviar notificación de nuevos productos
 
 
+router.get("/obtener-notificaciones-MyId/:userId", NotificacionController.obtenerNotificacionesByUserId); // Ruta para obtener notificaciones por ID de usuariAdd commentMore actions
+router.delete("/eliminarNotificacionById/:id", NotificacionController.eliminarNotificacionById); // Ruta para obtener notificaciones por ID de usuari
 
-router.get("/obtener-notificaciones-MyId/:userId", NotificacionController.obtenerNotificacionesByUserId); // Ruta para obtener notificaciones por ID de usuario
+
 module.exports = router;

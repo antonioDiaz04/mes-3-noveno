@@ -275,3 +275,38 @@ exports.obtenerNotificacionesByUserId=async (req, res) => {
         });
     }
 }
+
+
+exports.eliminarNotificacionById = async (req, res) => {
+    try {
+        const { id } = req.params; // El id de la notificación a eliminar
+        console.log(id)
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "ID de notificación no proporcionado"
+            });
+        }
+
+        // Buscar y eliminar la notificación
+        const resultado = await Notificacion.findByIdAndDelete(id);
+
+        if (!resultado) {
+            return res.status(404).json({
+                success: false,
+                message: "Notificación no encontrada"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Notificación eliminada correctamente"
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: "Error al eliminar la notificación",
+            error: err.message
+        });
+    }
+}
