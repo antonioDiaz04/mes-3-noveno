@@ -2,9 +2,9 @@ const webpush = require('web-push');
 const Notificacion = require('../Models/NotificacionModel.js');
 const Suscripcion = require('../Models/Suscripcion.js');
 const {
-  tiposNotificacion,
-  prioridadesNotificacion,
-  mensajesNotificacion
+    tiposNotificacion,
+    prioridadesNotificacion,
+    mensajesNotificacion
 } = require('../config/notificaciones.config');
 
 const imagenDefault = "https://scontent.fver2-1.fna.fbcdn.net/v/t39.30808-6/428626270_122131445744124868_2285920480645454536_n.jpg"; // Imagen por defecto para notificaciones
@@ -242,7 +242,7 @@ async function enviarNotificacionPushGenerica({ token, userId, email, titulo, cu
 
 
 
-exports.obtenerNotificacionesByUserId=async (req, res) => {
+exports.obtenerNotificacionesByUserId = async (req, res) => {
     try {
         const { userId } = req.params;
 
@@ -255,7 +255,7 @@ exports.obtenerNotificacionesByUserId=async (req, res) => {
 
         const notificaciones = await Notificacion.find({ usuario: userId }).sort({ fecha: -1 });
 
-        if (notificaciones.length === 0) {
+        if (!notificaciones) {
             return res.status(404).json({
                 success: false,
                 message: "No se encontraron notificaciones para este usuario"
