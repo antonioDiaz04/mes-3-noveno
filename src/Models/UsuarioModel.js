@@ -21,8 +21,6 @@ const UsuarioSchema = mongoose.Schema({
     type: String, required: false, default: "CLIENTE"
   },
   password: { type: String, required: false, default: "" },
-  preguntaSecreta: { type: String, required: false, default: "" },
-  respuestaSegura: { type: String, required: false, default: "" },
   fechaDeRegistro: { type: Date, default: Date.now() },
   estadoCuenta: { type: mongoose.Schema.Types.ObjectId, ref: "EstadoCuenta" },
   isClienteFrecuente: { type: Boolean, required: false, default: false },

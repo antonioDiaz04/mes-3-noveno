@@ -19,6 +19,69 @@ webpush.setVapidDetails(
     vapidKeys.privateKey
 );
 
+
+// funcion para notificacion a usuarios no logeados
+exports.enviarNotificacionLlevateCarritoNoLogeados = async (req, res) => {
+    try {
+    //    sin correo ni userId
+        const { token } = req.body;
+        if (!token) {
+            return res.status(400).json({
+                success: false,
+                message: "Token de suscripción no proporcionado"
+
+            });
+        }
+        if (!token.endpoint || !token.keys || !token.keys.auth || !token.keys.p256dh) {
+            return res.status(400).json({
+                success: false,
+                message: "Estructura del token inválida"
+            });
+        }
+        const resultado = await enviarNotificacionPushGenericaUsuarioNoLogeado({
+            token,
+            titulo: "¡Llévate tu carrito!",
+            cuerpo: "Tu carrito está listo para ser revisado. ¡No te lo pierdas!",
+            tipo: "alerta",
+            image: imagenDefault,
+            actions: [
+                { action: "view_cart", title: "Ver Carrito", icon: "/icons/cart.png" },
+                { action: "dismiss", title: "Descartar", icon: "/icons/close.png" }
+            ],
+            vibrate: [100, 50, 100]
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Notificación enviada con éxito",
+            data: resultado
+        });
+
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: "Error al enviar la notificación",
+            error: err.message
+        });
+    }
+};
+
+async function enviarNotificacionPushGenericaUsuarioNoLogeado({ token, titulo, cuerpo, tipo = 'info', image, actions = [], vibrate }) {
+    let tokenData;
+    try {
+        tokenData = await webpush.sendNotification(token, JSON.stringify({
+            title: titulo,
+            body: cuerpo,
+            icon: image,
+            actions: actions,
+            vibrate: vibrate
+        }));
+    } catch (error) {
+        console.error("Error al enviar notificación:", error);
+        throw new Error("Error al enviar notificación");
+    }
+}
+
 // Función auxiliar para validar token y guardar suscripción si no existe
 async function validarYGuardarSuscripcion({ token, userId, email }) {
     if (!token || !token.endpoint || !token.keys || !token.keys.p256dh || !token.keys.auth) {
@@ -95,11 +158,48 @@ exports.enviarNotificacionLlevateCarrito = async (req, res) => {
     }
 };
 
-
-
-
-
-
+exports.enviarNotificacionCorreo = async (req, res) => {
+    try {
+        const { token, userId, email } = req.body;
+        if (!token) {
+            return res.status(400).json({
+                success: false,
+                message: "Token de suscripción no proporcionado"
+            });
+        }
+        if (!token.endpoint || !token.keys || !token.keys.auth || !token.keys.p256dh) {
+            return res.status(400).json({
+                success: false,
+                message: "Estructura del token inválida"
+            });
+        }
+        const resultado = await enviarNotificacionPushGenerica({
+            token,
+            userId,
+            email,
+            titulo: "Código enviado",
+            cuerpo: "Hemos enviado un código a tu correo electrónico. Por favor, revisa tu bandeja de entrada.",
+            tipo: "info",
+            image: imagenDefault,
+            actions: [
+                { action: "check_email", title: "Revisar Correo", icon: "/icons/email.png" },
+                { action: "dismiss", title: "Descartar", icon: "/icons/close.png" }
+            ],
+            vibrate: [100, 50, 100]
+        });
+        res.status(200).json({
+            success: true,
+            message: "Notificación enviada con éxito",
+            data: resultado
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: "Error al enviar la notificación",
+            error: err.message
+        });
+    }
+};
 
 
 exports.enviarNotificacionRecordatorioDevolucionRenta = async (req, res) => {

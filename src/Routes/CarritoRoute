@@ -1,0 +1,9 @@
+const express = require('express');
+const router = express.Router();
+const carritoController = require('../Controllers/carritoController');
+const authMiddleware = require('../middlewares/auth');
+
+router.post('/guardar', authMiddleware, carritoController.guardarCarrito);
+router.delete('/vaciar', authMiddleware, carritoController.vaciarCarrito);
+
+module.exports = router;

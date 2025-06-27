@@ -8,7 +8,7 @@ const NotificacionController = require("../Controllers/NotificacionController.js
 // router.post("/", NotificacionController.enviarNotificacionyCuerpo);
 // router.post("/enviar-notificacion", NotificacionController.enviarNotificacion);
 router.post("/llevate-carrito", NotificacionController.enviarNotificacionLlevateCarrito); // Nueva ruta para enviar notificación de nuevos productos
-// router.post("/revisar-correo", NotificacionController.enviarNotificacionCorreo);
+router.post("/revisar-correo", NotificacionController.enviarNotificacionCorreo);
 // router.post("/enviar-notificacion-nuevos-productos", NotificacionController.enviarNotificacionNuevosProductos); // Nueva ruta para enviar notificación de nuevos productos
 // router.post("/enviar-notificacion-comentarios", NotificacionController.enviarNotificacionComentarios); // Nueva ruta para enviar notificación de nuevos productos
 // router.post("/enviar-notificacion-comentarios-respuesta", NotificacionController.enviarNotificacionComentariosRespuesta); // Nueva ruta para enviar notificación de nuevos productos

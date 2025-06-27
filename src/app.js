@@ -144,7 +144,8 @@ app.use(`/api/${apiVersion}/renta`, require("./Routes/Renta&Venta"));
 //   require("./Routes/EstadisticasRoute")
 // );
 app.use(`/api/${apiVersion}/proceso`, require("./Routes/Renta&Venta"));
-
+// ruta carrito
+app.use(`/api/${apiVersion}/carrito`, require("./Routes/CarritoRoute"));
 
 // Ruta para acciones control de Administrador de la página
 app.use(`/api/${apiVersion}/admin`, require("./Routes/PrivadoRoute"));

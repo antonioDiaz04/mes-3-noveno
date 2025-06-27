@@ -189,10 +189,10 @@ exports.checkCode = async (req, res) => {
 
 exports.crearUsuario = async (req, res) => {
   try {
-    let { nombre, telefono, email, password, preguntaSecreta, respuestaSegura } = req.body;
+    let { nombre, telefono, email, password } = req.body;
 
     // Validar que todos los campos estén presentes
-    if (!nombre || !telefono || !email || !password || !preguntaSecreta || !respuestaSegura) {
+    if (!nombre || !telefono || !email || !password) {
       return res.status(400).send({ message: "Todos los campos son obligatorios" });
     }
 
@@ -242,9 +242,7 @@ exports.crearUsuario = async (req, res) => {
       estadoCuenta: nuevoEstadoCuenta._id,
       token: "",
       codigoVerificacion: null,
-      verificado: false,
-      preguntaSecreta,
-      respuestaSegura,
+      verificado: false
     });
 
     const resultado = await usuario.save();

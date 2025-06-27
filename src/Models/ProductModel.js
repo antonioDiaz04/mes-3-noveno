@@ -45,7 +45,7 @@ const productoSchema = new mongoose.Schema({
     type: Number,
     required: true, // Requerido
     min: 0, // Precio no puede ser negativo
-  },
+  }, 
   mostrarPrecioAnterior: {
     type: Boolean,
     required: false, // Requerido
