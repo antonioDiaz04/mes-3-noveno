@@ -16,7 +16,7 @@ const DispositivoWearSchema = mongoose.Schema({
   usuario: { type: mongoose.Schema.Types.ObjectId, ref: "Usuarios", required: true },
   fechaVinculacion: { type: Date, default: Date.now },
   estado: { type: String, default: "vinculado" },
-   preferencias: {
+  preferencias: {
     notificaciones: { type: Boolean, default: true },
     vibracion: { type: Boolean, default: true },
     tema: { type: String, enum: ["claro", "oscuro", "sistema"], default: "sistema" },
@@ -50,11 +50,6 @@ const UsuarioSchema = mongoose.Schema({
   dispositivoWear: { type: mongoose.Schema.Types.ObjectId, ref: "DispositivoWear" },
 });
 
-
-const EstadoCuenta = mongoose.model("EstadoCuenta", EstadoCuentaSchema);
-const DispositivoWear = mongoose.model("DispositivoWear", DispositivoWearSchema);
-const Usuario = mongoose.model("Usuarios", UsuarioSchema);
-
 //  Middleware pre-save para limpiar el número de teléfono
 UsuarioSchema.pre("save", function (next) {
   if (this.telefono) {
@@ -63,6 +58,11 @@ UsuarioSchema.pre("save", function (next) {
   }
   next();
 });
+
+
+const EstadoCuenta = mongoose.model("EstadoCuenta", EstadoCuentaSchema);
+const DispositivoWear = mongoose.model("DispositivoWear", DispositivoWearSchema);
+const Usuario = mongoose.model("Usuarios", UsuarioSchema);
 
 module.exports = {
   Usuario,

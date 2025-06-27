@@ -2,10 +2,10 @@ const { Usuario, EstadoCuenta } = require("../Models/UsuarioModel");
 require("../Routes/UsuarioRoute");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const fs = require("fs-extra");
 const sanitizeObject = require("../util/sanitize");
 const { logger } = require("../util/logger");
-const { uploadImage, deleteImage } = require("../cloudinary/cloudinaryConfig");
+const { uploadImage } = require("../cloudinary/cloudinaryConfig");
+const Reporte = require('../Models/Reportes.Model');
 
 exports.perfilUsuario = async (req, res) => {
   try {
@@ -27,6 +27,25 @@ exports.perfilUsuario = async (req, res) => {
     return res.status(500).json({ mensaje: "Error en el servidor" });
   }
 };
+
+exports.crearReporte = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(req.body);
+    const { tipo, descripcion } = req.body;
+    const nuevoReporte = new Reporte({
+      usuario: id,
+      tipo: tipo,
+      descripcion: descripcion,
+    });
+    await nuevoReporte.save();
+    res.status(201).json({ message: 'Reporte enviado exitosamente' });
+  } catch (error) {
+    console.error('Error al guardar reporte:', error);
+    res.status(500).json({ message: 'Error al enviar el reporte' });
+  }
+};
+
 exports.consulrarPerfilUsuarioId = async (req, res) => {
   try {
     const { id } = req.params;
