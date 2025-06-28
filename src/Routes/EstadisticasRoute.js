@@ -1,27 +1,14 @@
-// const express = require("express");
-// const {
-//   obtenerClientesFrecuentes,
-//   obtenerClientesActivos,
-//   obtenerGastoPromedio,
-//   obtenerIngresosPorMes,
-//   obtenerIngresosTotales,
-//   obtenerMetodosPago,
-//   obtenerProductosPopulares,
-//   obtenerRentasRetrasadas,
-//   obtenerTotales,
-// } = require("../Controllers/EstadisticasController.js");
+const express = require("express");
+const dashboardController
+    = require("../Controllers/EstadisticasController.js");
 
-// const router = express.Router();
+const router = express.Router();
 
-// // router.get("/", obtenerEstadisticas);
-// router.get("/totales", obtenerTotales);
-// router.get("/ingresos", obtenerIngresosTotales);
-// router.get("/productos-populares", obtenerProductosPopulares);
-// router.get("/clientes-activos", obtenerClientesActivos);
-// router.get("/ingresos-mensuales", obtenerIngresosPorMes);
-// router.get("/metodos-pago", obtenerMetodosPago);
-// router.get("/rentas-retrasadas", obtenerRentasRetrasadas);
-// router.get("/clientes-frecuentes", obtenerClientesFrecuentes);
-// router.get("/gasto-promedio", obtenerGastoPromedio);
+// Rutas separadas por sección
+router.get('/resumen/ventas', dashboardController.obtenerResumenVentas);
+router.get('/resumen/rentas', dashboardController.obtenerResumenRentas);
+router.get('/resumen/clientes', dashboardController.obtenerClientesUnicos);
+router.get('/resumen/productos-mas-vendidos', dashboardController.obtenerProductosMasVendidos);
+router.get('/resumen/graficas', dashboardController.obtenerDatosGraficos);
 
-// module.exports = router;
+module.exports = router;

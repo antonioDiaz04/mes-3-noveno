@@ -126,6 +126,4 @@ VentaSchema.pre("save", function (next) {
 VentaSchema.index({ usuario: 1, createdAt: -1 });
 VentaSchema.index({ estado: 1, createdAt: -1 });
 
-const Venta = mongoose.model("Venta", VentaSchema);
-
-module.exports = Venta;
+module.exports = mongoose.models.Venta || mongoose.model("Venta", VentaSchema);

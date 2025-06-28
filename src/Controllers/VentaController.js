@@ -58,22 +58,31 @@ exports.crearVenta = async (req, res) => {
       usuario,
       productos,
       detallesPago,
-      resumen,
+      notas,
       esApartado,
-      anticipo,
-      fechaLimitePago
-    } = req.body;
+      resumen
+    } = sanitizeObject(req.body);
+
+    const { anticipo, total } = resumen || {};
+    console.log("Datos recibidos para crear venta:", req.body);
+
+    const camposFaltantes = [];
 
     // Validación de campos obligatorios
-    const camposFaltantes = [];
     if (!usuario) camposFaltantes.push('usuario');
     if (!productos || productos.length === 0) camposFaltantes.push('productos');
     if (!detallesPago?.metodoPago) camposFaltantes.push('detallesPago.metodoPago');
-    if (resumen?.subtotal === undefined) camposFaltantes.push('resumen.subtotal');
-    if (resumen?.total === undefined) camposFaltantes.push('resumen.total');
 
-    // Validación para usuario nuevo
-    if (usuario?.isNuevo) {
+    // Validar subtotal y total solo si resumen existe y tiene esos campos
+    if (resumen) {
+      if (resumen.subtotal === undefined) camposFaltantes.push('resumen.subtotal');
+      if (resumen.total === undefined) camposFaltantes.push('resumen.total');
+    } else {
+      camposFaltantes.push('resumen');
+    }
+
+    // Validación para usuario nuevo (solo si usuario es objeto)
+    if (typeof usuario === 'object' && usuario?.isNuevo) {
       if (!usuario.nombre) camposFaltantes.push('usuario.nombre');
       if (!usuario.email) camposFaltantes.push('usuario.email');
       if (!usuario.telefono) camposFaltantes.push('usuario.telefono');
@@ -86,10 +95,10 @@ exports.crearVenta = async (req, res) => {
       });
     }
 
-    let usuarioId = usuario._id;
+    let usuarioId = typeof usuario === 'object' ? usuario._id : usuario; // Si es string usarlo directamente
 
     // Crear usuario si es nuevo
-    if (usuario.isNuevo) {
+    if (typeof usuario === 'object' && usuario.isNuevo) {
       const telefonoFormateado = cleanPhoneNumber(usuario.telefono);
       const yaExiste = await Usuario.findOne({ telefono: telefonoFormateado });
       if (yaExiste) {
@@ -124,19 +133,25 @@ exports.crearVenta = async (req, res) => {
           throw new Error(`Producto ${item.producto} no encontrado`);
         }
         return {
-          producto: producto._id, // Asegurando que sea el ID del producto
+          producto: producto._id,
           cantidad: item.cantidad,
-          precioUnitario: producto.precio,
-          descuento: item.descuento || 0, // Si se pasa un descuento
+          // Usa el precioUnitario enviado, si prefieres validarlo contra base, cambia aquí
+          precioUnitario: item.precioUnitario || producto.precio,
+          descuento: item.descuento || 0,
         };
       })
     );
 
-    // Calcular subtotal
+    // Calcular subtotal con precios validados
     const subtotal = productosValidados.reduce(
       (total, producto) => total + producto.cantidad * producto.precioUnitario * (1 - producto.descuento / 100),
       0
     );
+
+    // Ajustar total con impuestos y descuentos del resumen, o usar subtotal si no vienen
+    const impuestos = resumen?.impuestos || 0;
+    const descuentos = resumen?.descuentos || 0;
+    const totalCalculado = subtotal + impuestos - descuentos;
 
     // Crear nueva venta con datos dinámicos
     const nuevaVenta = new Venta({
@@ -144,18 +159,22 @@ exports.crearVenta = async (req, res) => {
       productos: productosValidados,
       detallesPago: {
         metodoPago: detallesPago.metodoPago,
+        paypalTransactionId: detallesPago.paypalTransactionId || "",
+        paypalPayerEmail: detallesPago.paypalPayerEmail || "",
         ultimosDigitosTarjeta: detallesPago.ultimosDigitosTarjeta || "",
       },
       resumen: {
         subtotal: subtotal,
-        total: subtotal + (resumen?.impuestos || 0) - (resumen?.descuentos || 0),
-        impuestos: resumen?.impuestos || 0,
-        descuentos: resumen?.descuentos || 0,
+        total: totalCalculado,
+        impuestos: impuestos,
+        descuentos: descuentos,
         anticipo: anticipo || 0,
-        restante: anticipo ? subtotal + (resumen?.impuestos || 0) - (resumen?.descuentos || 0) - anticipo : 0,
+        restante: anticipo ? totalCalculado - anticipo : totalCalculado,
       },
       esApartado: esApartado || false,
-      fechaLimitePago: esApartado ? fechaLimitePago : null, // Solo aplica si es apartado
+      estado: "Pagado",
+      fechaLimitePago: esApartado ? fechaLimitePago : null,
+      notas: notas || "",
     });
 
     // Guardar venta
@@ -166,6 +185,7 @@ exports.crearVenta = async (req, res) => {
       venta: ventaGuardada,
     });
   } catch (error) {
+    console.error("Error crearVenta:", error);
     res.status(500).json({ mensaje: "Error al crear venta", error: error.message });
   }
 };

@@ -15,12 +15,12 @@ const app = express();
 
 conectarDB();
 
-const corsOrigins = process.env.CORS_ORIGINS 
-// Evita errores con espacios 
-  ? process.env.CORS_ORIGINS.split(",").map(origin => origin.trim()) 
+const corsOrigins = process.env.CORS_ORIGINS
+  // Evita errores con espacios 
+  ? process.env.CORS_ORIGINS.split(",").map(origin => origin.trim())
   : [];
 
-  
+
 const corsOptions = {
   origin: corsOrigins.length > 0 ? corsOrigins : false, // Evita problemas si no hay orígenes definidos
   methods: ["GET", "POST", "PUT", "DELETE"],
@@ -73,16 +73,16 @@ app.use((req, res, next) => {
 
 app.use(helmet({
   contentSecurityPolicy: {
-      directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "https://apis.google.com"],
-          styleSrc: ["'self'", "https://fonts.googleapis.com"],
-          imgSrc: ["'self'", "data:"],
-          connectSrc: ["'self'"],
-          fontSrc: ["'self'", "https://fonts.gstatic.com"],
-          objectSrc: ["'none'"],
-          frameAncestors: ["'none'"],
-      }
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://apis.google.com"],
+      styleSrc: ["'self'", "https://fonts.googleapis.com"],
+      imgSrc: ["'self'", "data:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+    }
   },
   xssFilter: true, // Protege contra ataques de XSS
   frameguard: { action: "deny" }, // Bloquea el uso en iframes
@@ -104,17 +104,6 @@ app.use((req, res, next) => {
   res.removeHeader("X-Powered-By"); // Elimina el encabezado que revela la tecnología del servidor
   next();
 });
-// app.use((req, res, next) => {
-//   const start = Date.now(); //Se captura el tiempo actual en milisegundos
-//   res.on("finish", () => {
-//     const ip = req.ip;
-//     console.log(ip)
-//     const duration = Date.now() - start; // se calcula la duración de la solicitud restando el tiempo actual
-//     logHttpRequest(req, res, duration);
-//   });
-//   next();+++
-// });
-
 // Ruta dinámica para la API
 const apiVersion = process.env.API_VERSION || "v1"; // Si no se define, usa 'v1'
 
@@ -139,11 +128,9 @@ app.use(`/api/${apiVersion}/verificar`, require("./Routes/catpch"));
 app.use(`/api/${apiVersion}/Empresa`, require("./Routes/PerfilEmpresa.Routes"));
 app.use(`/api/${apiVersion}/autentificacion`, require("./Routes/AuthRoute"));
 app.use(`/api/${apiVersion}/renta`, require("./Routes/Renta&Venta"));
-// app.use(
-//   `/api/${apiVersion}/estadisticas`,
-//   require("./Routes/EstadisticasRoute")
-// );
+app.use(`/api/${apiVersion}/estadisticas`,require("./Routes/EstadisticasRoute"));
 app.use(`/api/${apiVersion}/proceso`, require("./Routes/Renta&Venta"));
+
 
 
 // Ruta para acciones control de Administrador de la página

@@ -1,223 +1,134 @@
-// const Venta = require("../Models/VentaModel");
-// const Renta = require("../Models/RentaModel");
-// const redis = require("redis");
-// const {logger} = require("../util/logger");
+const Venta = require('../Models/VentaModel');
+const Renta = require('../models/RentaModel');
 
-// const client = redis.createClient();
+// === 1. Ventas ===
+exports.obtenerResumenVentas = async (req, res) => {
+    try {
+        const now = new Date();
+        const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+        const finMes = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-// // Función para obtener cliente frecuente
-// const obtenerClienteFrecuente = async (modelo, campo) => {
-//   try {
-//     const clienteMasFrecuente = await modelo.aggregate([
-//       { $group: { _id: campo, total: { $sum: 1 } } },
-//       { $sort: { total: -1 } },
-//       { $limit: 1 },
-//     ]);
-//     return clienteMasFrecuente;
-//   } catch (error) {
-//     logger.error("Error al obtener cliente frecuente:", error);
-//     throw new Error("Error interno del servidor");
-//   }
-// };
+        const ventas = await Venta.find({
+            createdAt: { $gte: inicioMes, $lte: finMes },
+            estado: { $in: ['Pagado', 'Entregado'] }
+        });
 
-// // Obtener totales de compras y rentas
-// exports.obtenerTotales = async (req, res) => {
-//   try {
-//     client.get("totales", async (err, data) => {
-//       if (data) {
-//         return res.status(200).json(JSON.parse(data)); // Si está cacheado, lo devolvemos
-//       } else {
-//         const [totalCompras, totalRentas] = await Promise.all([
-//           Venta.countDocuments(),
-//           Renta.countDocuments(),
-//         ]);
-//         const result = { totalCompras, totalRentas };
-//         client.setex("totales", 3600, JSON.stringify(result)); // Cacheamos por 1 hora
-//         res.status(200).json(result);
-//       }
-//     });
-//   } catch (error) {
-//     logger.error("Error al obtener totales:", error);
+        const totalVentas = ventas.reduce((sum, v) => sum + (v.resumen?.total || 0), 0);
 
-//     res
-//       .status(500)
-//       .json({ message: "Error interno del servidor", error: error.message });
-//   }
-// };
+        res.json({ totalVentas });
+    } catch (error) {
+        console.error('Error en obtenerResumenVentas:', error);
+        res.status(500).json({ message: 'Error al obtener resumen de ventas' });
+    }
+};
 
-// // Obtener ingresos totales
-// exports.obtenerIngresosTotales = async (req, res) => {
-//   try {
-//     const totalIngresosVentas = await Venta.aggregate([
-//       { $group: { _id: null, totalIngresos: { $sum: "$resumen.total" } } },
-//     ]);
+// === 2. Rentas ===
+exports.obtenerResumenRentas = async (req, res) => {
+    try {
+        const now = new Date();
+        const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+        const finMes = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-//     const totalIngresosRentas = await Renta.aggregate([
-//       {
-//         $group: {
-//           _id: null,
-//           totalIngresos: { $sum: "$detallesPago.precioRenta" },
-//         },
-//       },
-//     ]);
+        const rentas = await Renta.find({
+            'detallesRenta.fechaRecoge': { $gte: inicioMes, $lte: finMes },
+            estado: { $in: ['Activo', 'Completado'] }
+        });
 
-//     res.status(200).json({
-//       ingresosVentas: totalIngresosVentas[0]?.totalIngresos || 0,
-//       ingresosRentas: totalIngresosRentas[0]?.totalIngresos || 0,
-//     });
-//   } catch (error) {
-//     logger.error("Error al obtener ingresos totales:", error);
+        const totalRentas = rentas.reduce((sum, r) => sum + (r.detallesPago?.precioRenta || 0), 0);
 
-//     res
-//       .status(500)
-//       .json({ message: "Error interno del servidor", error: error.message });
-//   }
-// };
+        res.json({ totalRentas });
+    } catch (error) {
+        console.error('Error en obtenerResumenRentas:', error);
+        res.status(500).json({ message: 'Error al obtener resumen de rentas' });
+    }
+};
 
-// // Obtener productos más vendidos y rentados
-// exports.obtenerProductosPopulares = async (req, res) => {
-//   try {
-//     const productoMasVendido = await Venta.aggregate([
-//       { $unwind: "$productos" },
-//       {
-//         $group: {
-//           _id: "$productos.producto",
-//           totalVendido: { $sum: "$productos.cantidad" },
-//         },
-//       },
-//       { $sort: { totalVendido: -1 } },
-//       { $limit: 1 },
-//     ]);
+// === 3. Clientes únicos ===
+exports.obtenerClientesUnicos = async (req, res) => {
+    try {
+        const now = new Date();
+        const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+        const finMes = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-//     const productoMasRentado = await Renta.aggregate([
-//       { $group: { _id: "$producto", totalRentas: { $sum: 1 } } },
-//       { $sort: { totalRentas: -1 } },
-//       { $limit: 1 },
-//     ]);
+        const ventas = await Venta.find({
+            createdAt: { $gte: inicioMes, $lte: finMes },
+            estado: { $in: ['Pagado', 'Entregado'] }
+        }).select('usuario');
 
-//     res.status(200).json({ productoMasVendido, productoMasRentado });
-//   } catch (error) {
-//     logger.error("Error al obtener productos populares:", error);
+        const rentas = await Renta.find({
+            'detallesRenta.fechaRecoge': { $gte: inicioMes, $lte: finMes },
+            estado: { $in: ['Activo', 'Completado'] }
+        }).select('usuario');
 
-//     res
-//       .status(500)
-//       .json({ message: "Error interno del servidor", error: error.message });
-//   }
-// };
+        const clientesVentas = ventas.map(v => v.usuario.toString());
+        const clientesRentas = rentas.map(r => r.usuario.toString());
+        const totalClientes = new Set([...clientesVentas, ...clientesRentas]).size;
 
-// // Obtener número de clientes activos
-// exports.obtenerClientesActivos = async (req, res) => {
-//   try {
-//     const clientesActivosVentas = await Venta.distinct("usuario");
-//     const clientesActivosRentas = await Renta.distinct("usuario");
-//     const totalClientesActivos = new Set([
-//       ...clientesActivosVentas,
-//       ...clientesActivosRentas,
-//     ]).size;
+        res.json({ totalClientes });
+    } catch (error) {
+        console.error('Error en obtenerClientesUnicos:', error);
+        res.status(500).json({ message: 'Error al obtener clientes únicos' });
+    }
+};
 
-//     res.status(200).json({ totalClientesActivos });
-//   } catch (error) {
-//     logger.error("Error al obtener clientes activos:", error);
+// === 4. Productos más vendidos ===
+exports.obtenerProductosMasVendidos = async (req, res) => {
+    try {
+        const now = new Date();
+        const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+        const finMes = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-//     res
-//       .status(500)
-//       .json({ message: "Error interno del servidor", error: error.message });
-//   }
-// };
+        const ventas = await Venta.find({
+            createdAt: { $gte: inicioMes, $lte: finMes },
+            estado: { $in: ['Pagado', 'Entregado'] }
+        }).populate('productos.producto');
 
-// // Obtener ingresos por mes
-// exports.obtenerIngresosPorMes = async (req, res) => {
-//   try {
-//     const ingresosPorMes = await Venta.aggregate([
-//       {
-//         $group: {
-//           _id: { $month: "$fechaVenta" },
-//           totalIngresos: { $sum: "$resumen.total" },
-//           totalVentas: { $sum: 1 },
-//         },
-//       },
-//       { $sort: { _id: 1 } },
-//     ]);
+        const productosVendidos = {};
 
-//     res.status(200).json(ingresosPorMes);
-//   } catch (error) {
-//     logger.error("Error al obtener ingresos por mes:", error);
+        for (const venta of ventas) {
+            for (const item of venta.productos) {
+                const prod = item.producto;
+                if (!prod || !prod._id) continue;
 
-//     res
-//       .status(500)
-//       .json({ message: "Error interno del servidor", error: error.message });
-//   }
-// };
+                const key = prod._id.toString();
 
-// // Obtener métodos de pago más usados
-// exports.obtenerMetodosPago = async (req, res) => {
-//   try {
-//     const metodosPago = await Venta.aggregate([
-//       { $group: { _id: "$detallesPago.metodoPago", total: { $sum: 1 } } },
-//       { $sort: { total: -1 } },
-//     ]);
+                if (!productosVendidos[key]) {
+                    productosVendidos[key] = {
+                        nombre: prod.nombre,
+                        color: prod.color || 'Desconocido',
+                        talla: prod.talla || 'N/A',
+                        cantidad: 0
+                    };
+                }
 
-//     res.status(200).json(metodosPago);
-//   } catch (error) {
-//     logger.error("Error al obtener métodos de pago:", error);
+                productosVendidos[key].cantidad += item.cantidad;
+            }
+        }
 
-//     res
-//       .status(500)
-//       .json({ message: "Error interno del servidor", error: error.message });
-//   }
-// };
+        const vestidosMasVendidos = Object.values(productosVendidos);
 
-// // Obtener rentas con retraso
-// exports.obtenerRentasRetrasadas = async (req, res) => {
-//   try {
-//     const hoy = new Date();
-//     const rentasRetrasadas = await Renta.find({
-//       "detallesRenta.fechaFin": { $lt: hoy },
-//       estado: { $nin: ["Completado", "Cancelado"] },
-//     })
-//       .populate("usuario", "nombre email")
-//       .lean(); // Usamos lean() para mejorar el rendimiento
+        res.json({ productosMasVendidos: vestidosMasVendidos });
+    } catch (error) {
+        console.error('Error en obtenerProductosMasVendidos:', error);
+        res.status(500).json({ message: 'Error al obtener productos más vendidos' });
+    }
+};
 
-//     res.status(200).json(rentasRetrasadas);
-//   } catch (error) {
-//     logger.error("Error al obtener rentas retrasadas:", error);
+// === 5. Datos simulados de gráficas ===
+exports.obtenerDatosGraficos = (req, res) => {
+    const ventasMensuales = Array(12).fill(0);
+    const rentasMensuales = Array(12).fill(0);
 
-//     res
-//       .status(500)
-//       .json({ message: "Error interno del servidor", error: error.message });
-//   }
-// };
+    const clientesFrecuentes = {
+        labels: ['Buenavista', 'Altamira', 'Chapultepec', 'Centro', 'Tulancingo'],
+        datos: [120, 90, 80, 70, 60]
+    };
 
-// // Obtener clientes con más compras y rentas
-// exports.obtenerClientesFrecuentes = async (req, res) => {
-//   try {
-//     const clienteMasCompras = await obtenerClienteFrecuente(Venta, "usuario");
-//     const clienteMasRentas = await obtenerClienteFrecuente(Renta, "usuario");
+    const radarVentaRenta = {
+        labels: ['Jaltocán', 'Atlapexco', 'Buena Vista', 'Huejutla', 'Pachuca'],
+        rentas: [50, 40, 30, 20, 10],
+        ventas: [40, 50, 60, 70, 80]
+    };
 
-//     res.status(200).json({ clienteMasCompras, clienteMasRentas });
-//   } catch (error) {
-//     logger.error("Error al obtener clientes frecuentes:", error);
-
-//     res
-//       .status(500)
-//       .json({ message: "Error interno del servidor", error: error.message });
-//   }
-// };
-
-// // Obtener gasto promedio por cliente
-// exports.obtenerGastoPromedio = async (req, res) => {
-//   try {
-//     const gastoPromedio = await Venta.aggregate([
-//       { $group: { _id: "$usuario", totalGastado: { $sum: "$resumen.total" } } },
-//       { $group: { _id: null, promedio: { $avg: "$totalGastado" } } },
-//     ]);
-
-//     res.status(200).json({ gastoPromedio: gastoPromedio[0]?.promedio || 0 });
-//   } catch (error) {
-//     logger.error("Error al obtener gasto promedio:", error);
-
-//     res
-//       .status(500)
-//       .json({ message: "Error interno del servidor", error: error.message });
-//   }
-// };
+    res.json({ ventasMensuales, rentasMensuales, clientesFrecuentes, ventasRentasRadar: radarVentaRenta });
+};
