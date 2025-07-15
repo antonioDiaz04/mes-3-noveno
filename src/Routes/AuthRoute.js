@@ -12,6 +12,7 @@ router.get("/generar-Token-Wear/:deviceId", AutController.obtenerTokenPorDeviceI
 router.post("/guardar-token-alexa", AutController.guardarTokenNumerico);
 router.post("/validar-token-alexa", AutController.validarTokenAlexa);
 
+
 // router.post("/enviar-confirmar", AutController.enviarConfirmar);
 //autentificacion/signIn-Google-Facebook
 // router.post("/verficar-codigo", AutController.verificarCodigo);
