@@ -123,6 +123,7 @@ app.use(`/api/${apiVersion}/autentificacion`, require("./Routes/AuthRoute"));
 app.use(`/api/${apiVersion}/renta`, require("./Routes/Renta&Venta"));
 app.use(`/api/${apiVersion}/estadisticas`, require("./Routes/EstadisticasRoute"));
 app.use(`/api/${apiVersion}/proceso`, require("./Routes/Renta&Venta"));
+app.use(`/api/${apiVersion}/chatbot`, require("./Routes/chatbot.routes.js"));
 
 
 

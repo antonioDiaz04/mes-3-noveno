@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const quienesSomos = require("../Controllers/quienesSomos.model");
+const Bot = require("../Controllers/BotController");
+
+
+
 
 //* ==================================================
 //* ✅ RUTAS PÚBLICAS

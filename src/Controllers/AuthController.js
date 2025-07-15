@@ -472,6 +472,7 @@ exports.validarTokenAlexa = async (req, res) => {
   if (!token) {
     return res.status(400).json({ message: "Token requerido" });
   }
+  console.log(token)
 
   try {
     const usuario = await Usuario.findOne({ tokenAlexa: token });
