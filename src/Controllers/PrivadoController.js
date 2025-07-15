@@ -1,17 +1,13 @@
-const {
-  Politicas,
-  TerminosYCondiciones,
-  Deslindelegal,
-} = require("../Models/PrivadoModel");
-const { AcercaDe, Contacto, Pregunta } = require("../Models/PrivadoModel.js");
+const { Politicas, TerminosYCondiciones, Deslindelegal, } = require("../Models/PrivadoModel");
+const { AcercaDe } = require("../Models/PrivadoModel.js");
 const sanitizeObject = require("../util/sanitize.js");
-const {logger} = require("../util/logger");
+const { logger } = require("../util/logger");
+const { Console } = require("winston/lib/winston/transports/index.js");
 
 //políticas
-exports.crearPoliticas = async (req, res) => {
+const crearPoliticas = async (req, res) => {
   try {
-    const sanitizedBody = sanitizeObject(req.body);
-    const { titulo, contenido, fechaVigencia } = sanitizedBody;
+    const { title, description, fechaVigencia } = sanitizeObject(req.body);
 
     if (!fechaVigencia || isNaN(new Date(fechaVigencia).getTime())) {
       // logger.warn("Fecha de vigencia inválida");
@@ -22,8 +18,8 @@ exports.crearPoliticas = async (req, res) => {
 
     // Crear una nueva instancia de la política
     const nuevaPolitica = new Politicas({
-      titulo: titulo,
-      contenido: contenido,
+      titulo: title,
+      contenido: description,
       version: nuevaVersion,
       estado: "vigente",
       fechaVigencia: fechaVigencia,
@@ -38,12 +34,13 @@ exports.crearPoliticas = async (req, res) => {
       politica: nuevaPolitica,
     });
   } catch (error) {
+    console.error("Error al crear políticas: ", error);
     // logger.error("Error al crear políticas: " + error);
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
 
-exports.obtenerPoliticas = async (req, res) => {
+const obtenerPoliticas = async (req, res) => {
   try {
     const politicas = await Politicas.find({ estado: { $ne: "eliminado" } })
       .lean()
@@ -73,16 +70,17 @@ exports.obtenerPoliticas = async (req, res) => {
 
     return res.status(200).json(politicas);
   } catch (error) {
+    console.error("Error al obtener políticas: ", error);
     // logger.error(`Error al obtener políticas: ${error.message}`);
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
-exports.actualizarPoliticas = async (req, res) => {
+const actualizarPoliticas = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const sanitizedBody = sanitizeObject(req.body);
-    const { titulo, contenido, fechaVigencia } = sanitizedBody;
+
+    const { title, description, fechaVigencia } = sanitizeObject(req.body);
 
     const politicaExistente = await Politicas.findById(id);
 
@@ -109,8 +107,8 @@ exports.actualizarPoliticas = async (req, res) => {
     const nuevaVersion = (parseFloat(politicaExistente.version) + 1).toFixed(1);
 
     // Actualizar los campos de la política
-    politicaExistente.titulo = titulo;
-    politicaExistente.contenido = contenido;
+    politicaExistente.titulo = title;
+    politicaExistente.contenido = description;
     politicaExistente.version = nuevaVersion;
     politicaExistente.fechaVigencia = fechaVigencia; // Actualizar la fecha de vigencia
 
@@ -134,12 +132,13 @@ exports.actualizarPoliticas = async (req, res) => {
       politica: politicaActualizada,
     });
   } catch (error) {
+    console.error("Error al actualizar políticas: ", error);
     // logger.error(`Error al actualizar políticas: ${error.message}`);
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
 
-exports.eliminarPolitica = async (req, res) => {
+const eliminarPolitica = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -165,7 +164,7 @@ exports.eliminarPolitica = async (req, res) => {
   }
 };
 
-exports.obtenerHistorialPolitica = async (req, res) => {
+const obtenerHistorialPolitica = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -196,11 +195,14 @@ exports.obtenerHistorialPolitica = async (req, res) => {
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
+
+
+
 // Acerca de
-exports.createAcercaDe = async (req, res) => {
+const createAcercaDe = async (req, res) => {
   try {
-    const sanitizedBody = sanitizeObject(req.body);
-    const { titulo, contenido } = sanitizedBody;
+
+    const { titulo, contenido } = sanitizeObject(req.body);
 
     if (!titulo) {
       // logger.warn("Título vacío en creación de AcercaDe");
@@ -223,12 +225,13 @@ exports.createAcercaDe = async (req, res) => {
   }
 };
 
-exports.deleteAcercaDe = async (req, res) => {
+const deleteAcercaDe = async (req, res) => {
   try {
     const { id } = req.params;
     const acercaDe = await AcercaDe.findByIdAndDelete(id);
-    // if (!acercaDe) logger.warn(`AcercaDe con ID ${id} no encontrado`);
-    return res.status(404).json({ message: "AcercaDe no encontrado" });
+    if (!acercaDe)
+      return res.status(404).json({ message: "AcercaDe no encontrado" });
+    res.status(204).json({ message: "AcercaDe eliminado" });
   } catch (error) {
     // logger.error("Error al eliminar AcercaDe: ", error);
     res.status(500).json({
@@ -238,12 +241,11 @@ exports.deleteAcercaDe = async (req, res) => {
   }
 };
 
-exports.updateAcercaDe = async (req, res) => {
+const updateAcercaDe = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const sanitizedBody = sanitizeObject(req.body);
-    const { titulo, contenido } = sanitizedBody;
+    const { titulo, contenido } = sanitizeObject(req.body);
 
     if (!id) {
       // logger.warn("ID vacío en actualización de AcercaDe");
@@ -280,10 +282,10 @@ exports.updateAcercaDe = async (req, res) => {
 };
 
 //Terminos y condiciones
-exports.crearTerminosYCondiciones = async (req, res) => {
+const crearTerminosYCondiciones = async (req, res) => {
   try {
-    const sanitizedBody = sanitizeObject(req.body);
-    const { titulo, contenido, fechaVigencia } = sanitizedBody;
+    //title, description
+    const { title, description, fechaVigencia } = sanitizeObject(req.body);
 
     if (!fechaVigencia || isNaN(new Date(fechaVigencia).getTime())) {
       // logger.warn("Fecha de vigencia inválida al crear términos y condiciones");
@@ -291,8 +293,8 @@ exports.crearTerminosYCondiciones = async (req, res) => {
     }
 
     const nuevosTerminos = new TerminosYCondiciones({
-      titulo: titulo,
-      contenido: contenido,
+      titulo: title,
+      contenido: description,
       version: "1.0",
       estado: "vigente",
       fechaVigencia: fechaVigencia,
@@ -311,7 +313,7 @@ exports.crearTerminosYCondiciones = async (req, res) => {
   }
 };
 
-exports.obtenerTerminosYCondiciones = async (req, res) => {
+const obtenerTerminosYCondiciones = async (req, res) => {
   try {
     const terminos = await TerminosYCondiciones.find({
       estado: { $ne: "eliminado" },
@@ -344,7 +346,7 @@ exports.obtenerTerminosYCondiciones = async (req, res) => {
   }
 };
 
-exports.obtenerTerminosYCondicionesVigentes = async (req, res) => {
+const obtenerTerminosYCondicionesVigentes = async (req, res) => {
   try {
     // Buscar todos los términos que están vigentes
     const terminos = await TerminosYCondiciones.find({
@@ -381,11 +383,11 @@ exports.obtenerTerminosYCondicionesVigentes = async (req, res) => {
   }
 };
 
-exports.actualizarTerminosYCondiciones = async (req, res) => {
+const actualizarTerminosYCondiciones = async (req, res) => {
   try {
     const { id } = req.params;
-    const sanitizedBody = sanitizeObject(req.body);
-    const { titulo, contenido, fechaVigencia } = sanitizedBody;
+    console.log(req.body);
+    const { title, description, fechaVigencia } = sanitizeObject(req.body);
 
 
     const terminosExistentes = await TerminosYCondiciones.findById(id);
@@ -398,7 +400,6 @@ exports.actualizarTerminosYCondiciones = async (req, res) => {
       // logger.warn("Fecha de vigencia inválida");
       return res.status(400).json({ message: "Fecha de vigencia inválida" });
     }
-    console.log(titulo, contenido, fechaVigencia);
 
     // Guardar el historial de la versión anterior
     terminosExistentes.historial.push({
@@ -416,8 +417,8 @@ exports.actualizarTerminosYCondiciones = async (req, res) => {
     );
 
     // Actualizar los campos de los términos
-    terminosExistentes.titulo = titulo;
-    terminosExistentes.contenido = contenido;
+    terminosExistentes.titulo = title;
+    terminosExistentes.contenido = description;
     terminosExistentes.fechaVigencia = fechaVigencia;
     terminosExistentes.version = nuevaVersion;
     terminosExistentes.estado = "vigente"; // Asumiendo que el nuevo contenido es vigente
@@ -429,15 +430,16 @@ exports.actualizarTerminosYCondiciones = async (req, res) => {
       terminos: terminosActualizados,
     });
   } catch (error) {
+    console.error("Error al actualizar términos y condiciones: ", error);
     // logger.error(
-      // "Error al actualizar términos y condiciones con ID: " + req.params.id,
-      // error
+    // "Error al actualizar términos y condiciones con ID: " + req.params.id,
+    // error
     // );
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
 
-exports.eliminarTerminosYCondiciones = async (req, res) => {
+const eliminarTerminosYCondiciones = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -468,7 +470,7 @@ exports.eliminarTerminosYCondiciones = async (req, res) => {
   }
 };
 
-exports.obtenerHistorialTerminosYCondiciones = async (req, res) => {
+const obtenerHistorialTerminosYCondiciones = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -504,10 +506,11 @@ exports.obtenerHistorialTerminosYCondiciones = async (req, res) => {
   }
 };
 
-exports.crearDeslindeLegal = async (req, res) => {
+// Obtener todos los Deslindes Legales
+const crearDeslindeLegal = async (req, res) => {
   try {
-    const sanitizedBody = sanitizeObject(req.body);
-    const { titulo, contenido, fechaVigencia } = sanitizedBody;
+
+    const { title, description, fechaVigencia } = sanitizeObject(req.body);
 
     if (!fechaVigencia || isNaN(new Date(fechaVigencia).getTime())) {
       // logger.warn("Fecha de vigencia inválida");
@@ -515,8 +518,8 @@ exports.crearDeslindeLegal = async (req, res) => {
     }
 
     const nuevoDeslinde = new Deslindelegal({
-      titulo: titulo,
-      contenido: contenido,
+      titulo: title,
+      contenido: description,
       version: "1.0",
       estado: "vigente",
       fechaVigencia: fechaVigencia,
@@ -535,8 +538,7 @@ exports.crearDeslindeLegal = async (req, res) => {
   }
 };
 
-// Obtener todos los Deslindes Legales
-exports.obtenerDeslindesLegales = async (req, res) => {
+const obtenerDeslindesLegales = async (req, res) => {
   try {
     const deslindes = await Deslindelegal.find({
       estado: { $ne: "eliminado" },
@@ -572,13 +574,11 @@ exports.obtenerDeslindesLegales = async (req, res) => {
   }
 };
 
-// Actualizar Deslinde Legal
-exports.actualizarDeslindeLegal = async (req, res) => {
+const actualizarDeslindeLegal = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const sanitizedBody = sanitizeObject(req.body);
-    const { titulo, contenido, fechaVigencia } = sanitizedBody;
+    const { title, description, fechaVigencia } = sanitizeObject(req.body);
 
     const deslindeExistente = await Deslindelegal.findById(id);
 
@@ -605,8 +605,8 @@ exports.actualizarDeslindeLegal = async (req, res) => {
     const nuevaVersion = (parseFloat(deslindeExistente.version) + 1).toFixed(1);
 
     // Actualizar los campos del deslinde
-    deslindeExistente.titulo = titulo;
-    deslindeExistente.contenido = contenido;
+    deslindeExistente.titulo = title;
+    deslindeExistente.contenido = description;
     deslindeExistente.fechaVigencia = fechaVigencia;
     deslindeExistente.version = nuevaVersion;
     deslindeExistente.estado = "vigente";
@@ -626,8 +626,7 @@ exports.actualizarDeslindeLegal = async (req, res) => {
   }
 };
 
-// Eliminar Deslinde Legal (lógica)
-exports.eliminarDeslindeLegal = async (req, res) => {
+const eliminarDeslindeLegal = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -646,8 +645,8 @@ exports.eliminarDeslindeLegal = async (req, res) => {
     });
   } catch (error) {
     // logger.error(
-      // "Error al eliminar deslinde legal con ID: " + req.params.id,
-      // error
+    // "Error al eliminar deslinde legal con ID: " + req.params.id,
+    // error
     // );
     return res.status(500).json({
       mensaje: "Error interno del servidor",
@@ -656,13 +655,12 @@ exports.eliminarDeslindeLegal = async (req, res) => {
   }
 };
 
-// Obtener Historial del Deslinde Legal
-exports.obtenerHistorialDeslindeLegal = async (req, res) => {
+const obtenerHistorialDeslindeLegal = async (req, res) => {
   try {
     const { id } = req.params;
 
     const deslinde = await Deslindelegal.findById(id);
-    
+
     if (!deslinde) {
       // logger.warn("Deslinde legal no encontrado con ID: " + id);
       return res.status(404).send("Deslinde legal no encontrado");
@@ -691,3 +689,33 @@ exports.obtenerHistorialDeslindeLegal = async (req, res) => {
     return res.status(500).send("Error en el servidor: " + error);
   }
 };
+
+module.exports = {
+  PoliticaController: {
+    crearPoliticas,
+    obtenerPoliticas,
+    eliminarPolitica,
+    actualizarPoliticas,
+    obtenerHistorialPolitica
+  },
+  TerminosController: {
+    crearTerminosYCondiciones,
+    obtenerTerminosYCondiciones,
+    obtenerTerminosYCondicionesVigentes,
+    actualizarTerminosYCondiciones,
+    eliminarTerminosYCondiciones,
+    obtenerHistorialTerminosYCondiciones
+  },
+  AcercaDeController: {
+    createAcercaDe,
+    deleteAcercaDe,
+    updateAcercaDe
+  },
+  DeslindeController: {
+    crearDeslindeLegal,
+    obtenerDeslindesLegales,
+    actualizarDeslindeLegal,
+    eliminarDeslindeLegal,
+    obtenerHistorialDeslindeLegal
+  }
+}

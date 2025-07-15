@@ -8,6 +8,10 @@ router.post("/signIn-Google-Facebook", AutController.signInGoogleFacebook);
 router.post("/vincular-Dispositivo-Wear", AutController.vincularDispositivoWear);
 router.get("/confirmar-vinculacion/:deviceId", AutController.confirmarVinculacion);
 router.get("/generar-Token-Wear/:deviceId", AutController.obtenerTokenPorDeviceId);
+
+router.post("/guardar-token-alexa", AutController.guardarTokenNumerico);
+router.post("/validar-token-alexa", AutController.validarTokenAlexa);
+
 // router.post("/enviar-confirmar", AutController.enviarConfirmar);
 //autentificacion/signIn-Google-Facebook
 // router.post("/verficar-codigo", AutController.verificarCodigo);

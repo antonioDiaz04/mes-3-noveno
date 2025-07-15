@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const upload = require("../Midlewares/multer");
+const upload = require("../middleware/multer");
 const VentaController = require("../Controllers/VentaController.js"); // Importar el controlador para venta, renta y compra
 const RentaController = require("../Controllers/RentaController.js"); // Importar el controlador para venta, renta y compra
 

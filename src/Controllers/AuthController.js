@@ -1,6 +1,6 @@
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");const crypto = require('crypto');
+const bcrypt = require("bcryptjs"); const crypto = require('crypto');
 const { Usuario, DispositivoWear } = require("../Models/UsuarioModel");
 const sanitizeObject = require("../util/sanitize");
 const logger = require('../../src/util/logger');
@@ -37,7 +37,7 @@ exports.Login = async (req, res) => {
 
     // Contexto adicional para logs
 
-    const logContext = { 
+    const logContext = {
       ...logBase,
       email: email || null,
       telefono: telefono || null
@@ -75,8 +75,8 @@ exports.Login = async (req, res) => {
 
     if (estadoCuenta.estado === "bloqueada") {
       const ahora = Date.now();
-      const tiempoRestante = estadoCuenta.fechaDeUltimoBloqueo.getTime() + 
-                           estadoCuenta.tiempoDeBloqueo * 1000 - ahora;
+      const tiempoRestante = estadoCuenta.fechaDeUltimoBloqueo.getTime() +
+        estadoCuenta.tiempoDeBloqueo * 1000 - ahora;
 
       if (tiempoRestante > 0) {
         const logData = {
@@ -101,7 +101,7 @@ exports.Login = async (req, res) => {
       estadoCuenta.intentosFallidos = 0;
       estadoCuenta.fechaDeUltimoBloqueo = null;
       await estadoCuenta.save();
-      
+
       // logger.info('Cuenta desbloqueada automáticamente', logContext);
     }
 
@@ -209,10 +209,10 @@ exports.Login = async (req, res) => {
       maxAge: 3600000,
     });
 
-    return res.status(200).json({ 
-      token, 
-      rol: usuario.rol, 
-      captchaValid: isCaptchaValid 
+    return res.status(200).json({
+      token,
+      rol: usuario.rol,
+      captchaValid: isCaptchaValid
     });
 
   } catch (error) {
@@ -226,7 +226,7 @@ exports.Login = async (req, res) => {
 
     // logger.error('Error en el servidor durante el login', errorLog);
 
-    return res.status(500).json({ 
+    return res.status(500).json({
       message: "Error en el servidor",
       errorId: logBase.timestamp // Para correlacionar con logs
     });
@@ -247,7 +247,7 @@ exports.signInGoogleFacebook = async (req, res) => {
     if (usuario) {
       // Manejar cuenta existente
       const estadoCuenta = usuario.estadoCuenta;
-      
+
       if (estadoCuenta.estado === "bloqueada") {
         const ahora = Date.now();
         const tiempoRestante =
@@ -275,8 +275,8 @@ exports.signInGoogleFacebook = async (req, res) => {
       // Crear nuevo usuario para Google/Facebook
       const primerUsuario = await Usuario.findOne().populate("estadoCuenta");
       if (!primerUsuario || !primerUsuario.estadoCuenta) {
-        return res.status(500).json({ 
-          message: "No se pudo obtener la configuración de estado de cuenta" 
+        return res.status(500).json({
+          message: "No se pudo obtener la configuración de estado de cuenta"
         });
       }
 
@@ -298,7 +298,7 @@ exports.signInGoogleFacebook = async (req, res) => {
         rol: "usuario", // Rol por defecto
         uid // ID único del proveedor OAuth
       });
-      
+
       usuario = await Usuario.findById(usuario._id).populate("estadoCuenta");
     }
 
@@ -321,8 +321,8 @@ exports.signInGoogleFacebook = async (req, res) => {
       maxAge: 86400000, // 24 horas en ms
     });
 
-    return res.status(200).json({ 
-      token, 
+    return res.status(200).json({
+      token,
       rol: usuario.rol,
       usuario: {
         nombre: usuario.nombre,
@@ -333,9 +333,9 @@ exports.signInGoogleFacebook = async (req, res) => {
 
   } catch (error) {
     console.error("Error en el servidor:", error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       message: "Error en el servidor",
-      error: error.message 
+      error: error.message
     });
   }
 };
@@ -402,7 +402,7 @@ exports.confirmarVinculacion = async (req, res) => {
         rol: dispositivo.usuario.rol,
       },
       fechaVinculacion: dispositivo.fechaVinculacion,
-      preferencias: dispositivo.preferencias    
+      preferencias: dispositivo.preferencias
     });
 
   } catch (error) {
@@ -429,7 +429,7 @@ exports.obtenerTokenPorDeviceId = async (req, res) => {
       const nuevoToken = (numero % 9000) + 1000;
 
       console.log(nuevoToken)
-      
+
       dispositivo = new DispositivoWear({ deviceId, token: nuevoToken, estado: 'pendiente' });
       await dispositivo.save();
     }
@@ -438,6 +438,52 @@ exports.obtenerTokenPorDeviceId = async (req, res) => {
 
   } catch (error) {
     console.error('Error al obtener token:', error);
+    return res.status(500).json({ message: "Error interno del servidor" });
+  }
+};
+
+exports.guardarTokenNumerico = async (req, res) => {
+  const { usuarioId, token } = req.body;
+
+  if (!usuarioId || !token) {
+    return res.status(400).json({ message: "usuarioId y token son requeridos" });
+  }
+
+  try {
+    const usuario = await Usuario.findById(usuarioId);
+
+    if (!usuario) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    usuario.tokenAlexa = token;
+    await usuario.save();
+
+    return res.status(200).json({ message: "Token guardado correctamente" });
+  } catch (error) {
+    console.error("Error al guardar token:", error);
+    return res.status(500).json({ message: "Error interno del servidor" });
+  }
+};
+
+exports.validarTokenAlexa = async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ message: "Token requerido" });
+  }
+
+  try {
+    const usuario = await Usuario.findOne({ tokenAlexa: token });
+
+    if (usuario) {
+      return res.status(200).json({ valido: true, usuarioId: usuario._id });
+    } else {
+      return res.status(200).json({ valido: false });
+    }
+
+  } catch (error) {
+    console.error("Error al validar token:", error);
     return res.status(500).json({ message: "Error interno del servidor" });
   }
 };

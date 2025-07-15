@@ -5,10 +5,9 @@ const dashboardController
 const router = express.Router();
 
 // Rutas separadas por sección
-router.get('/resumen/ventas', dashboardController.obtenerResumenVentas);
-router.get('/resumen/rentas', dashboardController.obtenerResumenRentas);
-router.get('/resumen/clientes', dashboardController.obtenerClientesUnicos);
-router.get('/resumen/productos-mas-vendidos', dashboardController.obtenerProductosMasVendidos);
-router.get('/resumen/graficas', dashboardController.obtenerDatosGraficos);
+// router.get('/obtenerResumenGeneral', dashboardController.obtenerResumenGeneral);
+router.get('/obtenerTotalesRentaVenta', dashboardController.obtenerResumenDashboard);
+// router.get('/obtenerCantidadVestidosVendidosYRentados', dashboardController.obtenerCantidadVestidosVendidosYRentados);
+
 
 module.exports = router;

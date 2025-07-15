@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const misionSchema = mongoose.Schema({
-  contenido: {
+  description: {
     type: String,
     required: true,
     trim: true
@@ -17,7 +17,7 @@ const misionSchema = mongoose.Schema({
 });
 
 const visionSchema = mongoose.Schema({
-  contenido: {
+  description: {
     type: String,
     required: true,
     trim: true
@@ -33,29 +33,26 @@ const visionSchema = mongoose.Schema({
 });
 
 const valoresSchema = mongoose.Schema({
-  nombre: {
+  title: {
     type: String,
     required: true,
     trim: true
   },
-  descripcion: {
-    type: String,
+  items: {
+    type: [String],
     required: true,
-    trim: true
+    default: [],
   },
-  icono: {
-    type: String,
-    trim: true
-  },
-  orden: {
-    type: Number,
-    default: 0
+  fechaVigencia: {
+    type: Date,
+    default: Date.now
   },
   activo: {
     type: Boolean,
     default: true
   }
 });
+
 
 const preguntasFrecuentesSchema = mongoose.Schema({
   pregunta: {

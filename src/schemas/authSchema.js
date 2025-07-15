@@ -40,8 +40,8 @@ const loginSchema = Joi.object({
 
 const DocumentosLegales = Joi.object({
   titulo: Joi.string().min(3).max(100).required(),
-  contenido: Joi.string().min(10).required(),
-  fechaVigencia: Joi.optional(),
+  descripcion: Joi.string().min(3).max(250).required(),
+  fechaVigencia: Joi.date().optional(), // fecha válida si se proporciona
 });
 
 module.exports = { registerSchema, loginSchema, DocumentosLegales };

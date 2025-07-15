@@ -1,8 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken"); // Corregido: se debe usar 'jwt' en lugar de 'jw'
-const upload = require("../Midlewares/multer"); // Asegúrate de importar y configurar 'multer' si lo estás usando para manejo de archivos
+const upload = require("../middleware/multer");
 const ProductController = require("../Controllers/ProductController");
 
 // Configuración de las rutas

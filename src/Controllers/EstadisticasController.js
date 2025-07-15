@@ -1,134 +1,238 @@
-const Venta = require('../Models/VentaModel');
+const { startOfWeek, format, differenceInDays, addDays } = require('date-fns');
+const Venta = require('../models/VentaModel');
 const Renta = require('../models/RentaModel');
 
-// === 1. Ventas ===
-exports.obtenerResumenVentas = async (req, res) => {
-    try {
-        const now = new Date();
-        const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
-        const finMes = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+const meses = [
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+];
 
-        const ventas = await Venta.find({
-            createdAt: { $gte: inicioMes, $lte: finMes },
-            estado: { $in: ['Pagado', 'Entregado'] }
-        });
+const obtenerResumenDashboard = async (req, res) => {
+  try {
+    const start = req.query.start ? new Date(req.query.start) : null;
+    const end = req.query.end ? new Date(req.query.end) : null;
 
-        const totalVentas = ventas.reduce((sum, v) => sum + (v.resumen?.total || 0), 0);
+    const filtroFechasVentas = start && end ? { createdAt: { $gte: start, $lte: end } } : {};
+    const filtroFechasRentas = start && end ? { 'detallesRenta.fechaOcupacion': { $gte: start, $lte: end } } : {};
 
-        res.json({ totalVentas });
-    } catch (error) {
-        console.error('Error en obtenerResumenVentas:', error);
-        res.status(500).json({ message: 'Error al obtener resumen de ventas' });
+    // ---------- PERIODO ANTERIOR ----------
+    let startAnterior = null;
+    let endAnterior = null;
+
+    if (start && end) {
+      const dias = differenceInDays(end, start);
+      startAnterior = new Date(start);
+      startAnterior.setDate(startAnterior.getDate() - dias - 1);
+
+      endAnterior = new Date(start);
+      endAnterior.setDate(endAnterior.getDate() - 1);
     }
-};
 
-// === 2. Rentas ===
-exports.obtenerResumenRentas = async (req, res) => {
-    try {
-        const now = new Date();
-        const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
-        const finMes = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const filtroFechasVentasAnterior = startAnterior && endAnterior
+      ? { createdAt: { $gte: startAnterior, $lte: endAnterior } }
+      : {};
 
-        const rentas = await Renta.find({
-            'detallesRenta.fechaRecoge': { $gte: inicioMes, $lte: finMes },
-            estado: { $in: ['Activo', 'Completado'] }
-        });
+    const filtroFechasRentasAnterior = startAnterior && endAnterior
+      ? { 'detallesRenta.fechaOcupacion': { $gte: startAnterior, $lte: endAnterior } }
+      : {};
 
-        const totalRentas = rentas.reduce((sum, r) => sum + (r.detallesPago?.precioRenta || 0), 0);
+    const ventasAnterior = await Venta.find(filtroFechasVentasAnterior).lean();
+    const rentasAnterior = await Renta.find(filtroFechasRentasAnterior).lean();
 
-        res.json({ totalRentas });
-    } catch (error) {
-        console.error('Error en obtenerResumenRentas:', error);
-        res.status(500).json({ message: 'Error al obtener resumen de rentas' });
-    }
-};
+    const montoTotalVentasAnterior = ventasAnterior.reduce((sum, v) => sum + (v.resumen?.total || 0), 0);
+    const montoTotalRentasAnterior = rentasAnterior.reduce((sum, r) => sum + (r.detallesPago?.precioRenta || 0), 0);
 
-// === 3. Clientes únicos ===
-exports.obtenerClientesUnicos = async (req, res) => {
-    try {
-        const now = new Date();
-        const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
-        const finMes = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const totalVentasAnterior = ventasAnterior.length;
+    const totalRentasAnterior = rentasAnterior.length;
 
-        const ventas = await Venta.find({
-            createdAt: { $gte: inicioMes, $lte: finMes },
-            estado: { $in: ['Pagado', 'Entregado'] }
-        }).select('usuario');
+    const clientesVentasAnt = await Venta.find(filtroFechasVentasAnterior).distinct('usuario');
+    const clientesRentasAnt = await Renta.find(filtroFechasRentasAnterior).distinct('usuario');
+    const totalClientesAnterior = new Set([...clientesVentasAnt, ...clientesRentasAnt]).size;
 
-        const rentas = await Renta.find({
-            'detallesRenta.fechaRecoge': { $gte: inicioMes, $lte: finMes },
-            estado: { $in: ['Activo', 'Completado'] }
-        }).select('usuario');
+    // ---------- PERIODO ACTUAL ----------
+    const totalVentas = await Venta.countDocuments(filtroFechasVentas);
+    const totalRentas = await Renta.countDocuments(filtroFechasRentas);
 
-        const clientesVentas = ventas.map(v => v.usuario.toString());
-        const clientesRentas = rentas.map(r => r.usuario.toString());
-        const totalClientes = new Set([...clientesVentas, ...clientesRentas]).size;
+    const ventasFiltradas = await Venta.find(filtroFechasVentas).lean();
+    const rentasFiltradas = await Renta.find(filtroFechasRentas).lean();
 
-        res.json({ totalClientes });
-    } catch (error) {
-        console.error('Error en obtenerClientesUnicos:', error);
-        res.status(500).json({ message: 'Error al obtener clientes únicos' });
-    }
-};
+    const montoTotalVentas = ventasFiltradas.reduce((sum, v) => sum + (v.resumen?.total || 0), 0);
+    const montoTotalRentas = rentasFiltradas.reduce((sum, r) => sum + (r.detallesPago?.precioRenta || 0), 0);
 
-// === 4. Productos más vendidos ===
-exports.obtenerProductosMasVendidos = async (req, res) => {
-    try {
-        const now = new Date();
-        const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
-        const finMes = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const clientesVentas = await Venta.find(filtroFechasVentas).distinct('usuario');
+    const clientesRentas = await Renta.find(filtroFechasRentas).distinct('usuario');
+    const totalClientes = new Set([...clientesVentas, ...clientesRentas]).size;
 
-        const ventas = await Venta.find({
-            createdAt: { $gte: inicioMes, $lte: finMes },
-            estado: { $in: ['Pagado', 'Entregado'] }
-        }).populate('productos.producto');
+    const ventas = await Venta.find(filtroFechasVentas)
+      .populate('usuario')
+      .populate('productos.producto')
+      .lean();
 
-        const productosVendidos = {};
+    const rentas = await Renta.find(filtroFechasRentas)
+      .populate('usuario')
+      .populate('producto')
+      .lean();
 
-        for (const venta of ventas) {
-            for (const item of venta.productos) {
-                const prod = item.producto;
-                if (!prod || !prod._id) continue;
+    const transacciones = [
+      ...ventas.map(v => ({
+        fotoDePerfil: v.usuario?.fotoDePerfil || '',
+        cliente: v.usuario?.nombre || 'Usuario',
+        tipo: v.esApartado ? 'Apartado' : 'Venta',
+        vestido: v.productos?.[0]?.producto?.nombre || 'Producto',
+        monto: v.resumen?.total || 0,
+        estado: v.estado || 'Pendiente',
+        fecha: v.createdAt
+      })),
+      ...rentas.map(r => ({
+        fotoDePerfil: r.usuario?.fotoDePerfil || '',
+        cliente: r.usuario?.nombre || 'Usuario',
+        tipo: 'Renta',
+        vestido: r.producto?.nombre || 'Producto',
+        monto: r.detallesPago?.precioRenta || 0,
+        estado: r.estado || 'Pendiente',
+        fecha: r.fechaDeRegistro,
 
-                const key = prod._id.toString();
+      }))
 
-                if (!productosVendidos[key]) {
-                    productosVendidos[key] = {
-                        nombre: prod.nombre,
-                        color: prod.color || 'Desconocido',
-                        talla: prod.talla || 'N/A',
-                        cantidad: 0
-                    };
-                }
+    ].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
-                productosVendidos[key].cantidad += item.cantidad;
-            }
-        }
-
-        const vestidosMasVendidos = Object.values(productosVendidos);
-
-        res.json({ productosMasVendidos: vestidosMasVendidos });
-    } catch (error) {
-        console.error('Error en obtenerProductosMasVendidos:', error);
-        res.status(500).json({ message: 'Error al obtener productos más vendidos' });
-    }
-};
-
-// === 5. Datos simulados de gráficas ===
-exports.obtenerDatosGraficos = (req, res) => {
-    const ventasMensuales = Array(12).fill(0);
-    const rentasMensuales = Array(12).fill(0);
-
-    const clientesFrecuentes = {
-        labels: ['Buenavista', 'Altamira', 'Chapultepec', 'Centro', 'Tulancingo'],
-        datos: [120, 90, 80, 70, 60]
+    const generarColorUnico = (str) => {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const color = `hsl(${hash % 360}, 70%, 70%)`;
+      return color;
     };
 
-    const radarVentaRenta = {
-        labels: ['Jaltocán', 'Atlapexco', 'Buena Vista', 'Huejutla', 'Pachuca'],
-        rentas: [50, 40, 30, 20, 10],
-        ventas: [40, 50, 60, 70, 80]
+    // ---------- CALENDARIO ----------
+    const calendarioEventos = await Renta.find(filtroFechasRentas)
+      .populate('producto')
+      .lean();
+
+    const events = calendarioEventos.map(r => {
+      const desde = new Date(r.detallesRenta.fechaOcupacion);
+      const hasta = new Date(r.detallesRenta.fechaRegreso);
+      return {
+        id: `renta-${r._id}`,
+        calendarId: `renta-${r._id}`,
+        title: `${r.producto?.nombre || 'Producto'} (${r.usuario?.nombre || ''})`,
+        start: desde.toISOString(),
+        end: hasta.toISOString(), // Toast UI calendar incluye end de forma exclusiva
+        category: 'allday', // usar 'allday' para eventos que ocupan días completos
+        bgColor: generarColorUnico(r._id.toString()),
+        isReadOnly: true
+      };
+    });
+
+
+
+    const calendarOptions = {
+      initialView: 'dayGridMonth',
+      events
     };
 
-    res.json({ ventasMensuales, rentasMensuales, clientesFrecuentes, ventasRentasRadar: radarVentaRenta });
+    // ---------- RESPUESTA ----------
+    res.json({
+      totalVentas,
+      totalRentas,
+      totalClientes,
+      montoTotalVentas,
+      montoTotalRentas,
+
+      // Periodo anterior
+      totalVentasAnterior,
+      totalRentasAnterior,
+      totalClientesAnterior,
+      montoTotalVentasAnterior,
+      montoTotalRentasAnterior,
+
+      barChartData: await getBarChartReal(filtroFechasVentas, filtroFechasRentas),
+      chartOptionsMinimal: getChartOptions(),
+      calendarOptions,
+      transacciones
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al cargar el dashboard' });
+  }
+};
+
+async function getBarChartReal(filtroVentas, filtroRentas) {
+  const ventas = await Venta.find(filtroVentas).lean();
+  const rentas = await Renta.find(filtroRentas).lean();
+
+  // Determina si hay rango explícito y calcula días
+  const start = filtroVentas.createdAt?.$gte;
+  const end = filtroVentas.createdAt?.$lte;
+  const rangoDias = start && end ? differenceInDays(end, start) : 365;
+
+  let agrupador;
+  let etiquetas = [];
+  let ventasAgrupadas = {};
+  let rentasAgrupadas = {};
+
+  if (rangoDias <= 31) {
+    // Agrupar por día
+    agrupador = (fecha) => format(new Date(fecha), 'yyyy-MM-dd');
+  } else if (rangoDias <= 90) {
+    // Agrupar por semana
+    agrupador = (fecha) =>
+      `Semana ${format(startOfWeek(new Date(fecha)), 'w')} - ${format(new Date(fecha), 'MMM')}`;
+  } else {
+    // Agrupar por mes
+    agrupador = (fecha) => meses[new Date(fecha).getMonth()];
+  }
+
+  // Agrupa ventas
+  ventas.forEach((v) => {
+    const clave = agrupador(v.createdAt);
+    ventasAgrupadas[clave] = (ventasAgrupadas[clave] || 0) + (v.resumen?.total || 0);
+  });
+
+  // Agrupa rentas
+  rentas.forEach((r) => {
+    const clave = agrupador(r.detallesRenta.fechaOcupacion);
+    rentasAgrupadas[clave] = (rentasAgrupadas[clave] || 0) + (r.detallesPago?.precioRenta || 0);
+  });
+
+  // Etiquetas ordenadas por fecha
+  etiquetas = Array.from(new Set([...Object.keys(ventasAgrupadas), ...Object.keys(rentasAgrupadas)]));
+  etiquetas.sort((a, b) => new Date(a.split(' ')[1] || a) - new Date(b.split(' ')[1] || b));
+
+  return {
+    labels: etiquetas,
+    datasets: [
+      {
+        label: "Rentas",
+        backgroundColor: "#A5B4FC",
+        data: etiquetas.map((key) => rentasAgrupadas[key] || 0),
+      },
+      {
+        label: "Ventas",
+        backgroundColor: "#FCD34D",
+        data: etiquetas.map((key) => ventasAgrupadas[key] || 0),
+      },
+    ],
+  };
+}
+function getChartOptions() {
+  return {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: true,
+        position: "top"
+      }
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: { beginAtZero: true }
+    }
+  };
+}
+
+module.exports = {
+  obtenerResumenDashboard
 };

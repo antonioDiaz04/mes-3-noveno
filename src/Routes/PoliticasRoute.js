@@ -1,11 +1,10 @@
 const express = require("express");
 const router = express.Router();
 
-const PrivadoController = require("../Controllers/PrivadoController");
+const { PoliticaController } = require("../Controllers/PrivadoController");
 
-router.post("/", PrivadoController.crearPoliticas);
-router.get("/", PrivadoController.obtenerPoliticas);
-router.put("/", PrivadoController.actualizarPoliticas);
+router.post("/", PoliticaController.crearPoliticas);
+router.get("/", PoliticaController.obtenerPoliticas);
+router.put("/", PoliticaController.actualizarPoliticas);
 
 module.exports = router;
-

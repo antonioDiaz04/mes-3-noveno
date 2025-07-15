@@ -7,9 +7,9 @@ const {
 const sanitizeObject = require("../util/sanitize");
 const { logger } = require("../util/logger");
 
-// ==============================================
-// Controlador para Misión
-// ==============================================
+//* ==============================================
+//* Controlador para Misión
+//* ==============================================
 exports.getMision = async (req, res) => {
   try {
     const mision = await Mision.findOne();
@@ -21,24 +21,25 @@ exports.getMision = async (req, res) => {
 };
 exports.saveMision = async (req, res) => {
   try {
-    const { contenido } = sanitizeObject(req.body);
+    const { description } = sanitizeObject(req.body);
 
     // Verificar si ya existe una misión
     let mision = await Mision.findOne();
 
     if (mision) {
       // Actualizar
-      mision.contenido = contenido;
+      mision.description = description;
       mision.fechaActualizacion = Date.now();
       await mision.save();
     } else {
       // Crear nueva
-      mision = new Mision({ contenido });
+      mision = new Mision({ description });
       await mision.save();
     }
 
     res.json(mision);
   } catch (error) {
+    console.error("Error al guardar la misión:", error);
     // logger.error("Error al guardar la mision:", error);
     res.status(500).json({ error: error.message });
   }
@@ -61,9 +62,9 @@ exports.deleteMision = async (req, res) => {
   }
 };
 
-// ==============================================
-// Controlador para Visión
-// ==============================================
+//* ==============================================
+//* Controlador para Visión
+//* ==============================================
 
 // Obtener la visión
 exports.getVision = async (req, res) => {
@@ -78,18 +79,18 @@ exports.getVision = async (req, res) => {
 // Crear o actualizar visión
 exports.saveVision = async (req, res) => {
   try {
-    const { contenido } = sanitizeObject(req.body);
+    const { description } = sanitizeObject(req.body);
 
     let vision = await Vision.findOne();
 
     if (vision) {
       // Actualizar
-      vision.contenido = contenido;
+      vision.description = description;
       vision.fechaActualizacion = Date.now();
       await vision.save();
     } else {
       // Crear nueva
-      vision = new Vision({ contenido });
+      vision = new Vision({ description });
       await vision.save();
     }
 
@@ -99,7 +100,6 @@ exports.saveVision = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 // Cambiar estado activo
 exports.deleteVision = async (req, res) => {
   try {
@@ -119,59 +119,57 @@ exports.deleteVision = async (req, res) => {
   }
 };
 
-// ==============================================
-// Controlador para Valores
-// ==============================================
+//* ==============================================
+//* Controlador para Valores
+//* ==============================================
 
 // Obtener todos los valores activos
 exports.getValores = async (req, res) => {
   try {
-    const valores = await Valores.find({ activo: true }).sort({ orden: 1 });
+    const valores = await Valores.findOne({ activo: true }).sort({ fechaVigencia: -1 });
     res.json(valores);
   } catch (error) {
-    // logger.error("Error al traer todos los valores", error);
     res.status(500).json({ error: error.message });
   }
 };
+
 // Obtener todos los valores (incluyendo inactivos - para admin)
 exports.getAllValores = async (req, res) => {
   try {
-    const valores = await Valores.find().sort({ orden: 1 });
+    const valores = await Valores.find().sort({ fechaVigencia: -1 });
     res.json(valores);
   } catch (error) {
-    // logger.error("Error al traer todos de la vision:", error);
     res.status(500).json({ error: error.message });
   }
 };
+
 // Crear un nuevo valor
 exports.createValor = async (req, res) => {
   try {
-    const { nombre, descripcion, icono, orden } = sanitizeObject(req.body);
+    const { title, items, fechaVigencia } = sanitizeObject(req.body);
+
     const valor = new Valores({
-      nombre,
-      descripcion,
-      icono,
-      orden: orden || 0,
+      title,
+      items, // array de strings
+      fechaVigencia
     });
 
     await valor.save();
     res.status(201).json(valor);
   } catch (error) {
-    // logger.error("Error al crear los valores:", error);
     res.status(500).json({ error: error.message });
   }
 };
+
 // Actualizar un valor
 exports.updateValor = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, descripcion, icono, orden, activo } = sanitizeObject(
-      req.body
-    );
+    const { title, items, fechaVigencia } = sanitizeObject(req.body);
 
     const valor = await Valores.findByIdAndUpdate(
       id,
-      { nombre, descripcion, icono, orden, activo },
+      { title, items, fechaVigencia },
       { new: true }
     );
 
@@ -181,15 +179,16 @@ exports.updateValor = async (req, res) => {
 
     res.json(valor);
   } catch (error) {
-    // logger.error("Error al actualizar los valores:", error);
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // Eliminar un valor (soft delete)
 exports.deleteValor = async (req, res) => {
   try {
     const { id } = req.params;
+
     const valor = await Valores.findByIdAndUpdate(
       id,
       { activo: false },
@@ -202,14 +201,14 @@ exports.deleteValor = async (req, res) => {
 
     res.json({ message: "Valor desactivado correctamente" });
   } catch (error) {
-    // logger.error("Error al eliminar los valores:", error);
     res.status(500).json({ error: error.message });
   }
 };
 
-// ==============================================
-// Controlador para Preguntas Frecuentes
-// ==============================================
+
+//* ==============================================
+//* Controlador para Preguntas Frecuentes
+//* ==============================================
 
 // Obtener todas las preguntas activas
 exports.getPreguntas = async (req, res) => {
@@ -280,6 +279,36 @@ exports.updatePregunta = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// Registrar (reemplazar) todas las preguntas frecuentes
+exports.registrarPreguntasFrecuentes = async (req, res) => {
+  try {
+    const preguntas = req.body;
+
+    if (!Array.isArray(preguntas)) {
+      return res.status(400).json({ error: "Formato inválido" });
+    }
+
+    // Elimina las anteriores (o márcalas como inactivas si prefieres soft delete)
+    await PreguntaFrecuente.deleteMany({});
+
+    // Inserta todas
+    const nuevas = await PreguntaFrecuente.insertMany(
+      preguntas.map((p, i) => ({
+        pregunta: p.pregunta,
+        respuesta: p.respuesta,
+        categoria: p.categoria || 'general',
+        orden: i,
+        activo: true,
+      }))
+    );
+
+    res.status(201).json(nuevas);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Eliminar una pregunta (soft delete)
 exports.deletePregunta = async (req, res) => {
   try {

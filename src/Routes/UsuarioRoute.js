@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const UsuarioController = require("../Controllers/usuarioController");
-const validarDatos = require("../Midlewares/validator.middleware");
-const { registerSchema } = require("../schemas/authSchema");
-const upload = require("../Midlewares/multer");
+const upload = require("../middleware/multer");
 
 // agrega cliente
 router.post("/", UsuarioController.crearUsuario);

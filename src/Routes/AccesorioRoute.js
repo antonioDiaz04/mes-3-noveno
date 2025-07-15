@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const upload = require("../Midlewares/multer");
+const upload = require("../middleware/multer");
 const AccesorioController = require("../Controllers/AccesorioController");
 
 // Configuración de las rutas

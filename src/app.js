@@ -1,28 +1,24 @@
 const express = require("express");
 const morgan = require("morgan");
 require("dotenv").config();
-const bodyParser = require('body-parser');
 const conectarDB = require("./Server/Conexion");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
-// const { logHttpRequest } = require("./util/logger.js");
-const { limiter } = require("./util/rateLimit.js");
 const categoriaRoutes = require('./Routes/CategoriaRoutes');
-//importa el cliente oficial de elasticseach
+const updateLastActivity = require('./middleware/updateLastActivity');
 
 const app = express();
 
 conectarDB();
 
 const corsOrigins = process.env.CORS_ORIGINS
-  // Evita errores con espacios 
   ? process.env.CORS_ORIGINS.split(",").map(origin => origin.trim())
   : [];
 
 
 const corsOptions = {
-  origin: corsOrigins.length > 0 ? corsOrigins : false, // Evita problemas si no hay orígenes definidos
+  origin: corsOrigins.length > 0 ? corsOrigins : false,
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
@@ -32,16 +28,10 @@ app.use(helmet());
 app.use(cookieParser());
 app.use(cors(corsOptions));
 app.use(express.json());
-// app.use(limiter);esto limita las solicitudes constantes
-app.use(helmet.hidePoweredBy()); // Oculta información del servidor
-
-
-
-
+app.use(helmet.hidePoweredBy());
 app.use(helmet.hsts({ maxAge: 31536000, includeSubDomains: true }));
 app.use(helmet.noSniff());
 
-// Configura X-Frame-Options para prevenir Clickjacking
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
@@ -84,12 +74,11 @@ app.use(helmet({
       frameAncestors: ["'none'"],
     }
   },
-  xssFilter: true, // Protege contra ataques de XSS
-  frameguard: { action: "deny" }, // Bloquea el uso en iframes
-  noSniff: true // Evita la detección automática de MIME types
+  xssFilter: true,
+  frameguard: { action: "deny" },
+  noSniff: true
 }));
 
-// Solo habilitamos los mensajes por consola en el modo de desarrollo
 if (process.env.NODE_ENV !== "production") {
   app.use(morgan("dev"));
 }
@@ -101,11 +90,13 @@ app.use((req, res, next) => {
 
 
 app.use((req, res, next) => {
-  res.removeHeader("X-Powered-By"); // Elimina el encabezado que revela la tecnología del servidor
+  res.removeHeader("X-Powered-By");
   next();
 });
-// Ruta dinámica para la API
-const apiVersion = process.env.API_VERSION || "v1"; // Si no se define, usa 'v1'
+
+app.use(updateLastActivity);
+
+const apiVersion = process.env.API_VERSION || "v1";
 
 // Rutas padres
 app.use(`/api/${apiVersion}/msj`, require("./Routes/WhatsappRoute.js"));
@@ -126,9 +117,10 @@ app.use(`/api/${apiVersion}/enviar-correo`, require("./Routes/CorreoRoute"));
 app.use(`/api/${apiVersion}/verificacion`, require("./Routes/CorreoRoute"));
 app.use(`/api/${apiVersion}/verificar`, require("./Routes/catpch"));
 app.use(`/api/${apiVersion}/Empresa`, require("./Routes/PerfilEmpresa.Routes"));
+app.use(`/api/${apiVersion}/quienesSomos`, require("./Routes/quienesSomos.routes.js"));
 app.use(`/api/${apiVersion}/autentificacion`, require("./Routes/AuthRoute"));
 app.use(`/api/${apiVersion}/renta`, require("./Routes/Renta&Venta"));
-app.use(`/api/${apiVersion}/estadisticas`,require("./Routes/EstadisticasRoute"));
+app.use(`/api/${apiVersion}/estadisticas`, require("./Routes/EstadisticasRoute"));
 app.use(`/api/${apiVersion}/proceso`, require("./Routes/Renta&Venta"));
 
 
