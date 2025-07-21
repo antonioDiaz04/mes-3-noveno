@@ -7,9 +7,9 @@ const RentaSchema = new mongoose.Schema({
     required: true,
   },
 
-  producto: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "Producto", 
+  producto: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Producto",
     required: true
   },
 
@@ -25,18 +25,18 @@ const RentaSchema = new mongoose.Schema({
     }
   },
 
-  estado: { 
-    type: String, 
+  estado: {
+    type: String,
     enum: ['Pendiente', 'Activo', 'Completado', 'Cancelado'],
-    default: 'Pendiente' 
+    default: 'Pendiente'
   },
 
   detallesPago: {
     precioRenta: { type: Number, required: true, min: 0 },
-    metodoPago: { 
-      type: String, 
+    metodoPago: {
+      type: String,
       enum: ['Efectivo', 'Transferencia', 'Tarjeta', 'PayPal'],
-      required: true 
+      required: true
     },
     fechaPago: { type: Date, default: Date.now }
   },
@@ -77,7 +77,7 @@ const RentaSchema = new mongoose.Schema({
 });
 
 // Middleware de validación de fechas
-RentaSchema.pre("save", function(next) {
+RentaSchema.pre("save", function (next) {
   const recogida = this.detallesRenta.fechaRecoge;
   const regreso = this.detallesRenta.fechaRegreso;
   if (regreso <= recogida) {
@@ -87,14 +87,14 @@ RentaSchema.pre("save", function(next) {
 });
 
 // Método para calcular duración
-RentaSchema.methods.calcularDuracion = function() {
+RentaSchema.methods.calcularDuracion = function () {
   const inicio = this.detallesRenta.fechaRecoge;
   const fin = this.detallesRenta.fechaRegreso;
   return Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24));
 };
 
 // Método para actualizar estado de pago
-RentaSchema.methods.actualizarEstadoDePago = function() {
+RentaSchema.methods.actualizarEstadoDePago = function () {
   const totalAPagar = this.detallesPago.precioRenta + (this.multa || 0);
   const diferencia = this.montoPagado - totalAPagar;
 
@@ -102,5 +102,4 @@ RentaSchema.methods.actualizarEstadoDePago = function() {
   this.montoSobrante = diferencia > 0 ? diferencia : 0;
 };
 
-const Renta = mongoose.model("Renta", RentaSchema);
-module.exports = Renta;
+module.exports = mongoose.models.Renta || mongoose.model("Renta", RentaSchema);

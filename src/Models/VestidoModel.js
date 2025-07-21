@@ -1,7 +1,7 @@
 const mongoose = require("mongoose"); // Importa la librería Mongoose.
 
 // Define el esquema de Mongoose para la colección 'productos' (vestidos).
-const productoSchema = new mongoose.Schema({
+const VestidoSchema = new mongoose.Schema({
     // --- Información Básica ---
     // Campo para el nombre del vestido. Es obligatorio y se limpia de espacios en blanco al inicio/fin.
     nombre: {
@@ -248,16 +248,16 @@ const productoSchema = new mongoose.Schema({
 
 // Índice de texto para búsquedas en 'nombre'. Permite búsquedas de texto completas.
 // Combina con otros campos para consultas compuestas.
-productoSchema.index({ nombre: "text", color: 1, precio_venta: 1, rating_promedio: -1 });
+VestidoSchema.index({ nombre: "text", color: 1, precio_venta: 1, rating_promedio: -1 });
 
 // Índices individuales para campos booleanos que se usarán frecuentemente en filtros.
 // Un índice en '1' (ascendente) es suficiente para booleanos.
-productoSchema.index({ en_promocion: 1 });
-productoSchema.index({ en_oferta: 1 });
+VestidoSchema.index({ en_promocion: 1 });
+VestidoSchema.index({ en_oferta: 1 });
 // Sugerencia: Añadir índices a 'categoria', 'estilo', 'temporada' si se usan mucho para filtrar/recomendar.
-// productoSchema.index({ categoria: 1, estilo: 1, temporada: 1 });
+// VestidoSchema.index({ categoria: 1, estilo: 1, temporada: 1 });
 
 
 // Exporta el modelo Mongoose, lo que permite interactuar con la colección 'productos'.
 // El nombre del modelo aquí es 'Producto' (singular), Mongoose lo pluralizará a 'productos' para la colección.
-module.exports = mongoose.model("Producto", productoSchema);
+module.exports = mongoose.model("Vestido", VestidoSchema);

@@ -1,223 +1,238 @@
-// const Venta = require("../Models/VentaModel");
-// const Renta = require("../Models/RentaModel");
-// const redis = require("redis");
-// const {logger} = require("../util/logger");
+const { startOfWeek, format, differenceInDays, addDays } = require('date-fns');
+const Venta = require('../models/VentaModel');
+const Renta = require('../models/RentaModel');
 
-// const client = redis.createClient();
+const meses = [
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+];
 
-// // Función para obtener cliente frecuente
-// const obtenerClienteFrecuente = async (modelo, campo) => {
-//   try {
-//     const clienteMasFrecuente = await modelo.aggregate([
-//       { $group: { _id: campo, total: { $sum: 1 } } },
-//       { $sort: { total: -1 } },
-//       { $limit: 1 },
-//     ]);
-//     return clienteMasFrecuente;
-//   } catch (error) {
-//     logger.error("Error al obtener cliente frecuente:", error);
-//     throw new Error("Error interno del servidor");
-//   }
-// };
+const obtenerResumenDashboard = async (req, res) => {
+  try {
+    const start = req.query.start ? new Date(req.query.start) : null;
+    const end = req.query.end ? new Date(req.query.end) : null;
 
-// // Obtener totales de compras y rentas
-// exports.obtenerTotales = async (req, res) => {
-//   try {
-//     client.get("totales", async (err, data) => {
-//       if (data) {
-//         return res.status(200).json(JSON.parse(data)); // Si está cacheado, lo devolvemos
-//       } else {
-//         const [totalCompras, totalRentas] = await Promise.all([
-//           Venta.countDocuments(),
-//           Renta.countDocuments(),
-//         ]);
-//         const result = { totalCompras, totalRentas };
-//         client.setex("totales", 3600, JSON.stringify(result)); // Cacheamos por 1 hora
-//         res.status(200).json(result);
-//       }
-//     });
-//   } catch (error) {
-//     logger.error("Error al obtener totales:", error);
+    const filtroFechasVentas = start && end ? { createdAt: { $gte: start, $lte: end } } : {};
+    const filtroFechasRentas = start && end ? { 'detallesRenta.fechaOcupacion': { $gte: start, $lte: end } } : {};
 
-//     res
-//       .status(500)
-//       .json({ message: "Error interno del servidor", error: error.message });
-//   }
-// };
+    // ---------- PERIODO ANTERIOR ----------
+    let startAnterior = null;
+    let endAnterior = null;
 
-// // Obtener ingresos totales
-// exports.obtenerIngresosTotales = async (req, res) => {
-//   try {
-//     const totalIngresosVentas = await Venta.aggregate([
-//       { $group: { _id: null, totalIngresos: { $sum: "$resumen.total" } } },
-//     ]);
+    if (start && end) {
+      const dias = differenceInDays(end, start);
+      startAnterior = new Date(start);
+      startAnterior.setDate(startAnterior.getDate() - dias - 1);
 
-//     const totalIngresosRentas = await Renta.aggregate([
-//       {
-//         $group: {
-//           _id: null,
-//           totalIngresos: { $sum: "$detallesPago.precioRenta" },
-//         },
-//       },
-//     ]);
+      endAnterior = new Date(start);
+      endAnterior.setDate(endAnterior.getDate() - 1);
+    }
 
-//     res.status(200).json({
-//       ingresosVentas: totalIngresosVentas[0]?.totalIngresos || 0,
-//       ingresosRentas: totalIngresosRentas[0]?.totalIngresos || 0,
-//     });
-//   } catch (error) {
-//     logger.error("Error al obtener ingresos totales:", error);
+    const filtroFechasVentasAnterior = startAnterior && endAnterior
+      ? { createdAt: { $gte: startAnterior, $lte: endAnterior } }
+      : {};
 
-//     res
-//       .status(500)
-//       .json({ message: "Error interno del servidor", error: error.message });
-//   }
-// };
+    const filtroFechasRentasAnterior = startAnterior && endAnterior
+      ? { 'detallesRenta.fechaOcupacion': { $gte: startAnterior, $lte: endAnterior } }
+      : {};
 
-// // Obtener productos más vendidos y rentados
-// exports.obtenerProductosPopulares = async (req, res) => {
-//   try {
-//     const productoMasVendido = await Venta.aggregate([
-//       { $unwind: "$productos" },
-//       {
-//         $group: {
-//           _id: "$productos.producto",
-//           totalVendido: { $sum: "$productos.cantidad" },
-//         },
-//       },
-//       { $sort: { totalVendido: -1 } },
-//       { $limit: 1 },
-//     ]);
+    const ventasAnterior = await Venta.find(filtroFechasVentasAnterior).lean();
+    const rentasAnterior = await Renta.find(filtroFechasRentasAnterior).lean();
 
-//     const productoMasRentado = await Renta.aggregate([
-//       { $group: { _id: "$producto", totalRentas: { $sum: 1 } } },
-//       { $sort: { totalRentas: -1 } },
-//       { $limit: 1 },
-//     ]);
+    const montoTotalVentasAnterior = ventasAnterior.reduce((sum, v) => sum + (v.resumen?.total || 0), 0);
+    const montoTotalRentasAnterior = rentasAnterior.reduce((sum, r) => sum + (r.detallesPago?.precioRenta || 0), 0);
 
-//     res.status(200).json({ productoMasVendido, productoMasRentado });
-//   } catch (error) {
-//     logger.error("Error al obtener productos populares:", error);
+    const totalVentasAnterior = ventasAnterior.length;
+    const totalRentasAnterior = rentasAnterior.length;
 
-//     res
-//       .status(500)
-//       .json({ message: "Error interno del servidor", error: error.message });
-//   }
-// };
+    const clientesVentasAnt = await Venta.find(filtroFechasVentasAnterior).distinct('usuario');
+    const clientesRentasAnt = await Renta.find(filtroFechasRentasAnterior).distinct('usuario');
+    const totalClientesAnterior = new Set([...clientesVentasAnt, ...clientesRentasAnt]).size;
 
-// // Obtener número de clientes activos
-// exports.obtenerClientesActivos = async (req, res) => {
-//   try {
-//     const clientesActivosVentas = await Venta.distinct("usuario");
-//     const clientesActivosRentas = await Renta.distinct("usuario");
-//     const totalClientesActivos = new Set([
-//       ...clientesActivosVentas,
-//       ...clientesActivosRentas,
-//     ]).size;
+    // ---------- PERIODO ACTUAL ----------
+    const totalVentas = await Venta.countDocuments(filtroFechasVentas);
+    const totalRentas = await Renta.countDocuments(filtroFechasRentas);
 
-//     res.status(200).json({ totalClientesActivos });
-//   } catch (error) {
-//     logger.error("Error al obtener clientes activos:", error);
+    const ventasFiltradas = await Venta.find(filtroFechasVentas).lean();
+    const rentasFiltradas = await Renta.find(filtroFechasRentas).lean();
 
-//     res
-//       .status(500)
-//       .json({ message: "Error interno del servidor", error: error.message });
-//   }
-// };
+    const montoTotalVentas = ventasFiltradas.reduce((sum, v) => sum + (v.resumen?.total || 0), 0);
+    const montoTotalRentas = rentasFiltradas.reduce((sum, r) => sum + (r.detallesPago?.precioRenta || 0), 0);
 
-// // Obtener ingresos por mes
-// exports.obtenerIngresosPorMes = async (req, res) => {
-//   try {
-//     const ingresosPorMes = await Venta.aggregate([
-//       {
-//         $group: {
-//           _id: { $month: "$fechaVenta" },
-//           totalIngresos: { $sum: "$resumen.total" },
-//           totalVentas: { $sum: 1 },
-//         },
-//       },
-//       { $sort: { _id: 1 } },
-//     ]);
+    const clientesVentas = await Venta.find(filtroFechasVentas).distinct('usuario');
+    const clientesRentas = await Renta.find(filtroFechasRentas).distinct('usuario');
+    const totalClientes = new Set([...clientesVentas, ...clientesRentas]).size;
 
-//     res.status(200).json(ingresosPorMes);
-//   } catch (error) {
-//     logger.error("Error al obtener ingresos por mes:", error);
+    const ventas = await Venta.find(filtroFechasVentas)
+      .populate('usuario')
+      .populate('productos.producto')
+      .lean();
 
-//     res
-//       .status(500)
-//       .json({ message: "Error interno del servidor", error: error.message });
-//   }
-// };
+    const rentas = await Renta.find(filtroFechasRentas)
+      .populate('usuario')
+      .populate('producto')
+      .lean();
 
-// // Obtener métodos de pago más usados
-// exports.obtenerMetodosPago = async (req, res) => {
-//   try {
-//     const metodosPago = await Venta.aggregate([
-//       { $group: { _id: "$detallesPago.metodoPago", total: { $sum: 1 } } },
-//       { $sort: { total: -1 } },
-//     ]);
+    const transacciones = [
+      ...ventas.map(v => ({
+        fotoDePerfil: v.usuario?.fotoDePerfil || '',
+        cliente: v.usuario?.nombre || 'Usuario',
+        tipo: v.esApartado ? 'Apartado' : 'Venta',
+        vestido: v.productos?.[0]?.producto?.nombre || 'Producto',
+        monto: v.resumen?.total || 0,
+        estado: v.estado || 'Pendiente',
+        fecha: v.createdAt
+      })),
+      ...rentas.map(r => ({
+        fotoDePerfil: r.usuario?.fotoDePerfil || '',
+        cliente: r.usuario?.nombre || 'Usuario',
+        tipo: 'Renta',
+        vestido: r.producto?.nombre || 'Producto',
+        monto: r.detallesPago?.precioRenta || 0,
+        estado: r.estado || 'Pendiente',
+        fecha: r.fechaDeRegistro,
 
-//     res.status(200).json(metodosPago);
-//   } catch (error) {
-//     logger.error("Error al obtener métodos de pago:", error);
+      }))
 
-//     res
-//       .status(500)
-//       .json({ message: "Error interno del servidor", error: error.message });
-//   }
-// };
+    ].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
-// // Obtener rentas con retraso
-// exports.obtenerRentasRetrasadas = async (req, res) => {
-//   try {
-//     const hoy = new Date();
-//     const rentasRetrasadas = await Renta.find({
-//       "detallesRenta.fechaFin": { $lt: hoy },
-//       estado: { $nin: ["Completado", "Cancelado"] },
-//     })
-//       .populate("usuario", "nombre email")
-//       .lean(); // Usamos lean() para mejorar el rendimiento
+    const generarColorUnico = (str) => {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const color = `hsl(${hash % 360}, 70%, 70%)`;
+      return color;
+    };
 
-//     res.status(200).json(rentasRetrasadas);
-//   } catch (error) {
-//     logger.error("Error al obtener rentas retrasadas:", error);
+    // ---------- CALENDARIO ----------
+    const calendarioEventos = await Renta.find(filtroFechasRentas)
+      .populate('producto')
+      .lean();
 
-//     res
-//       .status(500)
-//       .json({ message: "Error interno del servidor", error: error.message });
-//   }
-// };
+    const events = calendarioEventos.map(r => {
+      const desde = new Date(r.detallesRenta.fechaOcupacion);
+      const hasta = new Date(r.detallesRenta.fechaRegreso);
+      return {
+        id: `renta-${r._id}`,
+        calendarId: `renta-${r._id}`,
+        title: `${r.producto?.nombre || 'Producto'} (${r.usuario?.nombre || ''})`,
+        start: desde.toISOString(),
+        end: hasta.toISOString(), // Toast UI calendar incluye end de forma exclusiva
+        category: 'allday', // usar 'allday' para eventos que ocupan días completos
+        bgColor: generarColorUnico(r._id.toString()),
+        isReadOnly: true
+      };
+    });
 
-// // Obtener clientes con más compras y rentas
-// exports.obtenerClientesFrecuentes = async (req, res) => {
-//   try {
-//     const clienteMasCompras = await obtenerClienteFrecuente(Venta, "usuario");
-//     const clienteMasRentas = await obtenerClienteFrecuente(Renta, "usuario");
 
-//     res.status(200).json({ clienteMasCompras, clienteMasRentas });
-//   } catch (error) {
-//     logger.error("Error al obtener clientes frecuentes:", error);
 
-//     res
-//       .status(500)
-//       .json({ message: "Error interno del servidor", error: error.message });
-//   }
-// };
+    const calendarOptions = {
+      initialView: 'dayGridMonth',
+      events
+    };
 
-// // Obtener gasto promedio por cliente
-// exports.obtenerGastoPromedio = async (req, res) => {
-//   try {
-//     const gastoPromedio = await Venta.aggregate([
-//       { $group: { _id: "$usuario", totalGastado: { $sum: "$resumen.total" } } },
-//       { $group: { _id: null, promedio: { $avg: "$totalGastado" } } },
-//     ]);
+    // ---------- RESPUESTA ----------
+    res.json({
+      totalVentas,
+      totalRentas,
+      totalClientes,
+      montoTotalVentas,
+      montoTotalRentas,
 
-//     res.status(200).json({ gastoPromedio: gastoPromedio[0]?.promedio || 0 });
-//   } catch (error) {
-//     logger.error("Error al obtener gasto promedio:", error);
+      // Periodo anterior
+      totalVentasAnterior,
+      totalRentasAnterior,
+      totalClientesAnterior,
+      montoTotalVentasAnterior,
+      montoTotalRentasAnterior,
 
-//     res
-//       .status(500)
-//       .json({ message: "Error interno del servidor", error: error.message });
-//   }
-// };
+      barChartData: await getBarChartReal(filtroFechasVentas, filtroFechasRentas),
+      chartOptionsMinimal: getChartOptions(),
+      calendarOptions,
+      transacciones
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al cargar el dashboard' });
+  }
+};
+
+async function getBarChartReal(filtroVentas, filtroRentas) {
+  const ventas = await Venta.find(filtroVentas).lean();
+  const rentas = await Renta.find(filtroRentas).lean();
+
+  // Determina si hay rango explícito y calcula días
+  const start = filtroVentas.createdAt?.$gte;
+  const end = filtroVentas.createdAt?.$lte;
+  const rangoDias = start && end ? differenceInDays(end, start) : 365;
+
+  let agrupador;
+  let etiquetas = [];
+  let ventasAgrupadas = {};
+  let rentasAgrupadas = {};
+
+  if (rangoDias <= 31) {
+    // Agrupar por día
+    agrupador = (fecha) => format(new Date(fecha), 'yyyy-MM-dd');
+  } else if (rangoDias <= 90) {
+    // Agrupar por semana
+    agrupador = (fecha) =>
+      `Semana ${format(startOfWeek(new Date(fecha)), 'w')} - ${format(new Date(fecha), 'MMM')}`;
+  } else {
+    // Agrupar por mes
+    agrupador = (fecha) => meses[new Date(fecha).getMonth()];
+  }
+
+  // Agrupa ventas
+  ventas.forEach((v) => {
+    const clave = agrupador(v.createdAt);
+    ventasAgrupadas[clave] = (ventasAgrupadas[clave] || 0) + (v.resumen?.total || 0);
+  });
+
+  // Agrupa rentas
+  rentas.forEach((r) => {
+    const clave = agrupador(r.detallesRenta.fechaOcupacion);
+    rentasAgrupadas[clave] = (rentasAgrupadas[clave] || 0) + (r.detallesPago?.precioRenta || 0);
+  });
+
+  // Etiquetas ordenadas por fecha
+  etiquetas = Array.from(new Set([...Object.keys(ventasAgrupadas), ...Object.keys(rentasAgrupadas)]));
+  etiquetas.sort((a, b) => new Date(a.split(' ')[1] || a) - new Date(b.split(' ')[1] || b));
+
+  return {
+    labels: etiquetas,
+    datasets: [
+      {
+        label: "Rentas",
+        backgroundColor: "#A5B4FC",
+        data: etiquetas.map((key) => rentasAgrupadas[key] || 0),
+      },
+      {
+        label: "Ventas",
+        backgroundColor: "#FCD34D",
+        data: etiquetas.map((key) => ventasAgrupadas[key] || 0),
+      },
+    ],
+  };
+}
+function getChartOptions() {
+  return {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: true,
+        position: "top"
+      }
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: { beginAtZero: true }
+    }
+  };
+}
+
+module.exports = {
+  obtenerResumenDashboard
+};

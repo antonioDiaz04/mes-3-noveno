@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const carritoController = require('../Controllers/carritoController');
-const authMiddleware = require('../middlewares/auth');
 
 router.get('/byIdUsuario/:idUsuario', carritoController.obtenerCarrito);
 router.post('/guardar', carritoController.guardarCarrito);

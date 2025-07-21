@@ -1,6 +1,7 @@
 const Resenia = require('../Models/ReseniaModel');
 // Obtener reseñas aceptadas
 const { enviaCorreoDinamico } = require('../Controllers/CorreoController');
+
 exports.obtenerReseniasAceptadas = async (req, res) => {
     try {
         const resenias = await Resenia.find({ estado: 'aprobada' });

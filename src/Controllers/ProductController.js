@@ -1,7 +1,7 @@
 const fs = require("fs-extra");
 
 const Producto = require("../Models/ProductModel"); // Asegúrate de importar tu modelo de producto
-const upload = require('../Midlewares/multer');
+const upload = require('../middleware/multer');
 const cloudinary = require("cloudinary").v2;
 // const Producto = require("../models/Producto"); // Importa el modelo de Producto
 // const fs = require("fs/promises");

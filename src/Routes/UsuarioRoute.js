@@ -1,20 +1,19 @@
 const express = require("express");
 const router = express.Router();
-const bcrypt = require("bcryptjs");
-const jw = require("jsonwebtoken");
 const UsuarioController = require("../Controllers/usuarioController");
-const validarDatos = require("../Midlewares/validator.middleware");
-const { registerSchema } = require("../schemas/authSchema");
-// router.get("/admin", UsuarioController.adminRoute);
+const upload = require("../middleware/multer");
 
 // agrega cliente
 router.post("/", UsuarioController.crearUsuario);
+router.post("/reportes/:id", UsuarioController.crearReporte);
 router.post("/check-email", UsuarioController.checkEmail);
 router.post("/check-telefono", UsuarioController.checkTelefono);
 
 router.post("/check-code", UsuarioController.checkCode);
 
-router.put("/editarUsuario/:id", UsuarioController.editarUsuario);
+router.put("/editarUsuario/:id" , upload.none(), UsuarioController.editarUsuario);
+router.put("/editarUsuario/:id/con-foto/", upload.single('profileImg'), UsuarioController.subirFotoDelUsuario);
+router.get("/fotoDePerfil/:id", UsuarioController.consulrarPerfilUsuarioId);
 router.delete("/:id", UsuarioController.eliminarUsuario);
 
 // router.get("/", UsuarioController.clienteRoute);

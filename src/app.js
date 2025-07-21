@@ -5,43 +5,34 @@ const conectarDB = require("./Server/Conexion");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
-// const { logHttpRequest } = require("./util/logger.js");
-const { limiter } = require("./util/rateLimit.js");
 const categoriaRoutes = require('./Routes/CategoriaRoutes');
-//importa el cliente oficial de elasticseach
+const updateLastActivity = require('./middleware/updateLastActivity');
 
 const app = express();
 
 conectarDB();
 
-const corsOrigins = process.env.CORS_ORIGINS 
-// Evita errores con espacios 
-  ? process.env.CORS_ORIGINS.split(",").map(origin => origin.trim()) 
+const corsOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(",").map(origin => origin.trim())
   : [];
 
-  
+
 const corsOptions = {
-  origin: corsOrigins.length > 0 ? corsOrigins : false, // Evita problemas si no hay orígenes definidos
+  // origin: corsOrigins.length > 0 ? corsOrigins : false,
+  origin: "*", //🔓 Acepta cualquier origen 
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
 
-
 app.use(helmet());
 app.use(cookieParser());
 app.use(cors(corsOptions));
 app.use(express.json());
-// app.use(limiter);esto limita las solicitudes constantes
-app.use(helmet.hidePoweredBy()); // Oculta información del servidor
-
-
-
-
+app.use(helmet.hidePoweredBy());
 app.use(helmet.hsts({ maxAge: 31536000, includeSubDomains: true }));
 app.use(helmet.noSniff());
 
-// Configura X-Frame-Options para prevenir Clickjacking
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
@@ -73,23 +64,22 @@ app.use((req, res, next) => {
 
 app.use(helmet({
   contentSecurityPolicy: {
-      directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "https://apis.google.com"],
-          styleSrc: ["'self'", "https://fonts.googleapis.com"],
-          imgSrc: ["'self'", "data:"],
-          connectSrc: ["'self'"],
-          fontSrc: ["'self'", "https://fonts.gstatic.com"],
-          objectSrc: ["'none'"],
-          frameAncestors: ["'none'"],
-      }
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://apis.google.com"],
+      styleSrc: ["'self'", "https://fonts.googleapis.com"],
+      imgSrc: ["'self'", "data:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+    }
   },
-  xssFilter: true, // Protege contra ataques de XSS
-  frameguard: { action: "deny" }, // Bloquea el uso en iframes
-  noSniff: true // Evita la detección automática de MIME types
+  xssFilter: true,
+  frameguard: { action: "deny" },
+  noSniff: true
 }));
 
-// Solo habilitamos los mensajes por consola en el modo de desarrollo
 if (process.env.NODE_ENV !== "production") {
   app.use(morgan("dev"));
 }
@@ -101,28 +91,20 @@ app.use((req, res, next) => {
 
 
 app.use((req, res, next) => {
-  res.removeHeader("X-Powered-By"); // Elimina el encabezado que revela la tecnología del servidor
+  res.removeHeader("X-Powered-By");
   next();
 });
-// app.use((req, res, next) => {
-//   const start = Date.now(); //Se captura el tiempo actual en milisegundos
-//   res.on("finish", () => {
-//     const ip = req.ip;
-//     console.log(ip)
-//     const duration = Date.now() - start; // se calcula la duración de la solicitud restando el tiempo actual
-//     logHttpRequest(req, res, duration);
-//   });
-//   next();+++
-// });
 
-// Ruta dinámica para la API
-const apiVersion = process.env.API_VERSION || "v1"; // Si no se define, usa 'v1'
+app.use(updateLastActivity);
+
+const apiVersion = process.env.API_VERSION || "v1";
 
 // Rutas padres
 app.use(`/api/${apiVersion}/msj`, require("./Routes/WhatsappRoute.js"));
 app.use(`/api/${apiVersion}/categoria`, categoriaRoutes);
 
 app.use(`/api/${apiVersion}/producto`, require("./Routes/ProductRoute"));
+app.use(`/api/${apiVersion}/vestido`, require("./Routes/VestidoRoute"));
 app.use(`/api/${apiVersion}/accesorio`, require("./Routes/AccesorioRoute.js"));
 app.use(
   `/api/${apiVersion}/vestidos-accesorios`,
@@ -137,15 +119,20 @@ app.use(`/api/${apiVersion}/enviar-correo`, require("./Routes/CorreoRoute"));
 app.use(`/api/${apiVersion}/verificacion`, require("./Routes/CorreoRoute"));
 app.use(`/api/${apiVersion}/verificar`, require("./Routes/catpch"));
 app.use(`/api/${apiVersion}/Empresa`, require("./Routes/PerfilEmpresa.Routes"));
+app.use(`/api/${apiVersion}/quienesSomos`, require("./Routes/quienesSomos.routes.js"));
 app.use(`/api/${apiVersion}/autentificacion`, require("./Routes/AuthRoute"));
 app.use(`/api/${apiVersion}/renta`, require("./Routes/Renta&Venta"));
-// app.use(
-//   `/api/${apiVersion}/estadisticas`,
-//   require("./Routes/EstadisticasRoute")
-// );
+app.use(`/api/${apiVersion}/estadisticas`, require("./Routes/EstadisticasRoute"));
 app.use(`/api/${apiVersion}/proceso`, require("./Routes/Renta&Venta"));
+
 // ruta carrito
 app.use(`/api/${apiVersion}/carrito`, require("./Routes/CarritoRoute"));
+
+app.use(`/api/${apiVersion}/chatbot`, require("./Routes/chatbot.routes.js"));
+app.use(`/api/${apiVersion}/transaccion`, require("./Routes/transactionRoutes.js"));
+// ruta carrito
+app.use(`/api/${apiVersion}/carrito`, require("./Routes/CarritoRoute"));
+
 
 // Ruta para acciones control de Administrador de la página
 app.use(`/api/${apiVersion}/admin`, require("./Routes/PrivadoRoute"));
