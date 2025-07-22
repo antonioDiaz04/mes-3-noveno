@@ -1,26 +1,13 @@
-// const { v2: cloudinary } = require("cloudinary");
-// const { uploadImage } = require("../cloudinary/cloudinary");
 const fs = require("fs-extra");
-const Producto = require("../Models/ProductModel"); // Asegúrate de importar tu modelo de producto
-// import path from 'path'
-// Importa multerConfig
-const upload = require('../Midlewares/multer');
-
-
+const Producto = require("../Models/ProductModel");
 const cloudinary = require("cloudinary").v2;
-// const Producto = require("../models/Producto"); // Importa el modelo de Producto
-// const fs = require("fs/promises");
 
-// Configuración de Cloudinary
 cloudinary.config({
   cloud_name: "dvvhnrvav",
   api_key: "982632489651298",
   api_secret: "TTIZcgIMiC8F4t8cE-t6XkQnPyQ",
 });
 
-// const fs = require('fs').promises; // Asegúrate de usar 'fs/promises' para funciones asíncronas
-// const cloudinary = require('cloudinary').v2;
-// const Producto = require('../models/Producto'); // Asegúrate de que la ruta del modelo sea correcta
 exports.crearProducto = async (req, res) => {
   try {
     console.log("Contenido de req.body:", req.body);
@@ -100,7 +87,7 @@ exports.crearProducto = async (req, res) => {
 
 exports.editarProducto = async (req, res) => {
 
-  
+
   try {
     const { imagenPrincipal, otrasImagenes, ...productoData } = req.body;
 
@@ -189,53 +176,53 @@ exports.obtenerProductoById = async (req, res) => {
 
 exports.buscarVestidos = async (req, res) => {
   try {
-      const query = req.params.query;
-      
-      // Validación de query
-      if (!query || query.trim().length < 2) {
-          return res.status(400).json({ 
-              mensaje: 'Término de búsqueda muy corto' 
-          });
-      }
+    const query = req.params.query;
 
-      // Dividir el término de búsqueda en palabras
-      const palabras = query.trim().split(' ').filter(palabra => palabra.length > 0);
+    // Validación de query
+    if (!query || query.trim().length < 2) {
+      return res.status(400).json({
+        mensaje: 'Término de búsqueda muy corto'
+      });
+    }
 
-      // Construir la consulta con una búsqueda 'OR' para cada palabra en los campos
-      const resultados = await Producto.find({
-          $or: palabras.map(palabra => ({
-              $or: [
-                  { nombre: { $regex: palabra, $options: 'i' } },
-                  { descripcion: { $regex: palabra, $options: 'i' } },
-                  { categoria: { $regex: palabra, $options: 'i' } },
-                  { color: { $regex: palabra, $options: 'i' } },
-                  { 'tallasDisponibles.talla': { $regex: palabra, $options: 'i' } }
-              ]
-          }))
-      })
+    // Dividir el término de búsqueda en palabras
+    const palabras = query.trim().split(' ').filter(palabra => palabra.length > 0);
+
+    // Construir la consulta con una búsqueda 'OR' para cada palabra en los campos
+    const resultados = await Producto.find({
+      $or: palabras.map(palabra => ({
+        $or: [
+          { nombre: { $regex: palabra, $options: 'i' } },
+          { descripcion: { $regex: palabra, $options: 'i' } },
+          { categoria: { $regex: palabra, $options: 'i' } },
+          { color: { $regex: palabra, $options: 'i' } },
+          { 'tallasDisponibles.talla': { $regex: palabra, $options: 'i' } }
+        ]
+      }))
+    })
       .select('nombre imagenPrincipal precio categoria tallasDisponibles')
       .limit(50);
 
-      // Manejo de resultados
-      if (resultados.length === 0) {
-          return res.status(404).json({ 
-              mensaje: 'No se encontraron productos',
-              resultados: [] 
-          });
-      }
-
-      // Respuesta exitosa
-      res.status(200).json({
-          total: resultados.length,
-          resultados: resultados
+    // Manejo de resultados
+    if (resultados.length === 0) {
+      return res.status(404).json({
+        mensaje: 'No se encontraron productos',
+        resultados: []
       });
+    }
+
+    // Respuesta exitosa
+    res.status(200).json({
+      total: resultados.length,
+      resultados: resultados
+    });
 
   } catch (error) {
-      console.error('Error en búsqueda:', error);
-      res.status(500).json({ 
-          mensaje: 'Error interno del servidor',
-          error: error.message 
-      });
+    console.error('Error en búsqueda:', error);
+    res.status(500).json({
+      mensaje: 'Error interno del servidor',
+      error: error.message
+    });
   }
 };
 exports.buscarProductosAvanzados = async (req, res) => {

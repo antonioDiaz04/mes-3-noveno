@@ -14,6 +14,7 @@ router.get('/por-categoria', BotController.vestidosPorCategoria);
 // Precio por nombre de vestido
 router.get('/precio', BotController.obtenerPrecio);
 
+router.get('/buscar-por-rango', BotController.buscarPorRango);
 // Horarios de atención
 router.get('/horarios', BotController.obtenerHorarios);
 

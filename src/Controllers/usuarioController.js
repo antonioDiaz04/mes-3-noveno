@@ -675,3 +675,106 @@ exports.actualizaDatos = async (req, res) => {
     res.status(500).json({ mensaje: "Error interno del servidor" });
   }
 };
+
+// const DISTRIBUCION_LOCALIDADES = {
+//   "Huejutla de Reyes": 22,
+//   "Atlapeza": 12,
+//   "Guazalingo": 12,
+//   "Choconamel": 11,
+//   "San Felipe Orizatlán": 5,
+//   "Tlachinol": 5,
+//   "Jaltocán": 3,
+//   "Calnali": 3,
+//   "Chalma": 5,
+//   "Platón Sánchez": 4
+// };
+
+// // Baraja un array aleatoriamente
+// function shuffleArray(array) {
+//   let m = array.length, t, i;
+//   while (m) {
+//     i = Math.floor(Math.random() * m--);
+//     t = array[m];
+//     array[m] = array[i];
+//     array[i] = t;
+//   }
+//   return array;
+// }
+
+// // Genera un número aleatorio no repetido
+// function generarTelefonoUnico(usados) {
+//   let telefono;
+//   do {
+//     telefono = "771" + Math.floor(1000000 + Math.random() * 9000000).toString(); // Ej: 7711234567
+//   } while (usados.has(telefono));
+//   usados.add(telefono);
+//   return telefono;
+// }
+
+// exports.asignarLocalidadesAleatorias = async (req, res) => {
+//   try {
+//     const usuarios = await Usuario.find().limit(82);
+//     if (usuarios.length < 82) {
+//       console.warn(`Se encontraron solo ${usuarios.length} usuarios. Verifica tu base de datos.`);
+//     }
+
+//     const usuariosBarajeados = shuffleArray([...usuarios]);
+
+//     // Obtén teléfonos ya usados
+//     const todos = await Usuario.find({}, "telefono");
+//     const telefonosUsados = new Set(todos.map(u => u.telefono).filter(t => !!t));
+
+//     let index = 0;
+
+//     for (const [localidad, cantidad] of Object.entries(DISTRIBUCION_LOCALIDADES)) {
+//       for (let i = 0; i < cantidad; i++) {
+//         if (usuariosBarajeados[index]) {
+//           const user = usuariosBarajeados[index];
+
+//           // Si no tiene teléfono, genera uno nuevo único
+//           if (!user.telefono || user.telefono.trim() === "") {
+//             const nuevoTelefono = generarTelefonoUnico(telefonosUsados);
+//             user.telefono = nuevoTelefono;
+//             console.warn(`⚠️ Usuario ${user.nombre} no tenía teléfono. Se asignó: ${nuevoTelefono}`);
+//           }
+
+//           user.localidad = localidad;
+//           await user.save();
+//           console.log(`✅ ${user.nombre} asignado a ${localidad}`);
+//           index++;
+//         }
+//       }
+//     }
+//     res.status(201).json({ message: '🎉 Asignación aleatoria de localidades + teléfonos completada.' });
+
+//   } catch (error) {
+//     console.error("❌ Error al asignar localidades:", error);
+//   }
+// };
+
+
+// exports.contarUsuariosPorLocalidad = async () => {
+//   try {
+//     const resultado = await Usuario.aggregate([
+//       {
+//         $group: {
+//           _id: "$localidad",
+//           total: { $sum: 1 }
+//         }
+//       },
+//       {
+//         $sort: { total: -1 } // Opcional: ordena de mayor a menor
+//       }
+//     ]);
+
+//     console.log("📊 Conteo de usuarios por localidad:");
+//     resultado.forEach(entry => {
+//       console.log(`📍 ${entry._id || "Sin localidad"}: ${entry.total}`);
+//     });
+
+//     return resultado;
+//   } catch (error) {
+//     console.error("❌ Error al contar usuarios por localidad:", error);
+//     return [];
+//   }
+// };

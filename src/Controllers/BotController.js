@@ -39,7 +39,79 @@ exports.obtenerTendencias = async (req, res) => {
 };
 
 
-// Obtener un consejo aleatorio
+
+// exports.obtenerConsejo = async (req, res) => {
+//     try {
+//         const ventas = await Venta.aggregate([
+//             { $unwind: '$productos' },
+//             {
+//                 $group: {
+//                     _id: '$productos.producto',
+//                     total: { $sum: '$productos.cantidad' }
+//                 }
+//             }
+//         ]);
+
+//         const rentas = await Renta.aggregate([
+//             {
+//                 $group: {
+//                     _id: '$producto',
+//                     total: { $sum: 1 }
+//                 }
+//             }
+//         ]);
+
+//         const popularidad = new Map();
+
+//         for (const v of ventas) {
+//             popularidad.set(v._id.toString(), (popularidad.get(v._id.toString()) || 0) + v.total);
+//         }
+
+//         for (const r of rentas) {
+//             popularidad.set(r._id.toString(), (popularidad.get(r._id.toString()) || 0) + r.total);
+//         }
+
+//         if (popularidad.size === 0) {
+//             return res.json({
+//                 mensaje: 'Aún no hay datos suficientes para recomendar un vestido. ¡Sé el primero en rentar o comprar uno!',
+//                 productos: []
+//             });
+//         }
+
+//         const productosOrdenados = [...popularidad.entries()].sort((a, b) => b[1] - a[1]);
+//         const productoTopId = productosOrdenados[0][0];
+
+//         const productoTop = await Producto.findById(productoTopId)
+//             .populate('idCategoria')
+//             .select('nombre descripcion precioActual imagenes');
+
+//         if (!productoTop) {
+//             return res.json({
+//                 mensaje: 'Hubo un problema al buscar recomendaciones. Intenta más tarde.',
+//                 productos: []
+//             });
+//         }
+
+//         const nombreCategoria = productoTop.idCategoria?.nombre || 'una categoría especial';
+
+//         const mensaje = `Los vestidos más populares últimamente son de la categoría "${nombreCategoria}". ¿Te gustaría probar uno como el "${productoTop.nombre}"?`;
+
+//         return res.status(200).json({
+//             mensaje,
+//             productos: [{
+//                 nombre: productoTop.nombre,
+//                 descripcion: productoTop.descripcion || 'Sin descripción.',
+//                 precio: `$${productoTop.precioActual}`,
+//                 imagen: productoTop.imagenes?.[0] || ''
+//             }]
+//         });
+
+//     } catch (error) {
+//         console.error('❌ Error en obtenerConsejo:', error);
+//         return res.status(500).json({ mensaje: 'Error al generar el consejo.', productos: [] });
+//     }
+// };
+
 exports.obtenerConsejo = async (req, res) => {
     try {
         const ventas = await Venta.aggregate([
@@ -61,6 +133,7 @@ exports.obtenerConsejo = async (req, res) => {
             }
         ]);
 
+        // Mapa para sumar popularidad combinada
         const popularidad = new Map();
 
         for (const v of ventas) {
@@ -73,37 +146,47 @@ exports.obtenerConsejo = async (req, res) => {
 
         if (popularidad.size === 0) {
             return res.json({
-                mensaje: 'Aún no hay datos suficientes para recomendar un vestido. ¡Sé el primero en rentar o comprar uno!',
+                mensaje: 'Aún no hay datos suficientes para recomendar vestidos. ¡Sé el primero en rentar o comprar uno!',
                 productos: []
             });
         }
 
+        // Ordenar productos por popularidad descendente
         const productosOrdenados = [...popularidad.entries()].sort((a, b) => b[1] - a[1]);
-        const productoTopId = productosOrdenados[0][0];
+        const idsOrdenados = productosOrdenados.map(([id]) => id);
 
-        const productoTop = await Producto.findById(productoTopId)
+        // Obtener productos en lote
+        const productos = await Producto.find({ _id: { $in: idsOrdenados } })
             .populate('idCategoria')
-            .select('nombre descripcion precioActual imagenes');
+            .select('nombre descripcion precioActual imagenes idCategoria');
 
-        if (!productoTop) {
-            return res.json({
-                mensaje: 'Hubo un problema al buscar recomendaciones. Intenta más tarde.',
-                productos: []
-            });
+        // Agrupar el más popular de cada categoría
+        const productosPorCategoria = new Map();
+
+        for (const prodId of idsOrdenados) {
+            const prod = productos.find(p => p._id.toString() === prodId);
+            if (!prod || !prod.idCategoria) continue;
+
+            const idCat = prod.idCategoria._id.toString();
+            if (!productosPorCategoria.has(idCat)) {
+                productosPorCategoria.set(idCat, {
+                    nombre: prod.nombre,
+                    descripcion: prod.descripcion || 'Sin descripción.',
+                    precio: `$${prod.precioActual}`,
+                    imagen: prod.imagenes?.[0] || '',
+                    categoria: prod.idCategoria.nombre
+                });
+            }
         }
 
-        const nombreCategoria = productoTop.idCategoria?.nombre || 'una categoría especial';
+        const destacados = Array.from(productosPorCategoria.values());
 
-        const mensaje = `Los vestidos más populares últimamente son de la categoría "${nombreCategoria}". ¿Te gustaría probar uno como el "${productoTop.nombre}"?`;
+        const categoriasList = destacados.map(p => `"${p.categoria}"`);
+        const mensaje = `Los vestidos más populares últimamente incluyen modelos de las categorías: ${categoriasList.join(', ')}. Aquí tienes algunas opciones recomendadas.`;
 
         return res.status(200).json({
             mensaje,
-            productos: [{
-                nombre: productoTop.nombre,
-                descripcion: productoTop.descripcion || 'Sin descripción.',
-                precio: `$${productoTop.precioActual}`,
-                imagen: productoTop.imagenes?.[0] || ''
-            }]
+            productos: destacados
         });
 
     } catch (error) {
@@ -111,6 +194,7 @@ exports.obtenerConsejo = async (req, res) => {
         return res.status(500).json({ mensaje: 'Error al generar el consejo.', productos: [] });
     }
 };
+
 
 exports.vestidosPorCategoria = async (req, res) => {
     try {
@@ -202,5 +286,52 @@ exports.obtenerHorarios = async (req, res) => {
         res.status(200).json({ horarios });
     } catch (error) {
         res.status(500).json({ respuesta: 'Error al obtener horarios.', detalles: error.message });
+    }
+};
+
+
+// Buscar vestidos por rango de precios
+exports.buscarPorRango = async (req, res) => {
+    const min = parseInt(req.query.min, 10);
+    const max = parseInt(req.query.max, 10);
+
+    if (isNaN(min) || isNaN(max) || min > max) {
+        return res.status(400).json({
+            mensaje: 'Debes proporcionar un rango válido. Por ejemplo: ?min=500&max=1500',
+            productos: []
+        });
+    }
+
+    try {
+        const productos = await Producto.find({
+            precioActual: { $gte: min, $lte: max },
+            disponible: true
+        }).select('nombre precioActual descripcion imagenes');
+
+        if (productos.length === 0) {
+            return res.status(200).json({
+                mensaje: `No se encontraron vestidos entre $${min} y $${max}.`,
+                productos: []
+            });
+        }
+
+        const lista = productos.map(p => ({
+            nombre: p.nombre,
+            descripcion: p.descripcion || 'Sin descripción disponible.',
+            precio: `$${p.precioActual}`,
+            imagen: p.imagenes?.[0] || ''
+        }));
+
+        return res.status(200).json({
+            mensaje: `Aquí tienes vestidos entre $${min} y $${max}.`,
+            productos: lista
+        });
+
+    } catch (error) {
+        console.error('❌ Error al buscar por rango:', error);
+        return res.status(500).json({
+            mensaje: 'Error al buscar los vestidos.',
+            productos: []
+        });
     }
 };

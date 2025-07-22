@@ -5,7 +5,6 @@ const conectarDB = require("./Server/Conexion");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
-const categoriaRoutes = require('./Routes/CategoriaRoutes');
 const updateLastActivity = require('./middleware/updateLastActivity');
 
 const app = express();
@@ -101,8 +100,7 @@ const apiVersion = process.env.API_VERSION || "v1";
 
 // Rutas padres
 app.use(`/api/${apiVersion}/msj`, require("./Routes/WhatsappRoute.js"));
-app.use(`/api/${apiVersion}/categoria`, categoriaRoutes);
-
+app.use(`/api/${apiVersion}/categoria`, require('./Routes/CategoriaRoutes'));
 app.use(`/api/${apiVersion}/producto`, require("./Routes/ProductRoute"));
 app.use(`/api/${apiVersion}/vestido`, require("./Routes/VestidoRoute"));
 app.use(`/api/${apiVersion}/accesorio`, require("./Routes/AccesorioRoute.js"));

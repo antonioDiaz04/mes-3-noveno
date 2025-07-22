@@ -1,10 +1,9 @@
 const fs = require("fs-extra");
-
-const Producto = require("../Models/ProductModel"); // Asegúrate de importar tu modelo de producto
-const upload = require('../middleware/multer');
+const Producto = require("../Models/ProductModel");
 const cloudinary = require("cloudinary").v2;
-// const Producto = require("../models/Producto"); // Importa el modelo de Producto
-// const fs = require("fs/promises");
+const sanitizeObject = require("../util/sanitize")
+// const { sanitizeObject } = require('../util/sanitize');
+
 
 // Configuración de Cloudinary
 cloudinary.config({
@@ -12,11 +11,10 @@ cloudinary.config({
   api_key: "982632489651298",
   api_secret: "TTIZcgIMiC8F4t8cE-t6XkQnPyQ",
 });
+
 exports.crearProducto = async (req, res) => {
   try {
-    console.log("Contenido de req.body:", req.body);
-    console.log("Archivos subidos:", req.files); // Accede a todos los archivos subidos
-
+    const bodySanitizado = sanitizeObject(req.body);
     const imagenesSubidas = [];
 
     if (req.files?.imagenes) {
@@ -45,40 +43,36 @@ exports.crearProducto = async (req, res) => {
         }
       }
     }
-    console.log("Imágenes subidas exitosamente");
 
-    console.log("paso aqui 1");
-
-    // Crea un nuevo objeto de Producto con los datos del formulario y las URLs de las imágenes
     const producto = new Producto({
-      nombre: req.body.nombre,
-      talla: req.body.talla,
-      altura: req.body.altura,
-      cintura: req.body.cintura,
-      color: req.body.color,
-      precioAnterior: req.body.precioAnterior,
-      precioActual: req.body.precioActual,
-      mostrarPrecioAnterior: req.body.mostrarPrecioAnterior, // Checkbox desactivado por defecto
-      opcionesTipoTransaccion: req.body.opcionesTipoTransaccion || "Venta", // Valor por defecto
-      nuevo: req.body.nuevo !== undefined ? req.body.nuevo : true, // Valor por defecto
-      tipoCuello: req.body.tipoCuello,
-      tipoCola: req.body.tipoCola,
-      tipoCapas: req.body.tipoCapas,
-      tipoHombro: req.body.tipoHombro,
-      descripcion: req.body.descripcion,
-      imagenes: imagenesSubidas, // Array de strings (URLs)
-      idCategoria: req.body.idCategoria, // Relación con la categoría
+      nombre: bodySanitizado.nombre,
+      talla: bodySanitizado.talla,
+      textura: bodySanitizado.textura,
+      color: bodySanitizado.color,
+      precioAnterior: bodySanitizado.precioAnterior,
+      precioActual: bodySanitizado.precioActual,
+      mostrarPrecioAnterior: bodySanitizado.mostrarPrecioAnterior === 'true',
+      opcionesTipoTransaccion: bodySanitizado.opcionesTipoTransaccion || "Venta",
+      nuevo: bodySanitizado.nuevo === 'true',
+      disponible: bodySanitizado.disponible === 'true',
+      tipoCuello: bodySanitizado.tipoCuello,
+      tipoCola: bodySanitizado.tipoCola,
+      tipoCapas: bodySanitizado.tipoCapas,
+      tipoHombro: bodySanitizado.tipoHombro,
+      descripcion: bodySanitizado.descripcion,
+      imagenes: imagenesSubidas,
+      idCategoria: bodySanitizado.idCategoria || null,
+      categorias: Array.isArray(bodySanitizado.categorias)
+        ? bodySanitizado.categorias
+        : bodySanitizado.idCategoria
+          ? [bodySanitizado.idCategoria]
+          : [],
+      fechaCreacion: new Date()
     });
 
-    console.log("Producto a guardar:", producto); // Imprimir el objeto del producto
-
-    console.log("paso aqui 2");
-
-    // Guardar el producto en la base de datos
     const resultadoProducto = await producto.save();
-    console.log("paso aqui 3");
 
-    // Enviar la respuesta con el producto creado
+
     res.status(201).json({ message: "Producto creado exitosamente", producto: resultadoProducto });
 
   } catch (error) {
@@ -103,7 +97,7 @@ exports.crearProducto = async (req, res) => {
 exports.editarProducto = async (req, res) => {
   try {
     const { id } = req.params;
-    const { imagenes: imagenesString, idCategoria, ...productoData } = req.body;
+    const { imagenes: imagenesString, idCategoria, categorias, ...productoData } = sanitizeObject(req.body);
 
     console.log("Datos recibidos:", { ...productoData, imagenes: imagenesString, idCategoria });
     console.log("Archivos nuevos:", req.files);
@@ -154,7 +148,15 @@ exports.editarProducto = async (req, res) => {
     // 4. Actualizar el producto (incluyendo idCategoria y sin eliminar imágenes existentes)
     const productoActualizado = await Producto.findByIdAndUpdate(
       id,
-      { ...productoData, imagenes: imagenesFinales, idCategoria },
+      {
+        ...productoData, imagenes: imagenesFinales,
+        idCategoria,
+        categorias: Array.isArray(categorias)
+          ? categorias
+          : idCategoria
+            ? [idCategoria]
+            : []
+      },
       { new: true }
     );
 
@@ -186,45 +188,19 @@ exports.eliminarProducto = async (req, res) => {
   }
 };
 
-const logger = require('../../src/util/logger');
-
-
 exports.obtenerProducto = async (req, res) => {
-  const logMetadata = {
-    ip: req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress,
-    userAgent: req.headers['user-agent'],
-    method: req.method,
-    url: req.originalUrl,
-    queryParams: req.query,
-    body: req.body
-  };
-
-  // logger.info('Inicio de obtención de productos', logMetadata);
-
   try {
     const productos = await Producto.find();
-    // logger.info(`Productos encontrados: ${productos.length}`, { 
-    //   ...logMetadata,
-    //   count: productos.length 
-    // });
 
     res.status(200).json(productos);
   } catch (error) {
-    // logger.error('Error al obtener productos', {
-    //   ...logMetadata,
-    //   error: {
-    //     name: error.name,
-    //     message: error.message,
-    //     stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    //   }
-    // });º
-
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Error interno del servidor",
       errorId: new Date().getTime() // ID único para referencia en logs
     });
   }
 };
+
 // Obtener todos los productos
 exports.obtenerProductoById = async (req, res) => {
   try {
@@ -301,10 +277,13 @@ exports.buscarProductosAvanzados = async (req, res) => {
 
   console.log('Filtros recibidos:', filtros);
 
-  // Filtrar por categoría si se proporciona
-  if (filtros.categoria) {
-    query.categoria = filtros.categoria;
-    console.log('Filtrando por categoría:', filtros.categoria);
+  // Filtrar por categoría individual o múltiple
+  if (filtros.categorias?.length) {
+    query.categorias = { $in: filtros.categorias };
+    console.log('Filtrando por categorías (array):', filtros.categorias);
+  } else if (filtros.categoria) {
+    query.categorias = filtros.categoria;
+    console.log('Filtrando por categoría (única):', filtros.categoria);
   }
 
   // Filtrar por color si se proporciona

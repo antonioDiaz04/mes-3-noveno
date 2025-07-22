@@ -467,7 +467,7 @@ exports.guardarTokenNumerico = async (req, res) => {
 };
 
 exports.validarTokenAlexa = async (req, res) => {
-  const { token } = req.body;
+  const { userId: userIdAlexa, token } = req.body;
 
   if (!token) {
     return res.status(400).json({ message: "Token requerido" });
@@ -477,7 +477,15 @@ exports.validarTokenAlexa = async (req, res) => {
     const usuario = await Usuario.findOne({ tokenAlexa: token });
 
     if (usuario) {
-      return res.status(200).json({ valido: true, usuarioId: usuario._id });
+      return res.status(200).json({
+        valido: true, userIdAlexa, usuarioId: usuario._id, usuario: {
+          fotoDePerfil: usuario.fotoDePerfil,
+          nombre: usuario.nombre,
+          email: usuario.email,
+          telefono: usuario.telefono,
+          apellidos: usuario.apellidos,
+        }
+      });
     } else {
       return res.status(200).json({ valido: false });
     }

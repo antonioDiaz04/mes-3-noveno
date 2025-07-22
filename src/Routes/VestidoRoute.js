@@ -139,6 +139,9 @@ router.get("/:id/similares", VestidoController.recomendarVestidosSimilares);
  */
 router.get("/frecuentes-juntos", VestidoController.VestidosFrecuentesJuntos);
 
+router.get('/por-temporadas', VestidoController.obtenerVestidosPorTemporadas);
+
+
 
 module.exports = router; // Exporta el enrutador para ser utilizado en el archivo principal de la aplicación (ej. app.js o server.js).
 

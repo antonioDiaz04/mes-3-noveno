@@ -5,6 +5,8 @@ const upload = require("../middleware/multer");
 
 // agrega cliente
 router.post("/", UsuarioController.crearUsuario);
+// router.get("/asignarLocalidadesAleatorias", UsuarioController.asignarLocalidadesAleatorias);
+// router.get("/contarUsuariosPorLocalidad", UsuarioController.contarUsuariosPorLocalidad);
 router.post("/reportes/:id", UsuarioController.crearReporte);
 router.post("/check-email", UsuarioController.checkEmail);
 router.post("/check-telefono", UsuarioController.checkTelefono);

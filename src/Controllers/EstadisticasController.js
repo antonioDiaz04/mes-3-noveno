@@ -1,6 +1,6 @@
 const { startOfWeek, format, differenceInDays, addDays } = require('date-fns');
-const Venta = require('../models/VentaModel');
-const Renta = require('../models/RentaModel');
+const Venta = require('../Models/VentaModel');
+const Renta = require('../Models/RentaModel');
 
 const meses = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",

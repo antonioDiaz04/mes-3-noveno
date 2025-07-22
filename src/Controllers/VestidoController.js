@@ -648,3 +648,24 @@ async function procesarImagenes(req, VestidoId) {
     // Filtra cualquier URL vacía que pueda haber resultado de la división de la cadena.
     return imagenesFinales.filter(url => url);
 }
+
+
+/**
+ * @desc Obtiene los IDs y temporadas de vestidos aptos para "Todo el año", "Verano" o "Invierno".
+ * @route GET /api/vestidos/por-temporadas
+ * @access Public
+ */
+exports.obtenerVestidosPorTemporadas = async (req, res) => {
+    try {
+        const temporadasDeseadas = ["Todo el año", "Verano", "Invierno"];
+        
+        const vestidos = await Vestido.find(
+            { temporada: { $in: temporadasDeseadas } }
+        ).select('_id temporada nombre');
+
+        res.status(200).json(vestidos);
+    } catch (error) {
+        console.error("Error al obtener vestidos por temporada:", error);
+        res.status(500).json({ error: "Error al obtener vestidos por temporada." });
+    }
+};
