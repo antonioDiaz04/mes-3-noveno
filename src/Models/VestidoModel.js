@@ -49,13 +49,7 @@ const VestidoSchema = new mongoose.Schema({
         // esta sería la forma correcta de manejarlo. El campo 'talla' de arriba podría ser omitido en ese caso,
         // o si un documento es para una instancia específica de vestido con una única talla.
     },
-    // Objeto para almacenar medidas detalladas del vestido.
-    medidas: {
-        altura: { type: Number, required: false }, // en centímetros
-        cintura: { type: Number, required: false }, // en centímetros
-        // Sugerencia: Podrías añadir otras medidas relevantes como busto, cadera, largo de manga, etc.
-    },
-
+   
     // --- Estilo y Temporada ---
     // Estilo general del vestido.
     estilo: {
