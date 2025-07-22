@@ -96,16 +96,20 @@ exports.getTransaction = async (req, res) => {
  * @throws  {400} Si los datos proporcionados no cumplen con las validaciones del esquema de Mongoose.
  * @throws  {500} Si ocurre un error inesperado en el servidor.
  */
+/**
+ * @desc    Crea una nueva transacción en la base de datos y luego genera recomendaciones.
+ * ... (comentarios de JSDoc) ...
+ */
 exports.createTransaction = async (req, res) => {
     try {
         console.log("Intentando crear una nueva transacción con los datos:", req.body);
 
-        // Step 1: Create the transaction in the database
+        // Paso 1: Crear la transacción en la base de datos
         const transaction = await Transaction.create(req.body);
         console.log("Transacción creada exitosamente:", transaction._id);
 
-        // Step 2: Trigger recommendation generation
-        // We'll simulate the request/response objects needed for getRecommendationsForTransaction
+        // Paso 2: Generar recomendaciones basadas en esta nueva transacción
+        // Creamos un objeto de respuesta simulado para capturar las recomendaciones que genera getRecommendationsForTransaction
         let recommendationsResponse = {};
         const mockRes = {
             status: function (code) {
@@ -117,17 +121,17 @@ exports.createTransaction = async (req, res) => {
             }
         };
 
-        // Call the recommendation logic.
-        // It expects an object with a 'body' property (containing the transaction data)
-        // and a mock response object.
+        // Llama a la lógica de getRecommendationsForTransaction.
+        // Se le pasa req.body como si fuera el cuerpo de una nueva solicitud POST para recomendaciones.
+        // getRecommendationsForTransaction usará esto para calcular las métricas del cliente y llamar a Python.
         await getRecommendationsForTransaction({ body: req.body }, mockRes);
 
-        // Step 3: Combine the transaction response with the recommendations
+        // Paso 3: Combinar la respuesta de la transacción con las recomendaciones
         res.status(201).json({
             success: true,
             message: 'Transacción creada y recomendaciones generadas.',
-            data: transaction, // The transaction we just created
-            recommendations: recommendationsResponse.recommendations || {} // Recommendations obtained
+            data: transaction, // La transacción que acabamos de crear
+            recommendations: recommendationsResponse.recommendations || {} // Las recomendaciones obtenidas de la función
         });
 
     } catch (error) {
@@ -138,7 +142,9 @@ exports.createTransaction = async (req, res) => {
         }
         res.status(500).json({ success: false, error: 'Error del servidor al crear la transacción o generar las recomendaciones.' });
     }
-};/**
+};
+
+/**
  * @desc    Actualiza una transacción existente por su ID.
  * Los campos a actualizar se esperan en el cuerpo de la solicitud (req.body).
  * @route   PUT /api/transactions/:id
