@@ -17,8 +17,8 @@ const corsOrigins = process.env.CORS_ORIGINS
 
 
 const corsOptions = {
-  // origin: corsOrigins.length > 0 ? corsOrigins : false,
-  origin: "*", //🔓 Acepta cualquier origen 
+  origin: corsOrigins.length > 0 ? corsOrigins : false,
+  // origin: "*", //🔓 Acepta cualquier origen 
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,

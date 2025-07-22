@@ -17,8 +17,8 @@ exports.getTransactions = async (req, res) => {
         // Utiliza .populate('idUsuario') para traer TODOS los campos del documento de usuario.
         // Utiliza .populate('idVestido') para traer TODOS los campos del documento de vestido.
         const transactions = await Transaction.find()
-                                              .populate('idUsuario') // Ahora popula TODOS los campos del usuario
-                                              .populate('idVestido'); // Ahora popula TODOS los campos del vestido
+            .populate('idUsuario') // Ahora popula TODOS los campos del usuario
+            .populate('idVestido'); // Ahora popula TODOS los campos del vestido
 
         // Responde con un estado 200 (OK) y un JSON que contiene:
         // - success: true (indicando que la operación fue exitosa)
@@ -54,8 +54,8 @@ exports.getTransaction = async (req, res) => {
         // Busca una transacción por su ID.
         // Popula TODOS los campos de idUsuario y idVestido.
         const transaction = await Transaction.findById(req.params.id)
-                                              .populate('idUsuario') // Ahora popula TODOS los campos del usuario
-                                              .populate('idVestido'); // Ahora popula TODOS los campos del vestido
+            .populate('idUsuario') // Ahora popula TODOS los campos del usuario
+            .populate('idVestido'); // Ahora popula TODOS los campos del vestido
 
         // Si no se encuentra ninguna transacción con el ID dado, responde con un error 404.
         if (!transaction) {
@@ -96,6 +96,7 @@ exports.getTransaction = async (req, res) => {
  */
 exports.createTransaction = async (req, res) => {
     try {
+        console.log(req.body)
         const transaction = await Transaction.create(req.body);
         res.status(201).json({
             success: true,
