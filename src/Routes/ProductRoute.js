@@ -18,6 +18,7 @@ router.put(
 );
 router.delete("/:id", ProductController.eliminarProducto);
 router.get("/", ProductController.obtenerProducto);
+router.get('/rango-fechas-renta/:idVestido', ProductController.obtenerRangoFechasRenta);
 router.get("/buscar/:query", ProductController.buscarVestidos);
 router.post("/buscarAvanzados/", ProductController.buscarProductosAvanzados);
 

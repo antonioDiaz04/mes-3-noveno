@@ -1,5 +1,6 @@
 const fs = require("fs-extra");
 const Producto = require("../Models/ProductModel");
+const Transaction = require("../Models/Transaction");
 const cloudinary = require("cloudinary").v2;
 const sanitizeObject = require("../util/sanitize")
 // const { sanitizeObject } = require('../util/sanitize');
@@ -188,6 +189,7 @@ exports.eliminarProducto = async (req, res) => {
   }
 };
 
+
 exports.obtenerProducto = async (req, res) => {
   try {
     const productos = await Producto.find();
@@ -271,6 +273,9 @@ exports.buscarVestidos = async (req, res) => {
     });
   }
 };
+
+
+
 exports.buscarProductosAvanzados = async (req, res) => {
   const filtros = req.body || {};
   const query = {}; // Objeto para construir los filtros dinámicamente
@@ -313,5 +318,39 @@ exports.buscarProductosAvanzados = async (req, res) => {
 
     // Responder al cliente con un error
     res.status(500).json({ error: 'Error al buscar productos' });
+  }
+};
+
+exports.obtenerRangoFechasRenta = async (req, res) => {
+  try {
+    const idVestido = req.params.idVestido;
+
+    const transacciones = await Transaction.find({
+      idVestido: idVestido,
+      tipoTransaccion: "renta",
+      "detallesRenta.fechaInicio": { $exists: true },
+      "detallesRenta.fechaFin": { $exists: true }
+    }).select("detallesRenta.fechaInicio detallesRenta.fechaFin");
+
+    if (transacciones.length === 0) {
+      return res.status(404).json({ mensaje: "No se encontraron rentas para este vestido." });
+    }
+
+    const fechasInicio = transacciones.map(t => new Date(t.detallesRenta.fechaInicio));
+    const fechasFin = transacciones.map(t => new Date(t.detallesRenta.fechaFin));
+
+    const fechaMin = new Date(Math.min(...fechasInicio));
+    const fechaMax = new Date(Math.max(...fechasFin));
+
+    res.status(200).json({
+      mensaje: "Rango de fechas de renta encontrado",
+      fechaInicio: fechaMin,
+      fechaFin: fechaMax,
+      totalRentas: transacciones.length
+    });
+
+  } catch (error) {
+    console.error("Error al obtener rango de fechas:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
   }
 };
