@@ -156,7 +156,9 @@ async function insertRealisticTransactions() {
 
         const transactions = [];
         const numTransactionsToGenerate = 500;
-        const currentYear = new Date().getFullYear(); // Año actual para las transacciones
+        
+        // **MODIFICACIÓN CLAVE: Establecer el año de las transacciones a 2023**
+        const targetYear = 2023; 
 
         for (let i = 0; i < numTransactionsToGenerate; i++) {
             // Seleccionar un vestido aleatorio de la lista obtenida
@@ -198,7 +200,8 @@ async function insertRealisticTransactions() {
                 }
             }
 
-            fechaTransaccion = getRandomDate(currentYear - 2, currentYear + 1, monthBias); // Transacciones de los últimos 2 años al próximo año
+            // **MODIFICACIÓN APLICADA AQUÍ:** Se pasa 'targetYear' como el rango de años
+            fechaTransaccion = getRandomDate(targetYear, targetYear, monthBias); 
             const fechaUltimoPago = new Date(fechaTransaccion.getTime() + getRandomInt(5, 60) * 60 * 1000); // 5-60 minutos después
 
             const transaction = {
